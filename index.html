@@ -681,6 +681,149 @@
     70% { opacity:1; }
     100%{ opacity:1; letter-spacing:.1em; }
   }
+  /* ── 手把樣式的按鍵盤面（監控台的密技用） ── */
+  .gamepad{ display:flex; flex-direction:column; align-items:center; gap:10px; padding:2px 0; }
+  .gp-body{
+    display:flex; align-items:center; gap:clamp(12px,5vw,30px);
+    background:linear-gradient(180deg,#414b57,#2a3038);
+    border:2px solid var(--line); border-radius:14px;
+    padding:14px clamp(14px,5vw,24px);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.09), 0 5px 16px rgba(0,0,0,.5);
+  }
+  .gp-dpad{
+    display:grid; grid-template-columns:repeat(3,26px); grid-template-rows:repeat(3,26px);
+    grid-template-areas:'. u .' 'l m r' '. d .'; flex:0 0 auto;
+  }
+  .gp-d{
+    background:#141821; border:1px solid #0a0d12; color:var(--text);
+    font-size:11px; line-height:1; padding:0; cursor:pointer;
+  }
+  .gp-d.u{ grid-area:u; border-radius:5px 5px 0 0; }
+  .gp-d.d{ grid-area:d; border-radius:0 0 5px 5px; }
+  .gp-d.l{ grid-area:l; border-radius:5px 0 0 5px; }
+  .gp-d.r{ grid-area:r; border-radius:0 5px 5px 0; }
+  .gp-d.m{ grid-area:m; border-left:0; border-right:0; cursor:default; }
+  .gp-d:hover{ background:#1d242e; color:var(--signal); }
+  .gp-d.m:hover{ background:#141821; color:var(--text); }
+  .gp-d:active{ background:#2c3540; }
+  .gp-mid{ display:flex; flex-direction:column; align-items:center; gap:5px; flex:0 0 auto; }
+  .gp-mid .lbl{ font-family:var(--mono); font-size:9px; color:var(--dim); letter-spacing:.14em; }
+  .gp-face{
+    display:grid; grid-template-columns:repeat(3,32px); grid-template-rows:repeat(3,32px);
+    grid-template-areas:'. x .' 'y . a' '. b .'; flex:0 0 auto; transform:rotate(-10deg);
+  }
+  .gp-r{
+    width:32px; height:32px; border-radius:50%; padding:0;
+    border:2px solid rgba(10,13,18,.85); color:#fff;
+    font-family:var(--mono); font-size:13px; font-weight:600; cursor:pointer;
+    box-shadow:0 3px 0 rgba(10,13,18,.75), inset 0 1px 0 rgba(255,255,255,.3);
+    text-shadow:0 1px 1px rgba(0,0,0,.5);
+  }
+  .gp-r.x{ grid-area:x; background:radial-gradient(circle at 34% 28%,#5aa7d8,#2f6f9e); }
+  .gp-r.y{ grid-area:y; background:radial-gradient(circle at 34% 28%,#63b477,#357a49); }
+  .gp-r.a{ grid-area:a; background:radial-gradient(circle at 34% 28%,#e2685f,#a8322b); }
+  .gp-r.b{ grid-area:b; background:radial-gradient(circle at 34% 28%,#dcbf55,#9a7c22); }
+  .gp-r:hover{ filter:brightness(1.15); }
+  .gp-r:active{ transform:translateY(3px); box-shadow:0 0 0 rgba(10,13,18,.75), inset 0 1px 0 rgba(255,255,255,.2); }
+  .gamepad .pdots{ margin:0; }
+  /* 接線盤面：孔位變多，按鈕收窄一點 */
+  #puzBoard .prow2 > b{ flex:0 0 52px; }
+  #puzBoard .prow2 .pbtn{ padding:8px 9px; font-size:12.5px; }
+  @media (max-width:420px){
+    .gp-body{ gap:12px; padding:12px 12px; }
+    .gp-dpad{ grid-template-columns:repeat(3,24px); grid-template-rows:repeat(3,24px); }
+    .gp-face{ grid-template-columns:repeat(3,30px); grid-template-rows:repeat(3,30px); }
+    .gp-r{ width:30px; height:30px; font-size:12px; }
+    #puzBoard .prow2 .pbtn{ padding:7px 8px; font-size:12px; }
+  }
+  /* ══ 密碼鎖：LED 顯示 + 實體鍵盤 ══════════════════════════════ */
+  #puzCode{ display:flex; flex-direction:column; align-items:center; gap:14px; }
+  .code{
+    display:flex; gap:8px; padding:12px 14px; margin:0;
+    background:linear-gradient(180deg,#0a1014,#0d161a);
+    border:2px solid #0a0d12; border-radius:4px;
+    box-shadow:inset 0 2px 8px rgba(0,0,0,.85), 0 0 0 2px rgba(255,255,255,.05);
+    letter-spacing:0;
+  }
+  .code .dg{
+    width:32px; height:44px; display:flex; align-items:center; justify-content:center;
+    font-family:var(--mono); font-size:26px; font-style:normal;
+    color:#6fb3c9; background:rgba(111,179,201,.05);
+    border-bottom:2px solid rgba(111,179,201,.25);
+    text-shadow:0 0 10px rgba(111,179,201,.9), 0 0 22px rgba(111,179,201,.4);
+  }
+  .code .dg.on{ background:rgba(111,179,201,.1); }
+  .code .dg.cur{ border-bottom-color:var(--signal); animation:cursorBlink .9s steps(2,end) infinite; }
+  .code.bad .dg{ color:var(--air); border-bottom-color:rgba(209,68,60,.5);
+                 text-shadow:0 0 10px rgba(209,68,60,.9); }
+  .code.good .dg{ color:#7ad39a; border-bottom-color:rgba(122,211,154,.6);
+                  text-shadow:0 0 12px rgba(122,211,154,.9); }
+  @keyframes cursorBlink{ 50%{ border-bottom-color:transparent; } }
+
+  .keypad{
+    display:grid; grid-template-columns:repeat(3,64px); gap:8px;
+    background:linear-gradient(180deg,#39424e,#252c36);
+    padding:12px; border:2px solid var(--line); border-radius:10px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.08), 0 5px 16px rgba(0,0,0,.5);
+  }
+  .keypad .key{
+    height:48px; padding:0; border-radius:5px;
+    background:linear-gradient(180deg,#4a545f,#333b45);
+    border:1px solid #1a1f27; color:var(--text);
+    font-family:var(--mono); font-size:19px; cursor:pointer;
+    box-shadow:0 3px 0 #1a1f27, inset 0 1px 0 rgba(255,255,255,.14);
+    transition:transform .04s, box-shadow .04s;
+  }
+  .keypad .key:hover{ background:linear-gradient(180deg,#55606c,#3a434e); color:#fff; }
+  .keypad .key.del{ font-size:16px; color:var(--dim); }
+  .keypad .key.ok{ background:linear-gradient(180deg,#4a7f92,#31606f); font-size:15px; color:#eaf6fa; }
+  .keypad .key:active,.keypad .key.hit{
+    transform:translateY(3px); box-shadow:0 0 0 #1a1f27, inset 0 2px 4px rgba(0,0,0,.4);
+  }
+  @media (max-width:420px){
+    .keypad{ grid-template-columns:repeat(3,58px); }
+    .code .dg{ width:28px; height:40px; font-size:23px; }
+  }
+
+  /* ══ 接線：真的把線拉過去 ═════════════════════════════════════ */
+  .wirebox{
+    position:relative; display:flex; justify-content:space-between;
+    gap:16px; padding:14px 10px 6px;
+    background:linear-gradient(180deg,#262d36,#1b2129);
+    border:2px solid var(--line); border-radius:8px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
+    touch-action:none; user-select:none;
+  }
+  .wiresvg{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:1; }
+  .wirecol{ display:flex; flex-direction:column; gap:12px; position:relative; z-index:2; }
+  .plug,.sock{
+    display:flex; align-items:center; gap:8px;
+    background:#161b22; border:1px solid var(--line); border-radius:4px;
+    padding:8px 10px; font-size:12.5px; cursor:pointer; white-space:nowrap;
+  }
+  .plug{ padding-right:6px; }
+  .sock{ padding-left:6px; flex-direction:row-reverse; }
+  .plug:hover,.sock:hover{ border-color:var(--signal); }
+  .plug.sel{ border-color:var(--signal); background:var(--panel2);
+             box-shadow:0 0 0 2px rgba(111,179,201,.25); }
+  .plug.done{ color:var(--dim); }
+  .tipcap{
+    width:14px; height:14px; border-radius:50%; flex:0 0 auto;
+    border:2px solid rgba(0,0,0,.6); box-shadow:inset 0 1px 0 rgba(255,255,255,.3);
+  }
+  .holecap{
+    width:16px; height:16px; border-radius:50%; flex:0 0 auto;
+    background:#0a0d12; box-shadow:inset 0 2px 4px rgba(0,0,0,.9);
+    display:flex; align-items:center; justify-content:center;
+    font-size:9px; color:rgba(255,255,255,.5);
+  }
+  .sock.full .holecap{ box-shadow:inset 0 0 0 2px rgba(255,255,255,.25); }
+  .wireacts{ display:flex; align-items:center; gap:10px; margin-top:12px; flex-wrap:wrap; }
+  .wireacts .pbtn.go{ border-color:var(--signal); color:var(--signal); }
+  @media (max-width:420px){
+    .plug,.sock{ font-size:11.5px; padding:7px 8px; }
+    .wirebox{ gap:8px; }
+  }
 </style>
 </head>
 <body>
@@ -1179,6 +1322,8 @@ const ACHIEVEMENTS = [
     check:() => !!state.flags.exploded },
   { id:'shocked',    name:'我是說真的',   desc:'還是碰了那條線。', hidden:true,
     check:() => !!state.flags.shocked },
+  { id:'homecoming', name:'請回來',       desc:'把照片放回神桌上。', hidden:true,
+    check:() => !!state.opened.altar },
   { id:'listener',   name:'聽見遠方',     desc:'把收訊本從頭讀到尾。', hidden:true,
     check:() => ['recv_north','recv_south','recv_gang','recv_cult','recv_stage','recv_sky']
                   .every(k => state.read[k]) },
@@ -1233,6 +1378,82 @@ const DOCS = {
     body:['駕駛座的窗戶破了，車上的收音機還開著，混著雜訊。',
           '「……接下來就在 95.2＋7 見面吧！」',
           '重複了兩次就斷了。'] },
+
+  /* ── 一樓二樓：打過一場的痕跡 ─────────────────────────────── */
+  shells_note: { title:'地上的彈殼', code:'RUIN-1', from:'一樓地板',
+    body:['牆邊掃出一小堆彈殼，像是有人事後整理過，掃到一起卻沒有丟掉。',
+          '口徑不只一種。',
+          '有幾顆已經生鏽，有幾顆還是亮的。'] },
+  barricade_note: { title:'堆起來的家具', code:'RUIN-2', from:'翻倒的櫃子',
+    body:['幾件家具被拖過來疊成一道矮牆，朝向鐵捲門那一側。',
+          '疊的人很清楚自己在擋什麼方向。',
+          '木板上有幾個穿過去的洞，邊緣往內翻。'] },
+  nest_note: { title:'窩裡的東西', code:'RUIN-3', from:'海綿堆成的窩',
+    body:['沙發的海綿、碎布、幾張撕爛的傳單，鋪成一個淺淺的凹陷。',
+          '底下混著一些不屬於這裡的東西：鑰匙、打火機、一支手電筒的尾蓋。',
+          '都是從別人身上掉下來的。'] },
+  hole_note: { title:'牆上的洞', code:'RUIN-4', from:'二樓牆面',
+    body:['隔間牆上一整排洞，從走廊一直連到浴室。',
+          '高度都在腰際，很整齊。',
+          '從洞看過去，另一邊的牆上有對應的一排。'] },
+  firstaid_note: { title:'急救箱', code:'RUIN-5', from:'急救箱',
+    body:['白鐵的急救箱，鎖扣被撬過又鎖回去。',
+          '裡面只剩下繃帶跟一瓶見底的消毒水。',
+          '箱蓋內側用原子筆記著日期，一行一行，最後一行沒寫完。'] },
+
+  /* ── 生活層：他把整個家搬上三樓 ───────────────────────────── */
+  tvnote: { title:'電視框上的貼紙', code:'HOME-1', from:'客廳電視',
+    body:['螢幕黑著，映出整個客廳，還有站在客廳裡的你。',
+          '電視框右下角貼著一張手寫標籤紙，邊角翹起來了：「94.5」。',
+          '寫得很大，像是怕自己忘記。'] },
+  sofa_note: { title:'沙發縫裡的東西', code:'HOME-2', from:'沙發',
+    body:['遙控器、一張發票、一顆掉下來的鈕扣。',
+          '發票的日期是災變前，品項是兩份便當。'] },
+  kitchen_note: { title:'流理台上的便利貼', code:'HOME-3', from:'流理台',
+    body:['「米沒了」「瓦斯行電話 →」，箭頭指向的地方是空白的。',
+          '最下面那張字比較新：「今天不要煮，直接泡。」'] },
+  shoe_note: { title:'鞋櫃', code:'HOME-4', from:'鞋櫃',
+    body:['三層鞋櫃，只有最上層是滿的。',
+          '下面兩層擺著別的尺寸，鞋頭朝內，很久沒有動過。',
+          '玄關地上只有一雙拖鞋。'] },
+  tin_letter: { title:'鐵盒裡的東西', code:'HOME-5', from:'餅乾鐵盒',
+    body:['鐵盒裡不是餅乾。',
+          '一疊繳費單、一本存摺，還有幾張照片。',
+          '最上面那張是全家福，四個人站在這棟房子門口，鐵捲門看起來還很新。'] },
+
+  desk_note: { title:'書桌上的稿紙', code:'HOME-6', from:'書桌',
+    body:['一疊稿紙，寫的是開場白。同一句改了七八次。',
+          '「各位聽眾，早安。」',
+          '「各位，早安。」',
+          '「早安。有人在嗎。」最後這句被畫掉了。'] },
+  closet_note: { title:'衣櫃', code:'HOME-7', from:'衣櫃',
+    body:['一邊掛著他的衣服，另一邊是空的，衣架還留在桿子上。',
+          '底層抽屜裡摺著兩件小孩的外套，尺寸差了兩號。'] },
+  mirror_note: { title:'鏡子上的字', code:'HOME-8', from:'鏡子',
+    body:['鏡面有一層薄薄的水垢。',
+          '斜著看的時候會浮出用手指寫過的字——寫的人大概以為擦掉就沒了。',
+          '「今天也要好好說話。」'] },
+  heater_card: { title:'熱水器保固卡', code:'HOME-9', from:'熱水器',
+    body:['貼在機殼側面的水電行貼紙，電話號碼被畫掉重寫過。',
+          '保固卡上最後一次維修的日期，是災變那一年的春天。',
+          '欄位下面有人補了一行：「以後自己修。」'] },
+  bed_note: { title:'床頭的書', code:'HOME-10', from:'床墊',
+    body:['一本翻到一半的書，夾著書籤停在同一頁很久了。',
+          '那一頁沒有畫線，也沒有摺角。'] },
+
+  /* ── 三樓：神明廳改的播音室 ───────────────────────────────── */
+  altar_note: { title:'神桌上的紙條', code:'ALT-1', from:'神桌',
+    body:['壓在器材底下的一張紙，字寫得很端正，跟這棟房子裡其他地方的潦草完全不同。',
+          '「借用一下，很快就還。」',
+          '日期是五年前。'] },
+  tablets_note: { title:'紙箱上的字', code:'ALT-2', from:'收起來的牌位',
+    body:['一個用報紙墊過底、封口封得很仔細的紙箱，放在牆角離窗戶最遠的地方。',
+          '側面用麥克筆寫著：「等安頓好再請回來。」',
+          '箱子上沒有灰塵。有人固定在擦。'] },
+  photo_back: { title:'照片背面', code:'ALT-3', from:'神桌',
+    body:['照片立起來之後，你才看到背面有字，鉛筆寫的，很輕。',
+          '「等大家都回來，再拍一張。」',
+          '這一句沒有日期。'] },
 
   /* ── L1 生活層：他這個人 ───────────────────────────────── */
   fridgenote: { title:'冰箱上的便條', code:'NOTE-F', from:'小冰箱',
@@ -1371,7 +1592,9 @@ const DOCS = {
   toolnote: { title:'信號塔操作指南', code:'MAN-1', from:'信號塔旁',
     body:['一張護貝過的指南，掛在塔座旁邊。',
           '「紅接黃、藍接綠，老鼠的兒子會打洞！」',
-          '最後一句被人用簽字筆圈了起來。'] },
+          '最後一句被人用簽字筆圈了起來。',
+          '底下還有一行比較潦草的字：',
+          '「黑的那條千萬不要接活的，塞備用就好。」'] },
 
   /* ── 陣營限定：三邊各一份 ───────────────────────────────── */
   wallmark: { title:'牆角的記號', code:'MARK-1', from:'線團後面',
@@ -1597,6 +1820,26 @@ const EP = { start:4, gain:4, max:16 };
          或 battleAfterOpen:'echo'（解開鎖之後才觸發）
    逃跑之後還會再遇到，打贏或打輸就結束。 */
 const ENEMIES = {
+  nester: {
+    name:'築巢的東西', hp:190, art:'e_nester',
+    intro:['沙發被剖開了，海綿全被扯出來鋪成一團。',
+           '那團東西動了一下，然後抬起頭。'],
+    moves:[{ text:'它從沙發底下衝出來撞你的腳。', atk:[18,28] },
+           { text:'它叼起一塊玻璃甩過來。', atk:[22,32] }],
+    win:['它拖著窩裡的東西鑽進牆縫，沒有再出來。'],
+    lose:['你退到樓梯口。','它回到那團海綿上，重新趴好。'],
+    flee:['你慢慢往後退，它沒有追上來。'],
+  },
+  lurker: {
+    name:'積水裡的東西', hp:250, art:'e_lurker',
+    intro:['浴室地板積了一層水，踩下去的時候水面晃了一下。',
+           '晃動的方向不對——不是你踩出來的。'],
+    moves:[{ text:'水面炸開，有東西纏上你的小腿。', atk:[24,34] },
+           { text:'它把整攤水掀了過來。', atk:[20,30] }],
+    win:['水面慢慢平下來。這次是真的平了。'],
+    lose:['你爬出浴室，身上全濕。','它沒有跟出來。'],
+    flee:['你退到門外，水聲就停了。'],
+  },
   chewer: {
     name:'啃線的東西', hp:210, art:'e_chewer',
     intro:['線圈後面傳出一陣很細的咀嚼聲。',
@@ -1635,6 +1878,11 @@ const ITEMS = {
                  battle:{ atk:[45,70], text:'你用螺絲起子往前刺。' } },
   pliers:      { name:'老虎鉗',       art:'i_pliers',      desc:'握把上纏著厚厚的防滑帶，是絕緣的。',
                  battle:{ atk:[55,85], text:'你抄起老虎鉗砸過去。' } },
+  crowbar:     { name:'鐵撬',         art:'i_crowbar',     desc:'一端被敲扁了，握起來剛剛好。',
+                 battle:{ atk:[60,90], text:'你掄起鐵撬砸下去。' } },
+  bandage:     { name:'繃帶',         art:'i_bandage',     desc:'壓縮包裝的急救繃帶，封口還沒開。點一下就能用。',
+                 heal:60, use:'你把繃帶纏上去，用力壓緊。' },
+  photo:       { name:'全家福',       art:'i_photo',       desc:'四個人站在鐵捲門前面，照片邊角有摺痕。' },
   fuse:        { name:'備用保險絲',   art:'i_fuse',        desc:'玻璃管裡的絲還是完整的。' },
   tape:        { name:'無標題錄音帶', art:'i_tape',        desc:'標籤被撕掉了，只剩下一圈膠痕。' },
 };
@@ -1701,15 +1949,18 @@ const CONFIG = {
 /* 地圖字元對照表，三個區域共用
    void:true = 不畫地磚，露出後面的遠景（陽台外、天線台邊緣） */
 const TILES = {
-  '#': { name:'牆',       solid:true,  color:'#242c36', art:'wall',     sprite:'' },
-  '=': { name:'吸音牆',   solid:true,  color:'#2f3946', art:'acoustic', sprite:'' },
-  'G': { name:'隔音玻璃', solid:true,  color:'#3c525e', art:'glass',    sprite:'' },
-  '.': { name:'地板',     solid:false, color:'#4a545f', art:'floor',    sprite:'' },
-  ',': { name:'地毯',     solid:false, color:'#414b57', art:'carpet',   sprite:'' },
-  'w': { name:'木地板',   solid:false, color:'#5c4d38', art:'wood',     sprite:'' },
-  'o': { name:'水泥地',   solid:false, color:'#565f66', art:'concrete', sprite:'' },
-  'r': { name:'欄杆',     solid:true,  color:'#3a444e', art:'rail',     sprite:'' },
-  'm': { name:'鐵網',     solid:false, color:'#4a5560', art:'mesh',     sprite:'' },
+  '#': { name:'牆',       solid:true,  color:'#242c36', art:'wall',      sprite:'' },
+  'b': { name:'彈痕牆',   solid:true,  color:'#242c36', art:'bullet',    sprite:'' },
+  '=': { name:'吸音牆',   solid:true,  color:'#2f3946', art:'acoustic',  sprite:'' },
+  'G': { name:'隔音玻璃', solid:true,  color:'#3c525e', art:'glass',     sprite:'' },
+  '.': { name:'地板',     solid:false, color:'#4a545f', art:'floor',     sprite:'' },
+  ',': { name:'地毯',     solid:false, color:'#414b57', art:'carpet',    sprite:'' },
+  'w': { name:'木地板',   solid:false, color:'#5c4d38', art:'wood',      sprite:'' },
+  'o': { name:'水泥地',   solid:false, color:'#565f66', art:'concrete',  sprite:'' },
+  /* 踩到會受傷。hurt 是每次踩進來扣的血量範圍 */
+  'x': { name:'玻璃碎片', solid:false, color:'#6a7480', art:'glassbits', sprite:'', hurt:[8,16] },
+  'r': { name:'欄杆',     solid:true,  color:'#3a444e', art:'rail',      sprite:'' },
+  'm': { name:'鐵網',     solid:false, color:'#4a5560', art:'mesh',      sprite:'' },
   ' ': { name:'外面',     solid:true,  void:true },
 };
 
@@ -1773,9 +2024,9 @@ const AREAS = {
       'rrrrrrooorrrrrrr',
     ],
     objects: [
-      { id:'frontdoor', name:'大門', col:5, row:2, w:2, h:1, solid:true, color:'#5b6470',
-        exit:{ to:'room', col:10, row:9 },
-        lines:['門沒有鎖，推一下就開了。',
+      { id:'frontdoor', name:'鐵捲門', col:5, row:2, w:2, h:1, solid:true, color:'#5b6470',
+        exit:{ to:'f1', col:5, row:9 },
+        lines:['鐵捲門只拉下來一半，彎腰就進得去。',
                '裡面有聲音——不是人聲，是機器一直在跑的聲音。'] },
       { id:'facade', name:'窗戶', col:8, row:2, w:2, h:1, solid:true, color:'#4a6470',
         lines:['隔著玻璃往裡面看，東西堆得到處都是。',
@@ -1825,7 +2076,7 @@ const AREAS = {
       { id:'weeds', name:'雜草叢', col:10, row:6, w:2, h:1, solid:false, color:'#5c7a5f',
         lines:['草長到膝蓋，只有從門口到車子那條路被踩出一道痕。',
                '那道痕已經開始長回來了。'] },
-      { id:'bike', name:'腳踏車', col:2, row:3, w:1, h:1, solid:true, color:'#6a6a72',
+      { id:'bike', name:'腳踏車', col:1, row:3, w:1, h:1, solid:true, color:'#6a6a72',
         lines:['前輪的胎是扁的，鏈條上的油倒是還沒乾。',
                '後架綁著一個空的置物籃。'] },
       { id:'path', name:'來時的路', col:7, row:8, w:1, h:1, solid:false, color:'#565f66',
@@ -1834,9 +2085,181 @@ const AREAS = {
     ],
   },
 
-  /* ① 室內：住的地方跟廣播器材混在一起，東西還在，人已經走了 */
+  /* ① 一樓：打過一場之後就沒人整理了 */
+  f1: {
+    name: '一樓',
+    spawn: { col:5, row:9 },
+    map: [
+      '####b#####b#####',
+      '#oooooo#,,,,,,,#',
+      '#ooxooo#,,,,x,,#',
+      '#oooooob,,,,,,,#',
+      '#oooooo#,,,,,x,#',
+      '#ooooxo#,,,,,,,#',
+      '#...x..........#',
+      '#.........x....#',
+      '#ww#..x........#',
+      '#ww#...........#',
+      '#####..#########',
+    ],
+    objects: [
+      /* — 廚房 — */
+      { id:'sink', name:'流理台', col:2, row:1, w:3, h:1, solid:true, color:'#7a828a',
+        docs:['kitchen_note'],
+        lines:['櫃門全被拉開，裡面的東西掃到地上。',
+               '有人在這裡找過東西，找得很急。'] },
+      { id:'gas', name:'瓦斯爐', col:5, row:1, w:1, h:1, solid:true, color:'#5a6673',
+        lines:['旋鈕全部歸零，還特地用膠帶固定住。',
+               '膠帶是新的，貼在滿是灰的爐面上。',
+               { who:'player', text:'……打完之後還有人回來確認過瓦斯。' }] },
+      { id:'barricade', name:'翻倒的櫃子', col:2, row:4, w:3, h:1, solid:true, color:'#6b5c45',
+        docs:['barricade_note'] },
+      { id:'shells', name:'掃成一堆的彈殼', col:1, row:5, w:1, h:1, solid:false, color:'#c9a86c',
+        docs:['shells_note'] },
+
+      /* — 客廳 — */
+      { id:'tv', name:'電視', col:11, row:1, w:2, h:1, solid:true, color:'#2a3038',
+        docs:['tvnote'],
+        lines:['螢幕碎了，裂痕從右下角往外散開。'] },
+      { id:'tin', name:'餅乾鐵盒', col:13, row:1, w:1, h:1, solid:true, color:'#c9a86c',
+        lock:{ type:'code', code:'945', digits:3, hint:'三位數字',
+               locked:['從電視櫃底下拉出來的舊餅乾鐵盒，蓋子上有一個三位數的小鎖。',
+                       '整個櫃子被翻得亂七八糟，只有這個盒子沒被打開。'],
+               wrong:['轉輪沒有對上。'],
+               opened:['三個數字轉到定位，蓋子彈開一條縫。'] },
+        give:'photo',
+        docs:['tin_letter'],
+        openedLines:['鐵盒開著，裡面剩下繳費單和存摺。'] },
+      { id:'table', name:'翻倒的茶几', col:10, row:3, w:2, h:1, solid:false, color:'#5c4d38',
+        lines:['側翻在地毯上，桌腳斷了一支。','底下壓著一地的玻璃。'] },
+      { id:'sofa', name:'沙發', col:9, row:4, w:3, h:1, solid:true, color:'#6b5a6a',
+        battle:'nester',
+        docs:['sofa_note'],
+        lines:['椅面被剖開，海綿整團被扯出來。'] },
+      { id:'nest', name:'海綿堆成的窩', col:12, row:4, w:1, h:1, solid:true, color:'#8a6a4a',
+        need: () => state.battles.nester && state.battles.nester !== 'flee',
+        needLines:['那團東西還趴在上面，靠不過去。'],
+        lock:{ type:'choice',
+               steps:[
+                 { q:'窩裡有東西在反光。要怎麼拿？',
+                   options:['直接伸手進去','用腳把窩撥開','先蹲下來看清楚'], goal:2 },
+                 { q:'看清楚了。雜物底下壓著一根鐵條。',
+                   options:['整個窩掀起來','只把鐵條抽出來'], goal:1 },
+               ],
+               damage:[10,20],
+               hurtFlag:'bitten',
+               failTitle:'裡面還有東西！',
+               fail:['手伸進去的瞬間，有什麼小小的、很快的東西咬了你一口。'],
+               locked:['海綿、碎布、撕爛的傳單，鋪成一個淺淺的凹陷。',
+                       '底下混著一些不屬於這個家的東西。'],
+               opened:['你把鐵條抽出來。是一根被敲扁一端的鐵撬。'] },
+        give:'crowbar',
+        docs:['nest_note'],
+        openedLines:['窩還在，裡面剩下鑰匙和打火機。'] },
+
+      /* — 走道與樓梯 — */
+      { id:'breaker', name:'總電閘箱', col:3, row:8, w:1, h:1, solid:true, color:'#4a5560',
+        lock:{ type:'switch', count:5, shuffle:7,
+               locked:['樓梯下的總電閘箱，箱門上有一道很深的凹痕。',
+                       '裡面五個開關全是關的。扳其中一個，旁邊的也會跟著動。'],
+               wrong:['還有沒扳上的。'],
+               opened:['五個全部扳上，箱子裡的燈亮了。',
+                       '樓上傳來機器一台一台重新啟動的聲音。'] },
+        docs:['breaker'],
+        openedLines:['開關都在上面。'] },
+      { id:'stairs1', name:'上樓的樓梯', col:1, row:8, w:2, h:2, solid:true, color:'#5c4d38',
+        exit:{ to:'f2', col:2, row:7 },
+        lines:['磨石子樓梯，扶手被摸得發亮。',
+               '踏面上一路往上都有踩碎玻璃的白色粉末。'] },
+      { id:'shoe', name:'鞋櫃', col:13, row:8, w:2, h:1, solid:true, color:'#5c4d38',
+        docs:['shoe_note'] },
+      { id:'slipper', name:'拖鞋', col:8, row:7, w:1, h:1, solid:false, color:'#6a6a72',
+        lines:['一雙拖鞋擺在走道中間，一隻正的一隻反的。','旁邊沒有第二雙。'] },
+      { id:'door', name:'鐵捲門', col:5, row:10, w:2, h:1, solid:true, color:'#5b6470',
+        exit:{ to:'outside', col:5, row:3 },
+        lines:['半開的鐵捲門，門板上有幾個往內凹的圓形。'] },
+    ],
+  },
+
+  /* ② 二樓：走廊到浴室一整排洞 */
+  f2: {
+    name: '二樓',
+    spawn: { col:5, row:7 },
+    map: [
+      '#####b######b###',
+      '#wwwwww#ooooooo#',
+      '#wwxwww#oooxooo#',
+      'bwwwwww#ooooooo#',
+      '#wwwwwwbooxoooo#',
+      '#wwwwww#ooooooo#',
+      '#..x...........#',
+      '#.........x....#',
+      '#ww#ww#...x....#',
+      '#ww#ww#........#',
+      '################',
+    ],
+    objects: [
+      /* — 臥室（已經沒人睡了） — */
+      { id:'closet', name:'衣櫃', col:1, row:1, w:2, h:1, solid:true, color:'#5c4d38',
+        docs:['closet_note'],
+        lines:['門板歪在一邊，裡面的東西被整個掃到地上。'] },
+      { id:'desk', name:'書桌', col:4, row:1, w:2, h:1, solid:true, color:'#5c4d38',
+        docs:['desk_note'],
+        lines:['桌面被翻過，只有抽屜還關著——鎖頭壞了，卡死在裡面。'] },
+      { id:'bedframe', name:'空的床架', col:1, row:4, w:3, h:1, solid:true, color:'#6b5a6a',
+        lines:['床架還在，床墊不見了。',
+               '四個角的螺絲都被拆下來排在地上，拆的人很有耐心。',
+               { who:'player', text:'……床墊被搬到樓上去了。' }] },
+      { id:'hole', name:'牆上的洞', col:7, row:2, w:1, h:1, solid:true, color:'#242c36',
+        docs:['hole_note'] },
+
+      /* — 衛浴 — */
+      { id:'towel', name:'毛巾架', col:8, row:1, w:1, h:2, solid:true, color:'#5a6673',
+        lines:['橫桿上掛著兩條毛巾，一條乾透變硬，一條根本沒動過。'] },
+      { id:'heater', name:'熱水器', col:10, row:1, w:1, h:1, solid:true, color:'#8a939d',
+        lock:{ type:'item', item:'pliers', consume:false,
+               locked:['牆上的熱水器，進水那一端的接頭鬆了，一直在滴水。',
+                       '地上的積水就是從這裡來的。',
+                       '手轉不動，得用工具。'],
+               wrong:['這個轉不動接頭。'],
+               opened:['你把接頭鎖緊，滴水停了。',
+                       '房子突然安靜下來——原來那個聲音一直都在。'] },
+        docs:['heater_card'],
+        openedLines:['接頭鎖緊了，不滴了。'] },
+      { id:'mirror', name:'碎掉的鏡子', col:12, row:1, w:2, h:1, solid:true, color:'#8fb8c9',
+        docs:['mirror_note'],
+        lines:['鏡面裂成好幾塊，右半邊整片掉進洗手台裡。'] },
+      { id:'puddle', name:'積水', col:9, row:3, w:3, h:1, solid:false, color:'#3c525e',
+        battle:'lurker',
+        lines:['浴室地板積了一層淺淺的水，映著天花板。'] },
+      { id:'firstaid', name:'急救箱', col:13, row:3, w:1, h:1, solid:true, color:'#dbe2ea',
+        lock:{ type:'item', item:'crowbar', consume:false,
+               locked:['牆上掛著一個白鐵急救箱，鎖扣被撬過又硬鎖回去，卡死了。',
+                       '徒手拉不開。'],
+               wrong:['這個撬不開鎖扣。'],
+               opened:['鎖扣「喀」一聲斷了，箱門彈開。',
+                       '裡面只剩下一捲繃帶和一瓶見底的消毒水。'] },
+        give:'bandage',
+        docs:['firstaid_note'],
+        openedLines:['箱子開著，裡面空了。'] },
+
+      /* — 走道與樓梯 — */
+      { id:'stairs_dn', name:'下樓的樓梯', col:1, row:8, w:2, h:2, solid:true, color:'#5c4d38',
+        exit:{ to:'f1', col:2, row:7 },
+        lines:['往下回到一樓。'] },
+      { id:'stairs_up', name:'上樓的樓梯', col:4, row:8, w:2, h:2, solid:true, color:'#5c4d38',
+        exit:{ to:'room', col:10, row:9 },
+        lines:['再往上一層。上面原本是神明廳。',
+               '這一段樓梯特別乾淨，被掃過。'] },
+      { id:'hallwin', name:'樓梯間的窗', col:8, row:6, w:2, h:1, solid:false, color:'#4a6470',
+        lines:['玻璃早就沒了，只剩下框。',
+               '風從這裡灌進來，走廊的灰被吹成一道一道的。'] },
+    ],
+  },
+
+  /* ③ 三樓：神明廳改的播音室。器材佔了整個神明桌 */
   room: {
-    name: '廣播室',
+    name: '播音室',
     spawn: { col:8, row:8 },
     map: [
       '################',
@@ -1852,27 +2275,46 @@ const AREAS = {
       '#####..###..####',
     ],
     objects: [
-      /* — 生活的部分 — */
-      { id:'bed', name:'床墊', col:1, row:2, w:2, h:2, solid:true, color:'#6b5a6a',
+
+      /* — 他把整個家搬上來了 — */
+      { id:'bed', name:'床墊', col:1, row:5, w:2, h:2, solid:true, color:'#6b5a6a',
         rest:true,
+        docs:['bed_note'],
         lines:['直接鋪在地上的床墊，被子堆成一團，中間還留著睡過的形狀。',
-               '枕頭邊放著一副耳機，線纏在被子裡。'] },
-      { id:'blanket', name:'掉在地上的毯子', col:3, row:4, w:1, h:1, solid:false, color:'#7a6a5a',
+               '床架沒有一起搬上來，只有床墊。'] },
+      { id:'blanket', name:'掉在地上的毯子', col:3, row:6, w:1, h:1, solid:false, color:'#7a6a5a',
         lines:['半條拖在地上，另一半還掛在床墊邊。'] },
-      { id:'kettle', name:'熱水壺', col:1, row:5, w:1, h:1, solid:true, color:'#8a939d',
-        lines:['插頭已經拔掉了。',
-               '旁邊疊著三個泡麵碗，湯都沒倒，乾成一圈一圈深色的痕。',
-               { who:'player', text:'……走之前是真的沒空收。' }] },
-      { id:'fridge', name:'小冰箱', col:4, row:2, w:1, h:2, solid:true, color:'#6a7078',
+      { id:'fridge', name:'小冰箱', col:4, row:7, w:1, h:1, solid:true, color:'#6a7078',
         docs:['fridgenote'],
-        lines:['沒有插電。門開著一條縫，裡面清空了。'] },
-      { id:'laundry', name:'曬衣繩', col:5, row:2, w:1, h:1, solid:true, color:'#5a6673',
-        lines:['一條繩子從牆角拉到機櫃上，只剩下幾個夾子。',
-               '繩子的一端是用麥克風架撐著的。'] },
-      { id:'calendar', name:'月曆', col:10, row:1, w:1, h:1, solid:true, color:'#6b5a42',
+        lines:['插頭還插著，但沒有電。門上貼滿便條。'] },
+      { id:'kettle', name:'熱水壺', col:6, row:2, w:1, h:1, solid:true, color:'#8a939d',
+        lines:['插頭還插著，保溫燈是暗的。'] },
+      { id:'noodles', name:'泡麵碗', col:9, row:4, w:1, h:1, solid:true, color:'#b8c2cc',
+        lines:['三個泡麵碗疊在混音器材旁邊，湯都沒倒，乾成一圈一圈深色的痕。',
+               { who:'player', text:'……吃飯跟工作在同一張桌子上。' }] },
+      { id:'calendar', name:'月曆', col:5, row:1, w:1, h:1, solid:true, color:'#6b5a42',
         docs:['calendar'] },
-      { id:'plant', name:'盆栽', col:5, row:5, w:1, h:1, solid:true, color:'#4f7a4a',
-        lines:['葉子還朝著落地窗的方向長。','土是乾的，很久沒有人澆了。'] },
+
+      /* — 神明廳留下來的 — */
+      { id:'shrine', name:'神明彩', col:1, row:1, w:3, h:1, solid:true, color:'#7a2f2c',
+        lines:['牆上還掛著神明彩，布面褪成暗紅色。',
+               '前面被一塊布蓋起來了，蓋得很平整，四個角都拉過。'] },
+      { id:'altar', name:'神桌', col:1, row:3, w:2, h:1, solid:true, color:'#8a3f2c',
+        lock:{ type:'item', item:'photo', consume:true,
+               locked:['一張老神桌，紅色桌巾還鋪著，上面擺的卻是混音器材和一捲一捲的線。',
+                       '器材底下壓著一張紙，抽不出來。',
+                       '桌面正中央空出一小塊，什麼都沒放，也沒有積灰。'],
+               wrong:['這個放上去不對。'],
+               opened:['你把照片立在空出來的那一塊上，靠著香爐。',
+                       '器材底下那張紙鬆了，可以抽出來了。',
+                       { who:'player', text:'……先這樣吧。' }] },
+        docs:['altar_note','photo_back'],
+        openedLines:['照片立在桌上，正對著門口。'] },
+      { id:'censer', name:'香爐', col:3, row:3, w:1, h:1, solid:true, color:'#6d7783',
+        lines:['香灰是滿的，表面壓得很平。',
+               '插著三支沒點過的香，一直沒有拔掉。'] },
+      { id:'tablets', name:'收起來的牌位', col:1, row:4, w:2, h:1, solid:true, color:'#6b5c45',
+        docs:['tablets_note'] },
 
       /* — 廣播器材 — */
       { id:'console', name:'主控台', col:11, row:3, w:4, h:1, solid:true, color:'#39424e',
@@ -1885,6 +2327,9 @@ const AREAS = {
                        '主電源的保險絲座空著。'],
                wrong:['這個裝不進保險絲座。'],
                opened:['保險絲卡進去的瞬間，機櫃那邊傳來一聲低鳴。','控台的燈一格一格亮了起來。'] },
+        need: () => state.opened.breaker,
+        needLines:['控台完全沒有反應，連指示燈都不亮。',
+                   { who:'player', text:'這一層的電是從樓下上來的。' }],
         onOpen: () => {
           state.flags.power = true;
           const t = findObj('terminal');
@@ -1971,21 +2416,13 @@ const AREAS = {
 
       { id:'cup', name:'馬克杯', col:9,  row:7, w:1, h:1, solid:false, color:'#77837b', art:'cup',
         lines:['杯底一圈乾掉的痕跡。','放在地上，離桌子有點遠。'] },
-      { id:'breaker', name:'電閘箱', col:3, row:1, w:1, h:1, solid:true, color:'#4a5560',
-        lock:{ type:'switch', count:5, shuffle:7,
-               locked:['牆上的電閘箱，裡面五個開關全是關的。',
-                       '扳其中一個，旁邊的也會跟著動。'],
-               wrong:['還有沒扳上的。'],
-               opened:['五個全部扳上，箱子裡的燈亮了。'] },
-        docs:['breaker'],
-        openedLines:['開關都在上面。'] },
-
       { id:'monitor', name:'監控台', col:9, row:6, w:1, h:1, solid:true, color:'#39424e',
-        lock:{ type:'seq',
-               buttons:['上','下','A','B'],
+        lock:{ type:'seq', pad:true,
+               buttons:['上','下','左','右','X','Y','A','B'],
                seq:['上','上','下','下','B','A','B','A'],
                locked:['一台獨立的監控台，螢幕黑著。',
-                       '鍵盤上只剩四個鍵還按得動：上、下、A、B。'],
+                       '螢幕前擺著一支老遊戲機的手把，線還接在主機上。',
+                       '十字鍵四個方向和 X、Y、A、B 四顆鈕都按得動。'],
                wrong:['螢幕閃了一下就暗回去。'],
                opened:['螢幕亮起來，跑出一排一排的舊紀錄。'] },
         docs:['monitorlog','konami'],
@@ -2020,15 +2457,15 @@ const AREAS = {
       { id:'sill', name:'窗邊', col:7, row:10, w:1, h:1, solid:true, color:'#4a6470',
         vista:'window_view', gather:'down',
         lines:['窗邊留了一塊沒堆東西的地方。'] },
-      { id:'door', name:'門', col:10, row:10, w:2, h:1, solid:true, color:'#5b6470',
-        exit:{ to:'outside', col:5, row:3 },
-        lines:['回到外面。','門一帶上，屋裡的機器聲就被關在後面。'] },
+      { id:'downstairs', name:'樓梯口', col:10, row:10, w:2, h:1, solid:true, color:'#5b6470',
+        exit:{ to:'f2', col:5, row:7 },
+        lines:['往下回到二樓。'] },
     ],
   },
 
-  /* ② 陽台：曬衣服、堆雜物，看得到遠景 */
+  /* ④ 後陽台：曬衣服、堆雜物，看得到遠景 */
   balcony: {
-    name: '陽台',
+    name: '後陽台',
     spawn: { col:6, row:3 },
     outdoor: true,
     map: [
@@ -2084,9 +2521,9 @@ const AREAS = {
     ],
   },
 
-  /* ③ 天線台：最高處，視野最開 */
+  /* ⑤ 頂樓：最高處，視野最開 */
   antenna: {
-    name: '天線台',
+    name: '頂樓',
     spawn: { col:4, row:3 },
     outdoor: true,
     sky: 'high',
@@ -2110,12 +2547,13 @@ const AREAS = {
         openedLines:['天線立得很正。'] },
       { id:'panel', name:'配電箱', col:3, row:2, w:1, h:1, solid:true, color:'#6a7078',
         lock:{ type:'wire',
-               wires:[{ name:'紅線',   ports:['黃孔','綠孔','接地孔'], goal:0 },
-                      { name:'藍線',   ports:['黃孔','綠孔','接地孔'], goal:1 },
-                      { name:'鼠標記', ports:['黃孔','綠孔','接地孔'], goal:2 }],
-               locked:['配電箱的蓋子沒鎖，三條線全掉在底下。',
-                       '插孔有三個：黃、綠，還有一個標著接地符號。',
-                       '第三條線的端頭貼著一張小小的老鼠貼紙。'],
+               wires:[{ name:'紅線',   ports:['黃孔','綠孔','藍孔','紅孔','備用孔','接地孔'], goal:0 },
+                      { name:'藍線',   ports:['黃孔','綠孔','藍孔','紅孔','備用孔','接地孔'], goal:1 },
+                      { name:'黑線',   ports:['黃孔','綠孔','藍孔','紅孔','備用孔','接地孔'], goal:4 },
+                      { name:'鼠標記', ports:['黃孔','綠孔','藍孔','紅孔','備用孔','接地孔'], goal:5 }],
+               locked:['配電箱的蓋子沒鎖，四條線全掉在底下。',
+                       '插孔有六個：黃、綠、藍、紅，一個標著「備用」，還有一個標著接地符號。',
+                       '有一條線的端頭貼著一張小小的老鼠貼紙。'],
                wrong:['接錯了，指示燈閃了一下紅。'],
                opened:['三條線各就各位，指示燈轉成綠的。'] },
         docs:['wiring'],
@@ -2158,11 +2596,11 @@ const DOOR_CLEARED = ['你把這裡的東西都看過一遍了。',
                       { who:'player', text:'剩下的，得問他本人。' }];
 
 /* 帶子播出去之後的結局台詞 */
-const DOOR_ENDING = ['房間裡的機器全部轉了起來，ON AIR 的燈映在牆上。',
+const DOOR_ENDING = ['你彎腰鑽出鐵捲門。回頭看，三樓的窗戶亮著。',
                      { v:'battle', id:'echo',
                        win:'那個聲音沒有再出現。',
                        lose:'牆裡還留著半拍的延遲，你決定不去聽。' },
-                     '訊號正在往外送。屋外的電線桿嗡嗡作響。',
+                     '訊號正在往外送，旁邊的電線桿嗡嗡作響。',
                      { who:'player', text:'……接下來就是我的節目了。' }];
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -2181,6 +2619,76 @@ const PALETTE = {
 };
 
 const ART = {
+  glassbits: `
+6,6,w,6,6,6,6,6
+6,6,6,6,6,w,6,6
+w,6,6,6,7,6,6,6
+6,6,w,6,6,6,6,w
+6,w,6,6,6,6,6,6
+6,6,6,6,w,6,7,6
+6,6,6,w,6,6,6,6
+6,w,6,6,6,6,6,6
+`,
+  bullet: `
+2,2,2,2,2,2,2,2
+1,k,k,1,1,1,1,1
+1,k,0,1,1,k,k,1
+1,1,1,1,1,k,0,1
+1,1,k,k,1,1,1,1
+1,1,k,0,1,1,k,k
+1,1,1,1,1,1,k,0
+0,0,0,0,0,0,0,0
+`,
+  e_nester: `
+.,.,.,b,b,.,.,.
+.,.,b,y,y,b,.,.
+.,b,b,k,k,b,b,.
+b,b,b,b,b,b,b,b
+b,b,w,b,b,w,b,b
+.,b,b,b,b,b,b,.
+.,.,b,.,.,b,.,.
+.,.,.,.,.,.,.,.
+`,
+  e_lurker: `
+.,.,.,.,.,.,.,.
+.,.,8,8,8,8,.,.
+.,8,9,8,8,9,8,.
+8,8,8,k,k,8,8,8
+8,8,k,8,8,k,8,8
+.,8,8,8,8,8,8,.
+8,.,8,.,.,8,.,8
+.,8,.,8,8,.,8,.
+`,
+  i_crowbar: `
+.,.,.,.,.,7,7,.
+.,.,.,.,7,7,.,.
+.,.,.,7,7,.,.,.
+.,.,7,7,.,.,.,.
+.,7,7,.,.,.,.,.
+7,7,.,.,.,.,.,.
+6,.,.,.,.,.,.,.
+6,6,.,.,.,.,.,.
+`,
+  i_bandage: `
+.,.,.,.,.,.,.,.
+.,w,w,w,w,w,w,.
+.,w,r,w,w,r,w,.
+.,w,w,r,r,w,w,.
+.,w,w,r,r,w,w,.
+.,w,r,w,w,r,w,.
+.,w,w,w,w,w,w,.
+.,.,.,.,.,.,.,.
+`,
+  i_photo: `
+.,.,.,.,.,.,.,.
+.,w,w,w,w,w,w,.
+.,w,9,9,9,9,w,.
+.,w,k,9,9,k,w,.
+.,w,y,y,y,y,w,.
+.,w,w,w,w,w,w,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
   i_pliers: `
 .,.,.,7,7,.,.,.
 .,.,7,6,6,7,.,.
@@ -2430,6 +2938,7 @@ function loadArea(id, col, row){
   AREA.id = id;
   if(id === 'antenna') state.flags.rooftop = true;
   if(id === 'room') state.flags.entered = true;
+  lastHurtCell = '';
   MAP = AREA.map;
   COLS = MAP[0].length; ROWS = MAP.length;
   OBJ = AREA.objects;
@@ -4650,6 +5159,19 @@ function update(dt){
     const keep = MATE_GAP * 3 + 40;              // 只留夠用的長度
     while(trail.length > 2 && trail[trail.length-1].d - trail[0].d > keep) trail.shift();
   }
+  /* 踩進會受傷的地磚（玻璃碎片之類）：同一格只算一次 */
+  {
+    const cell = here().join(',');
+    if(cell !== lastHurtCell){
+      lastHurtCell = cell;
+      const [hc, hr] = here();
+      const td = TILES[(MAP[hr] || '')[hc]];
+      if(td && td.hurt && state.started){
+        floatHurt(hurtPlayer(rnd(td.hurt)));
+        state.flags.cut = true;
+      }
+    }
+  }
   P.t += dt;
   updateMates(dt);
 }
@@ -4914,7 +5436,9 @@ function renderInv(){
 function openPuzzle(o){
   state.puzzle = o; state.code = ''; state.pick = 0;
   $('puzTitle').textContent = o.name;
-  $('puzMeta').textContent = o.lock.type === 'code' ? 'LOCKED' : 'NEEDS ITEM';
+  $('puzMeta').textContent = { code:'LOCKED', item:'NEEDS ITEM', seq:'SEQUENCE',
+                               wire:'WIRING', tune:'TUNING', switch:'BREAKER',
+                               choice:'CHOICE' }[o.lock.type] || 'LOCKED';
   $('puzDesc').innerHTML = pickLines(o.lock.locked).map(t => '<p>' + asText(t) + '</p>').join('');
   $('puzMsg').textContent = '';
   hideToast();
@@ -4925,6 +5449,7 @@ function openPuzzle(o){
   $('puzBoard').style.display = board ? 'block' : 'none';
   $('puzKbd').textContent = T2 === 'code' ? '數字鍵輸入　Enter 確認　ESC 關閉'
                           : T2 === 'item' ? '←→ 選道具　Enter 使用　ESC 關閉'
+                          : (T2 === 'seq' && o.lock.pad) ? '方向鍵與 X Y A B 鍵也可以　ESC 關閉'
                           : 'ESC 關閉';
   if(T2 === 'code'){ buildKeypad(o); drawCode(o); }
   else if(T2 === 'item') renderChips();
@@ -4962,7 +5487,7 @@ function initBoard(o){
   const L = o.lock;
   if(L.type === 'seq') L._in = [];
   if(L.type === 'choice') L._step = 0;
-  if(L.type === 'wire' && !L._at) L._at = L.wires.map(() => 0);
+  if(L.type === 'wire' && !L._at) L._at = L.wires.map(() => -1);   // -1 = 還沒接上
   if(L.type === 'tune' && !L._at) L._at = L.dials.map(d => d.min);
   if(L.type === 'switch' && !L._at){
     /* 從「全部扳上」倒著隨機扳幾次，保證一定解得開 */
@@ -4983,6 +5508,227 @@ function boardSolved(o){
   return false;
 }
 
+/* 手把盤面：十字鍵 + 兩顆圓鈕，只有上／下／A／B 按得動 */
+function padPress(o, key){
+  const L = o.lock;
+  if(!L || !L._in) return;
+  L._in.push(key);
+  if(L._in.length >= L.seq.length){
+    if(boardSolved(o)) return solve(o);
+    puzWrong(L.wrong || ['沒有反應。']);
+    L._in = [];
+  }
+  buildBoard(o);
+}
+
+function buildPad(o, box){
+  const L = o.lock;
+  const wrap = document.createElement('div'); wrap.className = 'gamepad';
+  const body = document.createElement('div'); body.className = 'gp-body';
+
+  const dpad = document.createElement('div'); dpad.className = 'gp-dpad';
+  [['u','上','▲'], ['l','左','◀'], ['m','',''], ['r','右','▶'], ['d','下','▼']]
+    .forEach(([cls, key, label]) => {
+      const b = document.createElement('button');
+      b.className = 'gp-d ' + cls;
+      b.textContent = label;
+      if(key) b.onclick = () => padPress(o, key);
+      else b.disabled = true;
+      dpad.appendChild(b);
+    });
+
+  const mid = document.createElement('div'); mid.className = 'gp-mid';
+  const lbl = document.createElement('div'); lbl.className = 'lbl'; lbl.textContent = 'INPUT';
+  const dots = document.createElement('div'); dots.className = 'pdots';
+  for(let i = 0; i < L.seq.length; i++){
+    const d = document.createElement('i');
+    if(i < L._in.length) d.className = 'f';
+    dots.appendChild(d);
+  }
+  mid.appendChild(lbl); mid.appendChild(dots);
+
+  const face = document.createElement('div'); face.className = 'gp-face';
+  ['X', 'Y', 'A', 'B'].forEach(k => {
+    const b = document.createElement('button');
+    b.className = 'gp-r ' + k.toLowerCase(); b.textContent = k;
+    b.onclick = () => padPress(o, k);
+    face.appendChild(b);
+  });
+
+  body.appendChild(dpad); body.appendChild(mid); body.appendChild(face);
+  wrap.appendChild(body);
+  box.appendChild(wrap);
+}
+
+/* ── 接線：從線頭拉一條線到插孔 ──────────────────────────────
+   支援拖曳，也支援「點線再點孔」（手機比較好按）。
+   一個孔只吃一條線，插進去會把原本那條擠掉。 */
+const WIRE_COL = { '紅':'#d1443c', '藍':'#4a8fb0', '黑':'#20242a', '黃':'#c9a13c',
+                   '綠':'#5c9a7a', '白':'#dbe2ea', '鼠':'#8a939d' };
+const PORT_COL = { '黃':'#c9a13c', '綠':'#5c9a7a', '藍':'#4a8fb0', '紅':'#d1443c',
+                   '備':'#7c8794', '接':'#6b5c45' };
+const SVGNS = 'http://www.w3.org/2000/svg';
+let wireUI = null;
+
+function wireColor(n){ return WIRE_COL[n[0]] || '#8a939d'; }
+function portColor(n){ return PORT_COL[n[0]] || '#7c8794'; }
+
+function wirePathD(x1, y1, x2, y2){
+  const sag = Math.max(16, Math.abs(x2 - x1) * 0.2);
+  return 'M ' + x1 + ' ' + y1 + ' C ' + (x1 + 34) + ' ' + (y1 + sag) + ', '
+       + (x2 - 34) + ' ' + (y2 + sag) + ', ' + x2 + ' ' + y2;
+}
+
+function drawWires(live){
+  const U = wireUI; if(!U) return;
+  const base = U.wrap.getBoundingClientRect();
+  const at = (el, right) => {
+    const r = el.getBoundingClientRect();
+    return [ (right ? r.right : r.left) - base.left, r.top + r.height/2 - base.top ];
+  };
+  U.svg.innerHTML = '';
+  const line = (x1, y1, x2, y2, col, dim) => {
+    const shadow = document.createElementNS(SVGNS, 'path');
+    shadow.setAttribute('d', wirePathD(x1, y1 + 2, x2, y2 + 2));
+    shadow.setAttribute('stroke', 'rgba(0,0,0,.55)');
+    shadow.setAttribute('stroke-width', '6'); shadow.setAttribute('fill', 'none');
+    shadow.setAttribute('stroke-linecap', 'round');
+    U.svg.appendChild(shadow);
+    const path = document.createElementNS(SVGNS, 'path');
+    path.setAttribute('d', wirePathD(x1, y1, x2, y2));
+    path.setAttribute('stroke', col);
+    path.setAttribute('stroke-width', '4.5'); path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-linecap', 'round');
+    if(dim) path.setAttribute('opacity', '.75');
+    U.svg.appendChild(path);
+  };
+
+  U.L.wires.forEach((w, i) => {
+    const p = U.L._at[i];
+    if(p < 0 || (live && live.i === i)) return;
+    const [x1, y1] = at(U.plugs[i], true);
+    const [x2, y2] = at(U.socks[p], false);
+    line(x1, y1, x2, y2, wireColor(w.name));
+  });
+  if(live){
+    const [x1, y1] = at(U.plugs[live.i], true);
+    line(x1, y1, live.x - base.left, live.y - base.top, wireColor(U.L.wires[live.i].name), true);
+  }
+
+  U.L.wires.forEach((w, i) => U.plugs[i].classList.toggle('done', U.L._at[i] >= 0));
+  U.socks.forEach((s, k) => s.classList.toggle('full', U.L._at.includes(k)));
+}
+
+function wireConnect(i, p){
+  const L = wireUI.L;
+  if(p >= 0) L._at.forEach((v, k) => { if(v === p && k !== i) L._at[k] = -1; });  // 一孔一線
+  L._at[i] = p;
+  hideToast();
+  drawWires();
+}
+
+function buildWirePanel(o, box){
+  const L = o.lock;
+  const wrap = document.createElement('div'); wrap.className = 'wirebox';
+  const svg = document.createElementNS(SVGNS, 'svg'); svg.setAttribute('class', 'wiresvg');
+  wrap.appendChild(svg);
+
+  const left = document.createElement('div'); left.className = 'wirecol';
+  const right = document.createElement('div'); right.className = 'wirecol';
+  const plugs = [], socks = [];
+
+  L.wires.forEach((w, i) => {
+    const el = document.createElement('div'); el.className = 'plug';
+    const nm = document.createElement('span'); nm.textContent = w.name;
+    const cap = document.createElement('span'); cap.className = 'tipcap';
+    cap.style.background = wireColor(w.name);
+    el.appendChild(nm); el.appendChild(cap);
+    el.dataset.i = i;
+    left.appendChild(el); plugs.push(el);
+  });
+
+  L.wires[0].ports.forEach((p, k) => {
+    const el = document.createElement('div'); el.className = 'sock';
+    const nm = document.createElement('span'); nm.textContent = p;
+    const hole = document.createElement('span'); hole.className = 'holecap';
+    hole.style.boxShadow = 'inset 0 0 0 2px ' + portColor(p) + ', inset 0 2px 4px rgba(0,0,0,.9)';
+    if(p[0] === '接') hole.textContent = '⏚';
+    el.appendChild(nm); el.appendChild(hole);
+    el.dataset.k = k;
+    right.appendChild(el); socks.push(el);
+  });
+
+  wrap.appendChild(left); wrap.appendChild(right);
+  box.appendChild(wrap);
+
+  const acts = document.createElement('div'); acts.className = 'wireacts';
+  const go = document.createElement('button');
+  go.className = 'pbtn go'; go.textContent = '送電';
+  go.onclick = () => {
+    if(boardSolved(o)) return solve(o);
+    puzWrong(L.wrong || ['沒有反應。']);
+  };
+  const clr = document.createElement('button');
+  clr.className = 'pbtn'; clr.textContent = '全部拔掉';
+  clr.onclick = () => { L._at = L.wires.map(() => -1); hideToast(); drawWires(); };
+  const note = document.createElement('span');
+  note.className = 'note'; note.style.margin = '0';
+  note.textContent = '拖著線頭拉到插孔，或點一下線再點一下孔。' + L.wires.length + ' 條都接對再送電。';
+  acts.appendChild(go); acts.appendChild(clr); acts.appendChild(note);
+  box.appendChild(acts);
+
+  wireUI = { wrap, svg, plugs, socks, L, sel:-1, drag:null };
+  requestAnimationFrame(() => drawWires());
+
+  const hitSock = (x, y) => {
+    const el = document.elementFromPoint(x, y);
+    const s = el && el.closest && el.closest('.sock');
+    return s ? +s.dataset.k : -1;
+  };
+
+  wrap.addEventListener('pointerdown', e => {
+    const plug = e.target.closest('.plug');
+    const sock = e.target.closest('.sock');
+    if(plug){
+      e.preventDefault();
+      const i = +plug.dataset.i;
+      wireUI.drag = { i, x:e.clientX, y:e.clientY, moved:false };
+      wrap.setPointerCapture(e.pointerId);
+      return;
+    }
+    if(sock && wireUI.sel >= 0){                      // 點選模式：先點線再點孔
+      e.preventDefault();
+      wireConnect(wireUI.sel, +sock.dataset.k);
+      plugs[wireUI.sel].classList.remove('sel');
+      wireUI.sel = -1;
+    }
+  });
+
+  wrap.addEventListener('pointermove', e => {
+    const d = wireUI.drag; if(!d) return;
+    if(!d.moved && Math.hypot(e.clientX - d.x, e.clientY - d.y) < 6) return;
+    d.moved = true;
+    drawWires({ i:d.i, x:e.clientX, y:e.clientY });
+  });
+
+  const finish = e => {
+    const d = wireUI.drag; if(!d) return;
+    wireUI.drag = null;
+    if(!d.moved){                                     // 只是點一下 → 選起來
+      plugs.forEach(p => p.classList.remove('sel'));
+      if(wireUI.sel === d.i){ wireUI.sel = -1; }
+      else { wireUI.sel = d.i; plugs[d.i].classList.add('sel'); }
+      drawWires();
+      return;
+    }
+    wireConnect(d.i, hitSock(e.clientX, e.clientY));
+    plugs.forEach(p => p.classList.remove('sel'));
+    wireUI.sel = -1;
+  };
+  wrap.addEventListener('pointerup', finish);
+  wrap.addEventListener('pointercancel', () => { wireUI.drag = null; drawWires(); });
+}
+
 function buildBoard(o){
   const L = o.lock, box = $('puzBoard');
   box.innerHTML = '';
@@ -4993,6 +5739,7 @@ function buildBoard(o){
   };
 
   if(L.type === 'seq'){
+    if(L.pad){ buildPad(o, box); return; }
     const r = mkRow('');
     L.buttons.forEach(b => {
       const btn = document.createElement('button');
@@ -5054,30 +5801,7 @@ function buildBoard(o){
     r.appendChild(dots);
   }
 
-  if(L.type === 'wire'){
-    L.wires.forEach((w, i) => {
-      const r = mkRow(w.name);
-      w.ports.forEach((p, k) => {
-        const btn = document.createElement('button');
-        btn.className = 'pbtn' + (L._at[i] === k ? ' on' : '');
-        btn.textContent = p;
-        btn.onclick = () => { L._at[i] = k; hideToast(); buildBoard(o); };
-        r.appendChild(btn);
-      });
-    });
-    const go = mkRow('');
-    const ok = document.createElement('button');
-    ok.className = 'pbtn on'; ok.textContent = '送電';
-    ok.onclick = () => {
-      if(boardSolved(o)) return solve(o);
-      puzWrong(L.wrong || ['沒有反應。']);
-    };
-    go.appendChild(ok);
-    const note = document.createElement('span');
-    note.className = 'note'; note.style.margin = '0';
-    note.textContent = '三條都接對再送電。';
-    go.appendChild(note);
-  }
+  if(L.type === 'wire'){ buildWirePanel(o, box); return; }
 
   if(L.type === 'tune'){
     L.dials.forEach((d, i) => {
@@ -5139,23 +5863,48 @@ function paintSignal(o){
 }
 
 /* 密碼鎖 */
+/* ── 密碼鎖：LED 顯示 + 實體感鍵盤 ── */
 function drawCode(o){
-  const n = o.lock.digits || 4;
-  let s = '';
-  for(let i=0;i<n;i++) s += (state.code[i] || '_') + ' ';
-  $('codeDisplay').textContent = s.trim();
+  const n = o.lock.digits || 4, box = $('codeDisplay');
+  box.className = 'code';
+  box.innerHTML = '';
+  for(let i = 0; i < n; i++){
+    const d = document.createElement('i');
+    d.className = 'dg' + (state.code[i] ? ' on' : '') + (i === state.code.length ? ' cur' : '');
+    d.textContent = state.code[i] || '';
+    box.appendChild(d);
+  }
 }
+
 function buildKeypad(o){
   const pad = $('keypad'); pad.innerHTML = '';
   ['1','2','3','4','5','6','7','8','9','←','0','確認'].forEach(k => {
     const b = document.createElement('button');
-    b.className = 'key'; b.textContent = k;
+    b.className = 'key' + (k === '確認' ? ' ok' : k === '←' ? ' del' : '');
+    b.dataset.k = k;
+    b.textContent = k;
     b.onclick = () => keyIn(k);
     pad.appendChild(b);
   });
 }
+
+/* 用實體鍵盤打字時，畫面上的鍵也要跟著跳一下 */
+function padFlash(k){
+  const b = document.querySelector('#keypad .key[data-k="' + k + '"]');
+  if(!b) return;
+  b.classList.add('hit');
+  setTimeout(() => b.classList.remove('hit'), 90);
+}
+
+function codeFlash(cls){
+  const box = $('codeDisplay'); if(!box) return;
+  box.classList.add(cls);
+  if(cls === 'bad') setTimeout(() => box.classList.remove('bad'), 600);
+}
+
 function keyIn(k){
   const o = state.puzzle; if(!o) return;
+  padFlash(k);
   if(k === '←'){ state.code = state.code.slice(0,-1); }
   else if(k === '確認'){ return submitCode(); }
   else if(/^[0-9]$/.test(k) && state.code.length < (o.lock.digits || 4)){ state.code += k; }
@@ -5164,9 +5913,10 @@ function keyIn(k){
 }
 function submitCode(){
   const o = state.puzzle; if(!o) return;
-  if(state.code === o.lock.code){ solve(o); return; }
+  if(state.code === o.lock.code){ codeFlash('good'); return solve(o); }
   puzWrong(o.lock.wrong || ['數字沒有對上。']);
   state.code = ''; drawCode(o);
+  codeFlash('bad');                 // 要放在 drawCode 之後，不然會被重設掉
 }
 
 /* 道具鎖 */
@@ -5186,6 +5936,12 @@ function renderChips(){
 }
 function useItem(o, id){
   if(!o){ say('道具', ['「' + ITEMS[id].name + '」現在用不上。']); return; }
+  /* 拖道具上去也要檢查前置條件，不然可以繞過 need 直接解開 */
+  if(o.need && !o.need()){
+    const t = o.needLines || ['現在還不行。'];
+    state.puzzle ? puzWrong(t) : say(o.name, t);
+    return;
+  }
   if(!o.lock || state.opened[o.id]){
     const t = ['「' + ITEMS[id].name + '」在' + o.name + '上派不上用場。'];
     state.puzzle ? puzWrong(t) : say(o.name, t);
@@ -5236,8 +5992,9 @@ addEventListener('pointerup', e => {
   if(!drag) return;
   const d = drag; drag = null;
   if(d.el) d.el.remove();
-  if(!d.moved){                                   // 只是點一下 = 看說明
+  if(!d.moved){                                   // 只是點一下 = 看說明，補給品直接用掉
     if(state.puzzle) useItem(state.puzzle, d.id);
+    else if(ITEMS[d.id].heal) healItem(d.id);
     else say(ITEMS[d.id].name, [ITEMS[d.id].desc]);
     return;
   }
@@ -5863,10 +6620,21 @@ function renderBattle(){
 
 function useBattleItem(id){
   const B = state.battle;
-  const use = ITEMS[id].battle;
+  const it = ITEMS[id];
   B.picking = false;
+  if(it.heal){                                    // 補給品：回血並消耗掉，算一個回合
+    const before = B.p.hp;
+    B.p.hp = Math.min(B.p.max, B.p.hp + it.heal);
+    dropItem(id);
+    B.log.push(it.use || '你處理了一下。');
+    B.log.push('恢復了 ' + Math.round(B.p.hp - before) + ' 點。');
+    renderBattle();
+    enemyTurn();
+    return;
+  }
+  const use = it.battle;
   if(!use){
-    B.log.push('「' + ITEMS[id].name + '」在這裡派不上用場。');
+    B.log.push('「' + it.name + '」在這裡派不上用場。');
     renderBattle();
     return;                                     // 沒效果就不算一回合
   }
@@ -6700,11 +7468,11 @@ document.querySelector('.vwrap').addEventListener('pointerdown', e => {
 
 /* ── 繪製 ── */
 function drawTile(def,c,r){
-  const a = def.art && artCanvas(def.art);
+  const rec = getImage(def.sprite);                    // 有圖片就優先用圖片
+  if(rec && rec.ok){ ctx.drawImage(rec.img, c*T, r*T, T, T); return; }
+  const a = def.art && artCanvas(def.art);             // 其次是 CSV 像素圖
   if(a){ ctx.drawImage(a, c*T, r*T, T, T); return; }
-  const rec = getImage(def.sprite);
-  if(rec && rec.ok) ctx.drawImage(rec.img, c*T, r*T, T, T);
-  else { ctx.fillStyle = def.color; ctx.fillRect(c*T, r*T, T, T); }
+  ctx.fillStyle = def.color; ctx.fillRect(c*T, r*T, T, T);
 }
 /* 沒有圖的物件會畫色塊加名字，其中 fillText 相對貴。
    內容不會變，所以整個物件先畫進一張小圖快取起來 */
@@ -6731,10 +7499,10 @@ function objCanvas(o){
 
 function drawObj(o){
   const x = o.col*T, y = o.row*T, w = o.w*T, h = o.h*T;
+  const rec = getImage(o.sprite);                      // 填了 sprite 就用圖片
   const a = o.art && artCanvas(o.art);
-  const rec = a ? null : getImage(o.sprite);
-  if(a) ctx.drawImage(a, x, y, w, h);
-  else if(rec && rec.ok) ctx.drawImage(rec.img, x, y, w, h);
+  if(rec && rec.ok) ctx.drawImage(rec.img, x, y, w, h);
+  else if(a) ctx.drawImage(a, x, y, w, h);
   else ctx.drawImage(objCanvas(o), x, y);
   if(o.docs){
     const left = visibleDocs(o).filter(k => !state.read[k]).length;
@@ -6903,11 +7671,11 @@ function tileLayer(){
   for(let r=0;r<ROWS;r++) for(let c2=0;c2<COLS;c2++){
     const d = TILES[MAP[r][c2]];
     if(!d || d.void) continue;
+    const rec = getImage(d.sprite);                    // 圖片優先
+    if(rec && rec.ok){ c.drawImage(rec.img, c2*T, r*T, T, T); continue; }
     const a = d.art && artCanvas(d.art);
     if(a){ c.drawImage(a, c2*T, r*T, T, T); continue; }
-    const rec = getImage(d.sprite);
-    if(rec && rec.ok) c.drawImage(rec.img, c2*T, r*T, T, T);
-    else { c.fillStyle = d.color; c.fillRect(c2*T, r*T, T, T); }
+    c.fillStyle = d.color; c.fillRect(c2*T, r*T, T, T);
   }
   AREA.tileLayer = cv;
   return cv;
@@ -6918,6 +7686,45 @@ function playerTag(){
   const t = (me.titles || '').trim();
   return (!t || t === '無稱號' || t === '無') ? '' : t;
 }
+/* 踩到玻璃之類的地磚會扣血，上面浮一個數字 */
+const hurtPops = [];
+let lastHurtCell = '';
+
+function floatHurt(n){
+  hurtPops.push({ n, x:P.x + T/2, y:P.y, t0:performance.now() });
+  if(hurtPops.length > 6) hurtPops.shift();
+}
+
+function drawHurtPops(){
+  const now = performance.now();
+  for(let i = hurtPops.length - 1; i >= 0; i--){
+    const h = hurtPops[i];
+    const k = (now - h.t0) / 950;
+    if(k >= 1){ hurtPops.splice(i, 1); continue; }
+    ctx.font = 'bold 11px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(6,8,11,' + (1 - k) * 0.8 + ')';
+    ctx.fillText('-' + h.n, Math.round(h.x) + 1, Math.round(h.y - k * 20) + 1);
+    ctx.fillStyle = 'rgba(209,68,60,' + (1 - k) + ')';
+    ctx.fillText('-' + h.n, Math.round(h.x), Math.round(h.y - k * 20));
+    ctx.textAlign = 'left';
+  }
+}
+
+/* 有 heal 的道具點一下就用掉 */
+function healItem(id){
+  const it = ITEMS[id];
+  if(state.hp >= hpMax()){
+    say(it.name, [it.desc, { who:'player', text:'現在還用不到。' }]);
+    return;
+  }
+  const before = state.hp;
+  healPlayer(it.heal);
+  dropItem(id);
+  say(it.name, [it.use || '你處理了一下。',
+                { who:'player', text:'體力恢復了 ' + Math.round(state.hp - before) + ' 點。' }]);
+}
+
 function drawTag(x, y, text, col){
   if(!text) return;
   const h = CONFIG.player.spriteHeight || T;
@@ -6954,6 +7761,7 @@ function draw(){
                           mates[i].moving, mates[i].t) })),
    { b:P.y+T, f:drawPlayer }]
     .sort((a,b) => a.b - b.b).forEach(d => d.f());
+  drawHurtPops();
   if(opts.showTag){
     party().forEach((s, i) => drawTag(mates[i].x, mates[i].y, s.name, 'rgba(219,226,234,.85)'));
     drawTag(P.x, P.y, playerTag(), '#6fb3c9');
@@ -7025,6 +7833,12 @@ addEventListener('keydown', e => {
     const L = state.puzzle.lock;
     if($('puzToast').classList.contains('on')){ hideToast(); }   // 有提示框先關掉
     if(k === 'Escape'){ hide('puzzleOverlay'); return; }
+    if(L.type === 'seq' && L.pad){
+      const map = { ArrowUp:'上', w:'上', ArrowDown:'下', s:'下',
+                    ArrowLeft:'左', ArrowRight:'右', x:'X', y:'Y', a:'A', b:'B' };
+      if(map[k]){ e.preventDefault(); padPress(state.puzzle, map[k]); }
+      return;
+    }
     if(L.type === 'code'){
       if(/^[0-9]$/.test(k)){ e.preventDefault(); keyIn(k); return; }
       if(k === 'Backspace'){ e.preventDefault(); keyIn('←'); return; }
@@ -7211,7 +8025,7 @@ $('startBtn').onclick = async () => {
   if(state.continued) return;          // 讀檔繼續就不要再播一次開場
   setTimeout(() => say('屋外', [
     '產業道路走到最後被草蓋掉一半，導航早就沒了訊號。',
-    '房子孤零零站在那裡，屋頂上架著一支跟它完全不成比例的天線塔。',
+    '一棟三層樓的透天孤零零站在那裡，頂樓還架著一支跟房子完全不成比例的天線塔。',
     '牆上牽出去的線比一般住家多太多，一路接到旁邊的電線桿上。',
     { v:'faction',
       association:'你是被派來確認這個頻段還能不能用的。',
