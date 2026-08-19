@@ -3474,15 +3474,15 @@ function drawDoll(c, dir, frame, arm){        // arm: 'L' / 'R' / 'B' 舉起哪�
         else { p(6,9+y,3,8,hairC); p(23,9+y,3,8,hairC);
                p(5,16+y,3,3,hairC); p(24,16+y,3,3,hairC); }
       }
-      if(cut === 'tail'){                                     // 高馬尾：綁在後腦上方
+      if(cut === 'tail'){                                     // 高馬尾：綁在頭頂，正面看得到那一束
         if(side){ p(6,6+y,4,10,hairC); }
         else if(back){ p(13,8+y,6,11,hairC); }
-        else { p(5,6+y,3,7,hairC); }
+        else { p(12,0+y,8,4,hairC); p(6,6+y,2,4,hairC); }
       }
-      if(cut === 'lowtail'){                                  // 垂馬尾：後面一整條垂到腰
+      if(cut === 'lowtail'){                                  // 垂馬尾：綁在後腦下方，正面兩側各露一點
         if(side){ p(7,11+y,4,14,hairC); p(6,20+y,3,4,hairC); }
         else if(back){ p(13,9+y,6,16,hairC); p(14,24+y,4,3,hairC); }
-        else { p(5,12+y,2,9,hairC); }                         // 正面只露出一點點
+        else { p(6,12+y,2,8,hairC); p(24,12+y,2,8,hairC); }
       }
       if(cut === 'braid'){                                    // 辮子：一節一節的
         if(side){ for(let i=0;i<5;i++) p(7+(i%2),11+i*3+y,4,3,hairC); }
@@ -3537,20 +3537,34 @@ function drawDoll(c, dir, frame, arm){        // arm: 'L' / 'R' / 'B' 舉起哪�
         if(side) p(9,8+y,10,3,hairC);
         p(8,9+y,3,7,hairC); p(21,9+y,3,7,hairC);
       }
-      if(cut === 'center'){                                   // 中分
-        if(!back && !side){ p(8,8+y,7,3,hairC); p(17,8+y,7,3,hairC); }
-        if(side) p(9,8+y,7,3,hairC);
+      if(cut === 'center'){                                   // 中分：從髮際線剖開一道
+        if(!back && !side){
+          p(8,8+y,7,3,hairC); p(17,8+y,7,3,hairC);
+          q(31,(3+y)*2,2,11,hDark);                           // 中央一道暗線就夠了
+        }
+        if(side){ p(9,8+y,7,3,hairC); q(26,(3+y)*2,2,9,hDark); }
       }
-      if(cut === 'crop'){                                     // 碎蓋：短瀏海帶鋸齒
+      if(cut === 'crop'){                                     // 碎蓋：瀏海下緣是鋸齒
         if(!back){
-          if(side) p(9,8+y,9,2,hairC);
-          else { p(8,8+y,16,2,hairC); q(24,(10+y)*2,4,2,hairC); q(36,(10+y)*2,4,2,hairC); }
+          if(side){
+            p(9,8+y,9,2,hairC);
+            q(24,(10+y)*2,5,4,hairC); q(33,(10+y)*2,4,3,hairC);
+          } else {
+            p(8,8+y,16,2,hairC);
+            q(20,(10+y)*2,5,4,hairC); q(28,(10+y)*2,4,5,hairC);
+            q(35,(10+y)*2,4,3,hairC); q(42,(10+y)*2,4,4,hairC);
+          }
         }
       }
-      if(cut === 'slick'){                                    // 後梳：額頭露出來
+      if(cut === 'slick'){                                    // 後梳：額頭真的要露出來
         if(!back){
-          if(side) q(18,(3+y)*2,28,4,hLite);
-          else q(20,(3+y)*2,24,4,hLite);
+          if(side){
+            p(11,6+y,13,3,skin);
+            q(20,(3+y)*2,26,2,hLite); q(24,(4+y)*2,20,1,hLite);
+          } else {
+            p(9,6+y,14,3,skin);
+            q(18,(3+y)*2,28,2,hLite); q(22,(4+y)*2,20,1,hLite);
+          }
         }
       }
       if(cut === 'bobin'){                                    // 內彎鮑伯：髮尾往內收
@@ -3567,8 +3581,10 @@ function drawDoll(c, dir, frame, arm){        // arm: 'L' / 'R' / 'B' 舉起哪�
       /* 受光切成幾段短的，看起來像髮絲而不是一條橫槓 */
       if(back){
         q(19, top+2, 9, 2, hLite); q(31, top+3, 7, 2, hLite); q(40, top+2, 5, 2, hLite);
-        q(31, top+5, 1, 22, hDark);                           // 中央髮束分線
-        q(17, top+18, 30, 1, hDark);                          // 後腦下緣收暗
+        q(31, top+4, 1, 8, hDark);                            // 分線只留上面一小截
+        q(19, top+18, 8, 1, hDark);                           // 下緣改成斷開的三段
+        q(30, top+19, 7, 1, hDark);
+        q(40, top+18, 6, 1, hDark);
       } else if(side){
         q(22, top+2, 8, 2, hLite); q(33, top+3, 6, 2, hLite);
         q(20, top+9, 1, 8, hDark);                            // 耳前那束的內側
