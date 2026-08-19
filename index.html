@@ -4927,6 +4927,7 @@ function useRoster(rows, label){
   rosterSource = label + '　' + roster.length + ' 位';
   console.info(label + '：' + roster.length + ' 位角色');
   const rs = $('rosterSrc'); if(rs) rs.textContent = rosterSource;
+  try{ previewStats(); }catch(err){}
 }
 (async () => {
   if(ROSTER.csvUrl){
@@ -7923,8 +7924,8 @@ function syncSettings(){
   $('gridToggle').checked = state.showGrid;
   $('tagToggle').checked = opts.showTag;
   $('readState').textContent = '目前 ' + readCount() + '/' + ALL_DOCS.length;
-  const src = $('statsSrc'); if(src) src.textContent = statsSource;
   const rsrc = $('rosterSrc'); if(rsrc) rsrc.textContent = rosterSource;
+  try{ previewStats(); }catch(err){}
   reportStatus();
   const sv = $('saveState');
   if(sv) sv.textContent = readSave() ? '已有存檔' : '尚無存檔';
@@ -8279,6 +8280,30 @@ addEventListener('keydown', e => {
 const slotsBtn = $('slotsBtn');
 if(slotsBtn) slotsBtn.onclick = () => { $('slotsNote').textContent =
   '自動存檔會一直保留，這三格是你自己存的'; openSlots(); };
+
+/* ── 進場前就先算好這個角色的數值，不用等按下按鈕 ── */
+function previewStats(){
+  const el = $('statsSrc'); if(!el) return;
+  if(state.started){ el.textContent = statsSource; return; }
+  if(PLAYER_SOURCE.mode === 'baked'){ el.textContent = '內建數值'; return; }
+  const name = ($('roleInput').value || '').trim();
+  if(!name){ el.textContent = '先輸入角色名稱'; return; }
+  if(!roster.length){ el.textContent = '名冊還在載入…'; return; }
+  const m = lookup(name);
+  if(!m.raw){ el.textContent = '內建數值（名冊上找不到「' + name + '」）'; return; }
+  try{
+    const raw = toStats(m.raw, ROSTER.fields);
+    const prev = me;
+    me = Object.assign({}, m, { stats: raw });
+    const s = myBattleStats();
+    me = prev;
+    el.textContent = '名冊數值　HP ' + s.max + '　攻 ' + s.atk[0] + '-' + s.atk[1] + '　防 ' + s.def;
+  }catch(err){
+    el.textContent = '內建數值（' + err.message + '）';
+  }
+}
+
+$('roleInput').addEventListener('input', previewStats);
 
 /* ── 通關回報：狀態顯示與測試 ── */
 let reportLast = '';
