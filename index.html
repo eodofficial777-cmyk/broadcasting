@@ -1180,6 +1180,14 @@
 
       <div class="field">
       <div class="field">
+      <div class="field">
+        <label>音樂 <span class="val" id="bgmState"></span></label>
+        <input type="range" id="bgmVol" min="0" max="100" step="5">
+        <label class="toggle" style="margin-top:8px"><input type="checkbox" id="bgmOff"> 靜音</label>
+        <div class="note" id="bgmCredit"></div>
+      </div>
+
+      <div class="field">
         <label>通關回報 <span class="val" id="reportSrc"></span></label>
         <div class="row" style="margin-top:8px">
           <button class="mini" id="reportTest">送出測試回報</button>
@@ -1269,6 +1277,29 @@ const LABELS = {
      'webhook'     Discord / Slack 之類的 Webhook
 
    送不出去會先存在瀏覽器裡，下次開啟自動補送。 */
+/* ── 背景音樂 ────────────────────────────────────────────────────────
+   音檔放在 index.html 同一層的 bgm/ 資料夾，路徑寫相對的。
+   沒有檔案或路徑打錯時遊戲照常跑，設定面板會顯示「找不到檔案」。
+
+   ⚠ credit 是使用條件，不要拿掉。魔王魂的素材可以商用、可以改，
+     但必須標示出處。除了這裡，發布的貼文也建議附上一句。 */
+const BGM = {
+  credit: '音楽：魔王魂',
+  volume: 0.45,                       // 預設音量 0～1
+  fade: 260,                          // 換曲的淡出淡入毫秒數，0 = 直接切
+
+  /* 寫 .ogg 就好。不支援 ogg 的瀏覽器（舊版 iOS Safari）
+     會自動改抓同名的 .mp3，所以兩種格式都要放進 bgm/ */
+  fallbackExt: 'mp3',
+
+  tracks: {
+    title:   'bgm/maou_bgm_cyber45.ogg',   // 進場畫面
+    room:    'bgm/maou_bgm_cyber45.ogg',   // 平常探索
+    battle:  'bgm/maou_bgm_cyber34.ogg',   // 戰鬥
+    special: 'bgm/maou_bgm_cyber42.ogg',   // 特殊：訊號送出去之後、結束畫面
+  },
+};
+
 const REPORT = {
   /* ── 通關與成就回報 ────────────────────────────────────────────────
      'off'         不回報
@@ -2359,7 +2390,7 @@ const AREAS = {
         need: () => state.flags.signal,
         needLines:['帶子放得進去，但發射端沒有反應。',
                    { who:'player', text:'訊號出不去。得先上去看看天線。' }],
-        onOpen: () => { state.flags.aired = true; },
+        onOpen: () => { state.flags.aired = true; playBGM('special'); },
         openedLines:['帶子還在轉。'] },
       { id:'rack', name:'機櫃', col:14, row:4, w:1, h:1, solid:true, color:'#2f3742',
         lock:{ type:'item', item:'screwdriver', consume:false,
@@ -2939,6 +2970,7 @@ function loadArea(id, col, row){
   if(id === 'antenna') state.flags.rooftop = true;
   if(id === 'room') state.flags.entered = true;
   lastHurtCell = '';
+  if(state.started && typeof playBGM === 'function') playBGM(bgmForArea());
   MAP = AREA.map;
   COLS = MAP[0].length; ROWS = MAP.length;
   OBJ = AREA.objects;
@@ -5023,7 +5055,8 @@ const state = { read:{}, showGrid:false, dialog:null, started:false, list:null,
                 vista:null, photo:false, pan:null, hp:0,
                 achv:{}, vistaSeen:{} };
 // 註：面板開關一律用 panelOpen() 判斷，不另外存旗標
-const opts = { textSpeed:44, moveSpeed:CONFIG.player.speed, showTag:true };
+const opts = { textSpeed:44, moveSpeed:CONFIG.player.speed, showTag:true,
+               bgmVol:0.45, bgmOff:false };
 const cam = { x:0, y:0 };                       // 畫面在房間裡的位置
 /* 夥伴跟隨：記錄玩家走過的路徑（含累積距離），
    夥伴依「落後多少距離」在路徑上內插取位置，所以移動是連續的，不會一格一格跳 */
@@ -6090,6 +6123,7 @@ function startBattle(id, o){
   };
   buildCmds();
   show('battleOverlay');
+  playBGM('battle');
   renderBattle();
   drawBattleScene();
 }
@@ -6204,6 +6238,7 @@ function endBattle(result){
   updateHP();
   state.battles[B.id] = result; saveGame(); checkAchievements();
   hide('battleOverlay');
+  playBGM(bgmForArea());
   state.battle = null;
   say(B.e.name, B.e[result] || ['……']);
 }
@@ -7942,6 +7977,7 @@ function syncSettings(){
   $('readState').textContent = '目前 ' + readCount() + '/' + ALL_DOCS.length;
   const rsrc = $('rosterSrc'); if(rsrc) rsrc.textContent = rosterSource;
   try{ previewStats(); }catch(err){}
+  try{ bgmState(); }catch(err){}
   reportStatus();
   const sv = $('saveState');
   if(sv) sv.textContent = readSave() ? '已有存檔' : '尚無存檔';
@@ -8260,7 +8296,8 @@ function paintTitle(swap){
   }
   const has = [1, 2, 3].some(n => slotInfo(n)) || !!readSave();
   $('titleFoot').innerHTML = (has ? '有進度可以繼續　' : '')
-    + '<span class="kb">↑↓ 選擇　Enter 確認</span>';
+    + '<span class="kb">↑↓ 選擇　Enter 確認</span>'
+    + (BGM.credit ? '<br>' + BGM.credit : '');
 }
 
 $('titleMenu').addEventListener('click', e => {
@@ -8269,13 +8306,14 @@ $('titleMenu').addEventListener('click', e => {
   const act = b.dataset.act;
   if(act === 'start'){ hide('title'); show('setup'); syncSettings(); }
   if(act === 'load'){ openSlots(); }
-  if(act === 'quit'){ show('quitOverlay'); }
+  if(act === 'quit'){ show('quitOverlay'); playBGM('special'); }
 });
 
 $('quitOverlay').addEventListener('click', () => {
   try{ localStorage.setItem(QUIT_KEY, '1'); }catch(err){}
   hide('quitOverlay');
   paintTitle(true);
+  playBGM('title');
 });
 
 addEventListener('keydown', e => {
@@ -8296,6 +8334,133 @@ addEventListener('keydown', e => {
 const slotsBtn = $('slotsBtn');
 if(slotsBtn) slotsBtn.onclick = () => { $('slotsNote').textContent =
   '自動存檔會一直保留，這三格是你自己存的'; openSlots(); };
+
+/* ── 背景音樂 ─────────────────────────────────────────────────────
+   瀏覽器規定要有使用者動作才准播，所以第一次點擊或按鍵時才真正開始。 */
+let bgmEl = null, bgmKey = 'title', bgmSrc = '', bgmOn = false, bgmErr = '', bgmFade = null;
+
+function bgmVolume(){
+  return opts.bgmOff ? 0 : Math.max(0, Math.min(1, opts.bgmVol));
+}
+
+/* 播不了 ogg 的瀏覽器自動換成同名的備援格式 */
+function bgmPath(src){
+  if(!src || !bgmEl) return src;
+  if(/\.ogg$/i.test(src) && !bgmEl.canPlayType('audio/ogg'))
+    return src.replace(/\.ogg$/i, '.' + (BGM.fallbackExt || 'mp3'));
+  return src;
+}
+
+function bgmMake(){
+  if(bgmEl) return;
+  bgmEl = new Audio();
+  bgmEl.loop = true;
+  bgmEl.preload = 'auto';
+  bgmEl.addEventListener('error', () => { bgmErr = '找不到檔案'; bgmState(); });
+  bgmEl.addEventListener('playing', () => { bgmErr = ''; bgmState(); });
+}
+
+function bgmLoad(src){
+  bgmSrc = src; bgmErr = '';
+  bgmEl.src = src;
+  if(!bgmOn) return;
+  const pr = bgmEl.play();
+  if(pr && pr.catch) pr.catch(() => {});
+}
+
+/* 換曲時淡出再淡入，不要硬切 */
+function bgmSwitch(src){
+  clearInterval(bgmFade);
+  const target = bgmVolume();
+  const ms = BGM.fade || 0;
+  if(!bgmOn || !bgmSrc || !ms || target <= 0){ bgmLoad(src); bgmEl.volume = target; return; }
+  const step = target / (ms / 40);
+  bgmFade = setInterval(() => {
+    const v = bgmEl.volume - step;
+    if(v <= 0.01){
+      clearInterval(bgmFade);
+      bgmEl.volume = 0;
+      bgmLoad(src);
+      let u = 0;
+      bgmFade = setInterval(() => {
+        u += step;
+        bgmEl.volume = Math.min(bgmVolume(), u);
+        if(u >= bgmVolume()) clearInterval(bgmFade);
+      }, 40);
+    } else bgmEl.volume = v;
+  }, 40);
+}
+
+function playBGM(key){
+  if(key) bgmKey = key;
+  const raw = (BGM.tracks || {})[bgmKey];
+  if(!raw) return;                       // 沒指定就繼續播現在這首
+  bgmMake();
+  const src = bgmPath(raw);
+  if(bgmSrc === src){                    // 同一首就不要重播
+    if(bgmOn && bgmEl.paused && !opts.bgmOff){
+      const pr = bgmEl.play(); if(pr && pr.catch) pr.catch(()=>{});
+    }
+    return;
+  }
+  bgmSwitch(src);
+}
+
+/* 訊號送出去之後，整棟房子換成另一首 */
+function bgmForArea(){ return state.flags.aired ? 'special' : 'room'; }
+
+function bgmApply(){
+  if(!bgmEl) return;
+  clearInterval(bgmFade);
+  bgmEl.volume = bgmVolume();
+  if(opts.bgmOff) bgmEl.pause();
+  else if(bgmOn && bgmEl.paused) { const pr = bgmEl.play(); if(pr && pr.catch) pr.catch(()=>{}); }
+  bgmState();
+}
+
+function bgmState(){
+  const el = $('bgmState'); if(!el) return;
+  el.textContent = bgmErr ? bgmErr
+                 : opts.bgmOff ? '靜音'
+                 : !bgmSrc ? '沒有設定音樂'
+                 : !bgmOn ? '待機（點一下畫面開始）'
+                 : Math.round(opts.bgmVol * 100) + '%';
+  const c = $('bgmCredit');
+  if(c) c.textContent = BGM.credit ? BGM.credit + '　（使用條件，請勿移除）' : '';
+  const v = $('bgmVol');
+  if(v && document.activeElement !== v) v.value = Math.round(opts.bgmVol * 100);
+  const o = $('bgmOff');
+  if(o) o.checked = !!opts.bgmOff;
+}
+
+function bgmUnlock(){
+  if(bgmOn) return;
+  bgmOn = true;
+  if(bgmEl && bgmEl.paused && !opts.bgmOff){
+    const pr = bgmEl.play(); if(pr && pr.catch) pr.catch(()=>{});
+  }
+  bgmState();
+}
+addEventListener('pointerdown', bgmUnlock);
+addEventListener('keydown', bgmUnlock);
+
+/* 按下進場之後換成探索曲 */
+const startBtnEl = $('startBtn');
+if(startBtnEl) startBtnEl.addEventListener('click', () => {
+  setTimeout(() => { if(state.started) playBGM(bgmForArea()); }, 80);
+});
+
+const bgmVolEl = $('bgmVol');
+if(bgmVolEl){
+  bgmVolEl.oninput = e => {
+    opts.bgmVol = (+e.target.value) / 100;
+    if(opts.bgmVol > 0) opts.bgmOff = false;
+    bgmApply();
+  };
+  bgmVolEl.onchange = () => saveGame();
+}
+const bgmOffEl = $('bgmOff');
+if(bgmOffEl) bgmOffEl.onchange = e => { opts.bgmOff = e.target.checked; bgmApply(); saveGame(); };
 
 /* ── 進場前就先算好這個角色的數值，不用等按下按鈕 ── */
 function previewStats(){
@@ -8384,7 +8549,7 @@ fit(); updateProgress(); renderInv();
 syncSettings();
 flushReports();
 
-paintTitle(); tmove(0); fitTitle();
+paintTitle(); tmove(0); fitTitle(); playBGM('title');
 try{                                             // 從存檔格讀進來就跳過標題
   if(sessionStorage.getItem(SKIP_KEY)){
     sessionStorage.removeItem(SKIP_KEY);
