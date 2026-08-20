@@ -1458,7 +1458,8 @@ const BGM = {
 
 const SKY = {
   csvUrl: '',
-  jsonUrl: '',                       // 備案：Apps Script 的 /exec，會自動加 ?what=sky
+  jsonUrl: 'https://script.google.com/macros/s/AKfycbz7Xs07vCA-UAr7EcP8LeK3rr_h8ySrpR6RsE-pkeB7IQsl85kVfI9DLLsvxT1j_eqjwg/exec',   // Apps Script 的 /exec，會自動加 ?what=sky
+                                     // 之後把「宣言」分頁發布成 CSV 填進上面的 csvUrl，就會改用 CSV
   fields: { text:'宣言', name:'角色' },
   max: 48,
 
@@ -1486,7 +1487,7 @@ const REPORT = {
   mode: 'appsscript',
 
   /* ↓ Apps Script 部署完拿到的 /exec 網址。換部署版本時記得回來換 */
-  url: 'https://script.google.com/macros/s/AKfycbzYFMzhJ7QjgC-ijbJ1XTMkgxb4r1sDhts9Gym0agllo5miJgAYp6M--YGiZFjW7gLw1g/exec',
+  url: 'https://script.google.com/macros/s/AKfycbz7Xs07vCA-UAr7EcP8LeK3rr_h8ySrpR6RsE-pkeB7IQsl85kVfI9DLLsvxT1j_eqjwg/exec',
 
   /* mode:'form' 時才需要填 */
   formFields: { role:'', faction:'', race:'', event:'', name:'', detail:'', time:'' },
@@ -5922,9 +5923,18 @@ function openPuzzle(o){
                           : T2 === 'item' ? '←→ 選道具　Enter 使用　ESC 關閉'
                           : (T2 === 'seq' && o.lock.pad) ? '方向鍵與 X Y A B 鍵也可以　ESC 關閉'
                           : 'ESC 關閉';
-  if(T2 === 'code'){ buildKeypad(o); drawCode(o); }
-  else if(T2 === 'item') renderChips();
-  else { initBoard(o); buildBoard(o); }
+  try{
+    if(T2 === 'code'){ buildKeypad(o); drawCode(o); }
+    else if(T2 === 'item') renderChips();
+    else { initBoard(o); buildBoard(o); }
+  }catch(err){
+    /* 盤面建構出錯：一定要把 state.puzzle 清掉，
+       不然看不見的解謎狀態會吃掉所有輸入，玩家會被卡死 */
+    console.error('解謎盤面建構失敗', o.id, err);
+    state.puzzle = null; state.code = '';
+    say(o.name, ['（好像卡住了，等一下再試試。）']);
+    return;
+  }
   show('puzzleOverlay');
 }
 function puzMsg(lines){
@@ -5958,6 +5968,7 @@ function initBoard(o){
   const L = o.lock;
   if(L.type === 'seq') L._in = [];
   if(L.type === 'choice') L._step = 0;
+  if(L.type === 'morse'  && !L._m) L._m = { out:'', buf:'' };   // 摩斯：已解出的字 + 打到一半的點劃
   if(L.type === 'music'  && !L._n) L._n = [];
   if(L.type === 'topics' && !L._p) L._p = [];
   if(L.type === 'broadcast' && L._t === undefined) L._t = '';
@@ -5978,6 +5989,7 @@ function boardSolved(o){
   if(L.type === 'topics') return (L._p || []).length === (L.pick || 3);
   if(L.type === 'broadcast') return !!(L._t || '').trim();
   if(L.type === 'choice') return (L._step || 0) >= L.steps.length;
+  if(L.type === 'morse')  return !!L._m && L._m.out === L.answer;
   if(L.type === 'seq')    return L._in.join('|') === L.seq.join('|');
   if(L.type === 'wire')   return L.wires.every((w, i) => L._at[i] === w.goal);
   if(L.type === 'tune')   return L.dials.every((d, i) => Math.abs(L._at[i] - d.goal) <= (L.tol || 0));
@@ -6610,6 +6622,7 @@ function morsePush(o, sym){
     if(!m.buf) return;
     const ch = MORSE_REV[m.buf];
     if(!ch){ m.buf = ''; puzWrong(['這串不是任何一個字母。'], '打錯了'); buildBoard(o); return; }
+    while(L.answer[m.out.length] === ' ') m.out += ' ';   // 詞間空格自動補，玩家不按空格也不會卡住
     m.out += ch; m.buf = '';
   }
   else if(sym === 'space'){
@@ -6618,7 +6631,7 @@ function morsePush(o, sym){
   }
   else if(sym === 'del'){
     if(m.buf) m.buf = m.buf.slice(0, -1);
-    else m.out = m.out.slice(0, -1);
+    else m.out = m.out.replace(/ +$/, '').slice(0, -1).replace(/ +$/, '');   // 一併退掉自動補的空格
   }
   if(m.out.length > L.answer.length) m.out = m.out.slice(0, L.answer.length);
   if(boardSolved(o)) return solve(o);
