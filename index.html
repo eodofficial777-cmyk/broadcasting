@@ -824,6 +824,142 @@
     .plug,.sock{ font-size:11.5px; padding:7px 8px; }
     .wirebox{ gap:8px; }
   }
+  /* ══ 電視畫面與摩斯電鍵 ══════════════════════════════════════ */
+  .tvbox{
+    position:relative; margin:0 auto 12px; width:100%; max-width:320px;
+    background:#0a0d12; border:3px solid #39424e; border-radius:10px;
+    padding:8px; box-shadow:inset 0 0 24px rgba(0,0,0,.9), 0 4px 14px rgba(0,0,0,.5);
+  }
+  .tvbox canvas{
+    display:block; width:100%; height:auto; image-rendering:pixelated;
+    background:#111820; border-radius:4px;
+  }
+  .tvbox::after{                                   /* 掃描線 */
+    content:''; position:absolute; inset:8px; pointer-events:none; border-radius:4px;
+    background:repeating-linear-gradient(180deg,rgba(0,0,0,.28) 0 1px,transparent 1px 3px);
+  }
+  .tvcap{
+    font-family:var(--mono); font-size:17px; letter-spacing:.42em;
+    text-align:center; color:#7ad39a; margin-top:8px;
+    text-shadow:0 0 10px rgba(122,211,154,.7);
+    word-break:break-all; line-height:1.5;
+  }
+  .tvsig{
+    font-family:var(--mono); font-size:14px; letter-spacing:.12em;
+    text-align:center; color:var(--signal); margin-top:6px;
+    text-shadow:0 0 8px rgba(111,179,201,.6); line-height:1.7; word-break:break-all;
+  }
+  .morsebuf{
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    margin:10px 0 8px; font-family:var(--mono);
+  }
+  .morsebuf .cur{
+    min-width:88px; padding:6px 10px; font-size:20px; letter-spacing:.2em;
+    background:#0a1014; border:1px solid var(--line); color:var(--signal);
+    text-align:center; border-radius:3px;
+  }
+  .morsebuf .cnt{ font-size:11px; color:var(--dim); }
+  .morsekeys{ display:grid; grid-template-columns:repeat(5,1fr); gap:5px; }
+  .morsekeys .mk{
+    padding:14px 4px; font-family:var(--mono); font-size:15px; cursor:pointer;
+    background:linear-gradient(180deg,#4a545f,#333b45); color:var(--text);
+    border:1px solid #1a1f27; border-radius:5px;
+    box-shadow:0 3px 0 #1a1f27, inset 0 1px 0 rgba(255,255,255,.12);
+  }
+  .morsekeys .mk:hover{ background:linear-gradient(180deg,#55606c,#3a434e); color:#fff; }
+  .morsekeys .mk:active{ transform:translateY(3px); box-shadow:0 0 0 #1a1f27; }
+  .morsekeys .mk.dit,.morsekeys .mk.dah{ font-size:20px; color:var(--signal); }
+  .morsekeys .mk small{ display:block; font-size:9px; color:var(--dim); margin-top:2px; }
+  /* ══ 高音直笛與播報題材 ══════════════════════════════════════ */
+  .flute{ display:flex; flex-direction:column; gap:12px; }
+  .staff{
+    display:flex; flex-wrap:wrap; gap:5px; justify-content:center;
+    background:#0a1014; border:1px solid var(--line); border-radius:4px; padding:10px;
+    min-height:52px;
+  }
+  .staff i{
+    width:34px; height:34px; display:flex; align-items:center; justify-content:center;
+    font-family:var(--mono); font-size:15px; font-style:normal;
+    background:rgba(111,179,201,.08); border:1px solid var(--line); border-radius:3px;
+    color:var(--signal);
+  }
+  .staff i.empty{ color:#3a4048; border-style:dashed; }
+  .staff i.on{ background:rgba(111,179,201,.3); color:#fff; }
+  .keysrow{ display:grid; grid-template-columns:repeat(6,1fr); gap:5px; }
+  .keysrow .nk{
+    padding:13px 2px; font-family:var(--mono); font-size:15px; cursor:pointer;
+    background:linear-gradient(180deg,#e8eef4,#b8c2cc); color:#1a1f27;
+    border:1px solid #6a7078; border-radius:4px;
+    box-shadow:0 3px 0 #6a7078, inset 0 1px 0 rgba(255,255,255,.6);
+  }
+  .keysrow .nk.hi{ background:linear-gradient(180deg,#39424e,#242c36); color:#dbe2ea;
+                   border-color:#141821; box-shadow:0 3px 0 #141821; }
+  .keysrow .nk:active,.keysrow .nk.hit{ transform:translateY(3px); box-shadow:0 0 0 #6a7078; }
+  .keysrow .nk.sp{ background:linear-gradient(180deg,#4a7f92,#31606f); color:#eaf6fa;
+                   border-color:#1a1f27; box-shadow:0 3px 0 #1a1f27; }
+  .keysrow .nk small{ display:block; font-size:9px; opacity:.75; margin-top:1px; }
+  .staff .barline{ width:2px; align-self:stretch; background:var(--line); margin:0 2px; }
+  .sheetmusic{
+    font-family:var(--mono); font-size:15px; letter-spacing:.16em; color:var(--signal);
+    text-align:center; background:rgba(0,0,0,.25); border:1px dashed var(--line);
+    padding:8px; border-radius:3px;
+  }
+  .topiclist{ max-height:44vh; overflow-y:auto; border:1px solid var(--line); border-radius:4px; }
+  .topiclist button{
+    display:flex; align-items:flex-start; gap:9px; width:100%; text-align:left;
+    background:transparent; border:0; border-bottom:1px solid var(--line);
+    padding:10px 12px; font-size:13.5px; color:var(--text); cursor:pointer;
+  }
+  .topiclist button:hover{ background:var(--panel2); }
+  .topiclist button.on{ background:rgba(111,179,201,.12); color:var(--signal); }
+  .topiclist .box{
+    flex:0 0 auto; width:15px; height:15px; margin-top:2px;
+    border:1px solid var(--line); border-radius:2px; font-size:10px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .topiclist button.on .box{ background:var(--signal); border-color:var(--signal); color:#0f1115; }
+  .topiclist .sub{ display:block; font-family:var(--mono); font-size:11px; color:var(--dim); margin-top:2px; }
+  .animcap{ width:18px; height:18px; flex:0 0 auto; image-rendering:pixelated; }
+  /* ══ 發信與結尾 ══════════════════════════════════════════════ */
+  #airOverlay{ background:#05070a; }
+  #airOverlay .stage{
+    position:relative; width:100%; height:100%;
+    display:flex; flex-direction:column; align-items:center; justify-content:flex-end;
+  }
+  #airCanvas{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+  .airbox{
+    position:relative; z-index:2; width:min(680px,92vw); margin:0 auto 6vh;
+    background:linear-gradient(180deg,rgba(11,17,25,.55),rgba(11,17,25,.9));
+    border:1px solid rgba(111,179,201,.3); border-radius:6px;
+    padding:16px 18px; backdrop-filter:blur(2px);
+  }
+  .airbox .who{
+    font-family:var(--mono); font-size:11px; letter-spacing:.14em;
+    color:var(--signal); margin-bottom:6px;
+  }
+  .airbox .line{ font-size:15.5px; line-height:1.85; color:var(--text); min-height:1.85em; }
+  .airbox .tip{ font-family:var(--mono); font-size:11px; color:var(--dim); margin-top:10px; }
+
+  .declbox{ display:flex; flex-direction:column; gap:10px; }
+  .declbox textarea{
+    width:100%; min-height:78px; resize:vertical;
+    background:#0a1014; border:1px solid var(--line); border-radius:4px;
+    color:var(--text); font-family:inherit; font-size:15px; line-height:1.7; padding:10px 12px;
+  }
+  .declbox textarea:focus{ outline:0; border-color:var(--signal); }
+  .declrow{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .declrow .cnt{ font-family:var(--mono); font-size:11px; color:var(--dim); }
+  .declpre{
+    font-size:13px; color:var(--dim); line-height:1.8;
+    border-left:2px solid var(--line); padding-left:10px;
+  }
+  .declpre b{ color:var(--signal); font-weight:400; }
+  #confirmOverlay .pbtn.danger, #confirmYes.danger{
+    border-color:rgba(209,68,60,.6); color:#f0b6b1; background:rgba(209,68,60,.12);
+  }
+  #confirmOverlay .pbtn.danger:hover, #confirmYes.danger:hover{
+    background:rgba(209,68,60,.26); color:#fff;
+  }
 </style>
 </head>
 <body>
@@ -839,6 +975,8 @@
         <nav id="titleMenu">
           <button data-act="start"><i>&#9654;</i>進入???房間</button>
           <button data-act="load"><i>&#9654;</i>讀取</button>
+          <button data-act="fresh" id="freshBtn"><i>&#9654;</i>重新開始</button>
+          <button data-act="sky" id="skyBtn"><i>&#9654;</i>看看天空</button>
           <button data-act="quit"><i>&#9654;</i>結束</button>
         </nav>
         <div class="tfoot" id="titleFoot"></div>
@@ -1030,6 +1168,17 @@
 </div>
 
 <!-- 上鎖的東西 -->
+<div class="overlay" id="airOverlay">
+  <div class="stage">
+    <canvas id="airCanvas"></canvas>
+    <div class="airbox">
+      <div class="who" id="airWho"></div>
+      <div class="line" id="airLine"></div>
+      <div class="tip" id="airTip">點一下繼續</div>
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="puzzleOverlay">
   <div class="sheet">
     <header><h2 id="puzTitle"></h2><span class="meta" id="puzMeta"></span></header>
@@ -1277,6 +1426,13 @@ const LABELS = {
      'webhook'     Discord / Slack 之類的 Webhook
 
    送不出去會先存在瀏覽器裡，下次開啟自動補送。 */
+/* ── 天空留言板 ──────────────────────────────────────────────────────
+   結尾播完之後，天上會浮著所有玩家喊出來的話。
+
+   來源有兩條，優先用 csvUrl（跟名冊同一套做法，最穩）：
+   1. report.gs 會把每個人的宣言寫進試算表的「宣言」分頁
+   2. 把那個分頁「發布到網路 → CSV」，網址貼進 csvUrl
+   都讀不到就用下面 baked 的墊檔，不會開天窗。 */
 /* ── 背景音樂 ────────────────────────────────────────────────────────
    音檔放在 index.html 同一層的 bgm/ 資料夾，路徑寫相對的。
    沒有檔案或路徑打錯時遊戲照常跑，設定面板會顯示「找不到檔案」。
@@ -1298,6 +1454,24 @@ const BGM = {
     battle:  'bgm/maou_bgm_cyber34.ogg',   // 戰鬥
     special: 'bgm/maou_bgm_cyber42.ogg',   // 特殊：訊號送出去之後、結束畫面
   },
+};
+
+const SKY = {
+  csvUrl: '',
+  jsonUrl: '',                       // 備案：Apps Script 的 /exec，會自動加 ?what=sky
+  fields: { text:'宣言', name:'角色' },
+  max: 48,
+
+  baked: [
+    { text:'我還在。', name:'北邊的某個人' },
+    { text:'水塔的水可以喝，煮過就好。', name:'不具名' },
+    { text:'誰看到我妹妹請跟她說我往南走了', name:'不具名' },
+    { text:'台四線中段有塌方，繞海邊。', name:'跑船的' },
+    { text:'不要相信那個賣藥的。', name:'不具名' },
+    { text:'今天也活著。明天再說。', name:'不具名' },
+    { text:'如果聽得到，敲三下窗戶。', name:'不具名' },
+    { text:'謝謝那個放歌的人。', name:'不具名' },
+  ],
 };
 
 const REPORT = {
@@ -1353,6 +1527,8 @@ const ACHIEVEMENTS = [
     check:() => !!state.flags.exploded },
   { id:'shocked',    name:'我是說真的',   desc:'還是碰了那條線。', hidden:true,
     check:() => !!state.flags.shocked },
+  { id:'wannaplay',  name:'我想玩個遊戲', desc:'把小丑的訊號解出來。', hidden:true,
+    check:() => !!state.opened.tvscreen },
   { id:'homecoming', name:'請回來',       desc:'把照片放回神桌上。', hidden:true,
     check:() => !!state.opened.altar },
   { id:'listener',   name:'聽見遠方',     desc:'把收訊本從頭讀到尾。', hidden:true,
@@ -1409,6 +1585,43 @@ const DOCS = {
     body:['駕駛座的窗戶破了，車上的收音機還開著，混著雜訊。',
           '「……接下來就在 95.2＋7 見面吧！」',
           '重複了兩次就斷了。'] },
+
+  prep_note: { title:'主控台上的紙條', code:'PREP-1', from:'主控台',
+    body:['一張用膠帶貼在主控台上方牆面的紙，字寫得比別處大，像是給自己看的。',
+          '「開場的準備工作：」',
+          '「1. 選個喜歡的主題曲」',
+          '「2. 找至少三件有趣的事情！」',
+          '「3. 確認放送設備跟天線有接通」',
+          '「4. 嘟嚕嘟嘟嚕、開始播報！」',
+          '第四項旁邊畫了一個很潦草的笑臉。'] },
+  clown_note: { title:'錄影帶的標籤', code:'HOME-12', from:'電視機下方',
+    body:['電視底下的錄影機裡卡著一捲帶子，退不出來，標籤是手寫的。',
+          '「他們來的那天我正在錄這個。」',
+          '「密碼給你。想活就照著打。」',
+          '沒有署名。字跡跟屋裡其他地方的一樣。'] },
+  baby_note: { title:'大同寶寶底座', code:'HOME-11', from:'大同寶寶',
+    body:['底座刻著一組編號，還有一行很小的字：贈品，不得販售。',
+          '有人用奇異筆在旁邊補了一句：「電視不聽話的時候，把它放上去。」',
+          '筆跡跟屋裡其他地方的一樣。'] },
+
+  /* ── 入口：鐵捲門與發電機 ─────────────────────────────────── */
+  motor_note: { title:'馬達上的彈孔', code:'GATE-1', from:'電動鐵捲門',
+    body:['鐵捲門上方的捲門馬達，外殼上有三個很近的彈孔。',
+          '線路看起來還是通的，只是沒有電。',
+          '控制盒的貼紙寫著：「停電時請改用手動。」手動拉環被拆掉了。'] },
+  gen_note: { title:'發電機的操作牌', code:'GATE-2', from:'發電機',
+    body:['一台拖車型的小發電機，車體上噴著電視台的台號。',
+          '掛在把手上的操作牌：「加油→開閥→拉繩→送電」。',
+          '油量表指在底。'] },
+  tank_note: { title:'油箱旁的字', code:'GATE-3', from:'SNG 車油箱',
+    body:['油箱蓋被撬過又蓋回去，邊緣有牙齒的痕跡。',
+          '車身上用粉筆寫著一行字，已經被雨沖掉一半：',
+          '「還有油，但下面有東西。」'] },
+  door3_note: { title:'門邊的便條', code:'GATE-4', from:'三樓的門',
+    body:['一道跟這棟房子完全不搭的門，門框是後來加上去的。',
+          '鎖是指紋式的，讀取窗還亮著待機的綠燈。',
+          '旁邊貼著一張便條，字跡跟屋裡其他地方一樣：',
+          '「手指沒帶在身上。不如先去看電視吧？」'] },
 
   /* ── 一樓二樓：打過一場的痕跡 ─────────────────────────────── */
   shells_note: { title:'地上的彈殼', code:'RUIN-1', from:'一樓地板',
@@ -1625,7 +1838,10 @@ const DOCS = {
           '「紅接黃、藍接綠，老鼠的兒子會打洞！」',
           '最後一句被人用簽字筆圈了起來。',
           '底下還有一行比較潦草的字：',
-          '「黑的那條千萬不要接活的，塞備用就好。」'] },
+          '「黑的那條千萬不要接活的，塞備用就好。」',
+          '塑膠牌翻過來，背面的字比較新，像是後來才補的：',
+          '「貓來窮、狗來富。」',
+          '「窮的接空孔，富的接紅孔。」'] },
 
   /* ── 陣營限定：三邊各一份 ───────────────────────────────── */
   wallmark: { title:'牆角的記號', code:'MARK-1', from:'線團後面',
@@ -1851,6 +2067,16 @@ const EP = { start:4, gain:4, max:16 };
          或 battleAfterOpen:'echo'（解開鎖之後才觸發）
    逃跑之後還會再遇到，打贏或打輸就結束。 */
 const ENEMIES = {
+  driller: {
+    name:'錐齒獸', hp:230, art:'e_driller',
+    intro:['油箱底下傳來一陣金屬被磨開的聲音。',
+           '有東西從車底鑽出來，牙齒排成一圈，正在轉。'],
+    moves:[{ text:'它撞上你的側腹，牙齒還在轉。', atk:[22,32] },
+           { text:'它啃住鐵板，把碎片往你身上噴。', atk:[18,30] }],
+    win:['它把嘴裡的鐵屑吐掉，鑽回車底不再出來。'],
+    lose:['你退到馬路上。','它繼續啃那台車，沒有追出來。'],
+    flee:['你退開，磨鐵的聲音又響了起來。'],
+  },
   nester: {
     name:'築巢的東西', hp:190, art:'e_nester',
     intro:['沙發被剖開了，海綿全被扯出來鋪成一團。',
@@ -1909,6 +2135,9 @@ const ITEMS = {
                  battle:{ atk:[45,70], text:'你用螺絲起子往前刺。' } },
   pliers:      { name:'老虎鉗',       art:'i_pliers',      desc:'握把上纏著厚厚的防滑帶，是絕緣的。',
                  battle:{ atk:[55,85], text:'你抄起老虎鉗砸過去。' } },
+  gas:         { name:'汽油',         art:'i_gas',         desc:'從 SNG 車油箱抽出來的，裝在一個舊塑膠桶裡。' },
+  daitong:     { name:'大同寶寶',     art:'i_daitong',     desc:'棒球帽、紅衣服、憨憨的笑。底座刻著一組編號。' },
+  waxfinger:   { name:'蠟製的手指',   art:'i_waxfinger',   desc:'一根蠟做的食指，指腹上的紋路壓得很清楚。做的人知道要按哪裡。' },
   crowbar:     { name:'鐵撬',         art:'i_crowbar',     desc:'一端被敲扁了，握起來剛剛好。',
                  battle:{ atk:[60,90], text:'你掄起鐵撬砸下去。' } },
   bandage:     { name:'繃帶',         art:'i_bandage',     desc:'壓縮包裝的急救繃帶，封口還沒開。點一下就能用。',
@@ -2055,10 +2284,26 @@ const AREAS = {
       'rrrrrrooorrrrrrr',
     ],
     objects: [
-      { id:'frontdoor', name:'鐵捲門', col:5, row:2, w:2, h:1, solid:true, color:'#5b6470',
+      { id:'frontdoor', name:'電動鐵捲門', col:5, row:2, w:2, h:1, solid:true, color:'#5b6470',
+        need: () => state.opened.generator,
+        needLines:['電動鐵捲門整片拉到底，貼著地面。',
+                   '上方的捲門馬達外殼有三個很近的彈孔，手動拉環也被拆走了。',
+                   { who:'player', text:'線還是通的。只要有電，它自己會捲上去。' }],
         exit:{ to:'f1', col:5, row:9 },
-        lines:['鐵捲門只拉下來一半，彎腰就進得去。',
+        docs:['motor_note'],
+        lines:['馬達嗡了一聲，鐵捲門一格一格捲上去。',
                '裡面有聲音——不是人聲，是機器一直在跑的聲音。'] },
+      { id:'generator', name:'發電機', col:1, row:7, w:2, h:1, solid:true, color:'#6b5c45',
+        lock:{ type:'item', item:'gas', consume:true,
+               locked:['一台拖車型的小發電機，被推到牆邊，電線已經接到鐵捲門的控制盒上。',
+                       '掛在把手上的操作牌寫著：「加油→開閥→拉繩→送電」。',
+                       '油量表指在底。'],
+               wrong:['這個灌不進油箱。'],
+               opened:['你把油倒進去，開閥，拉繩。',
+                       '第三下的時候它咳了一聲，然後穩定地轉了起來。',
+                       '牆上的燈跟著亮了。'] },
+        docs:['gen_note'],
+        openedLines:['發電機穩定地轉著，聲音蓋過了風。'] },
       { id:'facade', name:'窗戶', col:8, row:2, w:2, h:1, solid:true, color:'#4a6470',
         lines:['隔著玻璃往裡面看，東西堆得到處都是。',
                { who:'player', text:'住得很隨便，可是器材擺得很整齊。' }] },
@@ -2068,6 +2313,26 @@ const AREAS = {
         lines:['抬頭看，屋頂上架著一支跟房子完全不成比例的天線塔。',
                '塔身偏向一邊，最上面那截被風吹得晃。',
                { who:'player', text:'那個高度，訊號可以傳很遠。' }] },
+      { id:'tank', name:'SNG 車油箱', col:4, row:5, w:1, h:1, solid:true, color:'#4a5560',
+        battle:'driller',
+        lock:{ type:'choice',
+               steps:[
+                 { q:'油箱裡還有油。要怎麼弄出來？',
+                   options:['把油箱敲破','找根管子虹吸','直接拆下整個油箱'], goal:1 },
+                 { q:'車上有一截透明軟管。虹吸要先做什麼？',
+                   options:['管子插進去用力吹','管子插進去先吸','把車子墊高'], goal:1 },
+               ],
+               damage:[8,14],
+               hurtFlag:'gassed',
+               failTitle:'滿嘴汽油！',
+               fail:['你嗆了一大口，喉嚨到胃像被點著一樣。'],
+               locked:['油箱蓋被撬過又蓋回去，邊緣有牙齒的痕跡。',
+                       '搖起來還有聲音，是滿的。'],
+               opened:['油從管子流進塑膠桶裡，味道嗆得眼睛發酸。',
+                       '差不多裝了一半，夠了。'] },
+        give:'gas',
+        docs:['tank_note'],
+        openedLines:['油箱空了一半，管子還插在裡面。'] },
       { id:'sng', name:'SNG 車', col:1, row:5, w:3, h:2, solid:true, color:'#5c6a72',
         lock:{ type:'item', item:'screwdriver', consume:false,
                locked:['一台很像以前電視台的 SNG 車，停在牆邊。',
@@ -2079,7 +2344,7 @@ const AREAS = {
         give:'pliers',
         docs:['sngnote'],
         openedLines:['側板開著，工具箱裡剩下的都是接頭。'] },
-      { id:'sngradio', name:'收音機', col:4, row:6, w:1, h:1, solid:true, color:'#4b5560',
+      { id:'sngradio', name:'收音機', col:5, row:6, w:1, h:1, solid:true, color:'#4b5560',
         docs:['airvoice'] },
       { id:'pole', name:'電線桿', col:14, row:4, w:1, h:2, solid:true, color:'#6b5c45',
         lines:['一根舊電線桿，上面接出去的線多得不像話。',
@@ -2149,9 +2414,48 @@ const AREAS = {
         docs:['shells_note'] },
 
       /* — 客廳 — */
-      { id:'tv', name:'電視', col:11, row:1, w:2, h:1, solid:true, color:'#2a3038',
+      { id:'tv', name:'電視', col:11, row:1, w:1, h:1, solid:true, color:'#2a3038',
+        need: () => state.opened.breaker,
+        needLines:['螢幕黑著，映出整個客廳，還有站在客廳裡的你。',
+                   { who:'player', text:'……沒電。總開關應該在樓梯下面。' }],
+        lock:{ type:'choice',
+               steps:[
+                 { q:'通電了，但電視只有雜訊。要怎麼辦？',
+                   options:['正常打開', '看看電源', '暴力敲電視機上緣',
+                            { t:'把旁邊的大同寶寶放上去', item:'daitong' }],
+                   goal:3 },
+                 { q:'寶寶放上去了。畫面還是一片雪花。',
+                   options:['正常打開', '看看電源', '暴力敲電視機上緣', '再放一次寶寶'],
+                   goal:2 },
+               ],
+               damage:[4,10],
+               hurtFlag:'zapped',
+               failTitle:'啪！',
+               fail:['機殼後面竄出一道細細的藍光，手指麻了一下。'],
+               locked:['螢幕碎了一角，裂痕從右下角往外散開，但還亮著。',
+                       '整面都是雪花。'],
+               opened:['你照著老規矩，在上緣狠狠敲了一記。',
+                       '雪花一瞬間收乾淨，畫面定住了。'] },
         docs:['tvnote'],
-        lines:['螢幕碎了，裂痕從右下角往外散開。'] },
+        openedLines:['電視開著，畫面定在同一格。'] },
+      { id:'tvscreen', name:'電視畫面', col:12, row:1, w:1, h:1, solid:true, color:'#141c26',
+        need: () => state.opened.tv,
+        needLines:['電視還沒開。'],
+        lock:{ type:'morse',
+               answer:'I WANT TO PLAY GAME',
+               pic:'',
+               locked:['畫面定在一格：一個小丑騎在腳踏車上，沒有動。',
+                       '螢幕下方的字幕被遮住了，只剩下一排星號。',
+                       '字幕底下有一行斷斷續續的訊號。'],
+               wrong:['小丑沒有動。'],
+               opened:['最後一個字母打完，星號一格一格翻成字。',
+                       '小丑轉過頭來，咯咯咯地笑。',
+                       '「就讓你來代替我發言吧？」',
+                       '機殼底下「咚」一聲掉出一個東西。',
+                       { who:'player', text:'……一根手指。是蠟做的。' }] },
+        give:'waxfinger',
+        docs:['clown_note'],
+        openedLines:['畫面裡的小丑還騎在那台腳踏車上，笑著。'] },
       { id:'tin', name:'餅乾鐵盒', col:13, row:1, w:1, h:1, solid:true, color:'#c9a86c',
         lock:{ type:'code', code:'945', digits:3, hint:'三位數字',
                locked:['從電視櫃底下拉出來的舊餅乾鐵盒，蓋子上有一個三位數的小鎖。',
@@ -2161,6 +2465,23 @@ const AREAS = {
         give:'photo',
         docs:['tin_letter'],
         openedLines:['鐵盒開著，裡面剩下繳費單和存摺。'] },
+      { id:'shrinebaby', name:'大同寶寶', col:9, row:1, w:1, h:1, solid:true, color:'#c9756c',
+        lock:{ type:'choice',
+               steps:[
+                 { q:'電視櫃上擺著一個大同寶寶，被壓在倒下來的層板底下。要怎麼弄出來？',
+                   options:['整片層板抬起來','把寶寶硬抽出來','先把上面的東西拿掉'], goal:2 },
+               ],
+               damage:[6,12],
+               hurtFlag:'pinched',
+               failTitle:'層板塌下來了！',
+               fail:['你一動，上面整疊東西滑下來砸在手上。'],
+               locked:['一個大同寶寶被壓在倒下來的層板底下，只露出半張臉。',
+                       '棒球帽是歪的，但沒有裂。'],
+               opened:['你把上面的雜物一件一件搬開，寶寶完好無缺地站在那裡。',
+                       { who:'player', text:'……這種東西居然沒被打破。' }] },
+        give:'daitong',
+        docs:['baby_note'],
+        openedLines:['層板挪開了，原本的位置留下一圈沒有灰的痕跡。'] },
       { id:'table', name:'翻倒的茶几', col:10, row:3, w:2, h:1, solid:false, color:'#5c4d38',
         lines:['側翻在地毯上，桌腳斷了一支。','底下壓著一地的玻璃。'] },
       { id:'sofa', name:'沙發', col:9, row:4, w:3, h:1, solid:true, color:'#6b5a6a',
@@ -2235,8 +2556,16 @@ const AREAS = {
         docs:['closet_note'],
         lines:['門板歪在一邊，裡面的東西被整個掃到地上。'] },
       { id:'desk', name:'書桌', col:4, row:1, w:2, h:1, solid:true, color:'#5c4d38',
+        lock:{ type:'item', item:'crowbar', consume:false,
+               locked:['桌面被翻過，只有抽屜還關著——鎖頭壞了，卡死在裡面。',
+                       '從縫隙看得到裡面有東西，但手指伸不進去。'],
+               wrong:['這個撬不開抽屜。'],
+               opened:['抽屜被撬開，裡面是一疊稿紙。',
+                       '稿紙底下壓著一顆用泡棉包好的備用保險絲。',
+                       { who:'player', text:'……他連這個都先備好了。' }] },
+        give:'fuse',
         docs:['desk_note'],
-        lines:['桌面被翻過，只有抽屜還關著——鎖頭壞了，卡死在裡面。'] },
+        openedLines:['抽屜開著，稿紙散在桌面上。'] },
       { id:'bedframe', name:'空的床架', col:1, row:4, w:3, h:1, solid:true, color:'#6b5a6a',
         lines:['床架還在，床墊不見了。',
                '四個角的螺絲都被拆下來排在地上，拆的人很有耐心。',
@@ -2279,7 +2608,16 @@ const AREAS = {
         exit:{ to:'f1', col:2, row:7 },
         lines:['往下回到一樓。'] },
       { id:'stairs_up', name:'上樓的樓梯', col:4, row:8, w:2, h:2, solid:true, color:'#5c4d38',
+        lock:{ type:'item', item:'waxfinger', consume:false,
+               locked:['樓梯口被一道門擋住了。門框是後來加上去的，跟這棟房子完全不搭。',
+                       '鎖是指紋式的，讀取窗還亮著待機的綠燈。',
+                       '旁邊貼著一張便條：「手指沒帶在身上。不如先去看電視吧？」'],
+               wrong:['讀取窗閃了一下紅燈。這個不是手指。'],
+               opened:['你把那根蠟指按上去。',
+                       '綠燈變成白色，鎖舌退開的聲音很輕。',
+                       { who:'player', text:'……他把自己的指紋留在這種東西上。' }] },
         exit:{ to:'room', col:10, row:9 },
+        docs:['door3_note'],
         lines:['再往上一層。上面原本是神明廳。',
                '這一段樓梯特別乾淨，被掃過。'] },
       { id:'hallwin', name:'樓梯間的窗', col:8, row:6, w:2, h:1, solid:false, color:'#4a6470',
@@ -2325,6 +2663,27 @@ const AREAS = {
                { who:'player', text:'……吃飯跟工作在同一張桌子上。' }] },
       { id:'calendar', name:'月曆', col:5, row:1, w:1, h:1, solid:true, color:'#6b5a42',
         docs:['calendar'] },
+
+      /* — 開場的準備 — */
+      { id:'checklist', name:'牆上的準備清單', col:11, row:1, w:2, h:1, solid:true, color:'#8a8f96',
+        docs:['prep_note'] },
+      { id:'recorder', name:'高音直笛', col:5, row:6, w:1, h:1, solid:true, color:'#c9a86c',
+        lock:{ type:'music', notes:16,
+               sheet:'卡加布列島　四四拍\n3 6 6 (1) ｜ 7 6 — — ｜ 6 3 6 (1) ｜ (3)(3) 6 —',
+               locked:['收音器材旁邊擺著一支高音直笛，笛身上有齒痕。',
+                       '譜架上壓著一張手抄的簡譜，四個小節，用鉛筆畫了小節線。',
+                       '空白處有人寫了一行：「隨便吹什麼都可以，反正是自己的節目。」'],
+               opened:['你把最後一個音吹完。',
+                       '殘響在吸音牆之間散掉，房間安靜下來。',
+                       { who:'player', text:'……開場就用這段。' }] },
+        openedLines:['直笛放在譜架上。開場曲已經決定了。'] },
+      { id:'topicboard', name:'播報題材板', col:3, row:9, w:2, h:1, solid:true, color:'#6b5a42',
+        lock:{ type:'topics', pick:3,
+               locked:['一塊軟木板，上面別著空白的夾子。',
+                       '旁邊用鉛筆寫著：「今天要講什麼？挑三件。」'],
+               opened:['三張紙條夾上去，順序排好。',
+                       { who:'player', text:'……這樣就有得講了。' }] },
+        openedLines:['三則題材夾在板子上，等著被唸出來。'] },
 
       /* — 神明廳留下來的 — */
       { id:'shrine', name:'神明彩', col:1, row:1, w:3, h:1, solid:true, color:'#7a2f2c',
@@ -2390,15 +2749,16 @@ const AREAS = {
         need: () => state.flags.signal,
         needLines:['帶子放得進去，但發射端沒有反應。',
                    { who:'player', text:'訊號出不去。得先上去看看天線。' }],
-        onOpen: () => { state.flags.aired = true; playBGM('special'); },
+        onOpen: () => { state.flags.heard = true; },
         openedLines:['帶子還在轉。'] },
       { id:'rack', name:'機櫃', col:14, row:4, w:1, h:1, solid:true, color:'#2f3742',
         lock:{ type:'item', item:'screwdriver', consume:false,
                locked:['風扇在轉，聲音很低。','側板被一排螺絲鎖死了。'],
                wrong:['這個拆不了螺絲。'],
-               opened:['側板卸下來，裡面是一整排保險絲座。','其中一格還插著沒用過的備品。'] },
-        give:'fuse',
-        openedLines:['側板開著，剩下的保險絲都是燒過的。'] },
+               opened:['側板卸下來，裡面是一整排保險絲座。',
+                       '全部燒黑了，備品那一格是空的。',
+                       { who:'player', text:'……得去別的地方找一顆。' }] },
+        openedLines:['側板開著，保險絲座全是燒過的。'] },
       { id:'drawer', name:'控台抽屜', col:12, row:4, w:1, h:1, solid:true, color:'#5c4d38',
         lock:{ type:'code', code:'1773', digits:4, hint:'四位數字',
                locked:['控台下的抽屜，鎖上有四個轉輪。',
@@ -2578,19 +2938,35 @@ const AREAS = {
         openedLines:['天線立得很正。'] },
       { id:'panel', name:'配電箱', col:3, row:2, w:1, h:1, solid:true, color:'#6a7078',
         lock:{ type:'wire',
-               wires:[{ name:'紅線',   ports:['黃孔','綠孔','藍孔','紅孔','備用孔','接地孔'], goal:0 },
-                      { name:'藍線',   ports:['黃孔','綠孔','藍孔','紅孔','備用孔','接地孔'], goal:1 },
-                      { name:'黑線',   ports:['黃孔','綠孔','藍孔','紅孔','備用孔','接地孔'], goal:4 },
-                      { name:'鼠標記', ports:['黃孔','綠孔','藍孔','紅孔','備用孔','接地孔'], goal:5 }],
-               locked:['配電箱的蓋子沒鎖，四條線全掉在底下。',
-                       '插孔有六個：黃、綠、藍、紅，一個標著「備用」，還有一個標著接地符號。',
-                       '有一條線的端頭貼著一張小小的老鼠貼紙。'],
+               wires:[{ name:'貓標記', ports:['黃孔','綠孔','藍孔','紅孔','空孔','備用孔','接地孔'], goal:4 },
+                      { name:'紅線',   ports:['黃孔','綠孔','藍孔','紅孔','空孔','備用孔','接地孔'], goal:0 },
+                      { name:'狗標記', ports:['黃孔','綠孔','藍孔','紅孔','空孔','備用孔','接地孔'], goal:3 },
+                      { name:'黑線',   ports:['黃孔','綠孔','藍孔','紅孔','空孔','備用孔','接地孔'], goal:5 },
+                      { name:'藍線',   ports:['黃孔','綠孔','藍孔','紅孔','空孔','備用孔','接地孔'], goal:1 },
+                      { name:'鼠標記', ports:['黃孔','綠孔','藍孔','紅孔','空孔','備用孔','接地孔'], goal:6 }],
+               locked:['配電箱的蓋子沒鎖，六條線全掉在底下。',
+                       '插孔有七個：黃、綠、藍、紅，一個標著「空」，一個標著「備用」，',
+                       '最右邊那個標著接地符號。',
+                       '有三條線的端頭貼著手繪的動物貼紙：老鼠、貓、狗。'],
                wrong:['接錯了，指示燈閃了一下紅。'],
                opened:['三條線各就各位，指示燈轉成綠的。'] },
         docs:['wiring'],
         openedLines:['線接得好好的。'] },
       { id:'toolbag', name:'工具袋', col:8, row:2, w:1, h:1, solid:false, color:'#6b5c45',
         docs:['toolnote'] },
+      { id:'sender', name:'發信盤', col:8, row:4, w:1, h:1, solid:true, color:'#4a7f92',
+        need: () => (state.music || []).length && (state.topics || []).length
+                 && state.flags.power && state.flags.signal,
+        needLines:['天線塔底下的發信盤，推桿還壓在最底。',
+                   '旁邊貼著那張清單，四項只勾了一部分。',
+                   { who:'player', text:'……開場曲、三件事、放送設備、天線。還沒齊。' }],
+        lock:{ type:'broadcast',
+               locked:['推桿可以推了。',
+                       '訊號會從這支塔送出去，這一帶只要還有收音機的人都聽得到。',
+                       '你把耳機戴上。'],
+               opened:[],
+               after: (o) => runBroadcast(o.lock._t) },
+        openedLines:['推桿在最上面。訊號還在送。'] },
       { id:'notebook', name:'收訊本', col:9, row:3, w:1, h:1, solid:true, color:'#7a6c4e',
         docs:['recv_north','recv_south','recv_gang','recv_cult','recv_stage','recv_sky'],
         lines:['一本被壓在鐵板下的簿子，紙頁被風翻得很毛。'] },
@@ -2670,6 +3046,16 @@ w,6,6,6,7,6,6,6
 1,1,1,1,1,1,k,0
 0,0,0,0,0,0,0,0
 `,
+  e_driller: `
+.,.,.,6,6,.,.,.
+.,.,6,7,7,6,.,.
+.,6,7,k,k,7,6,.
+6,7,7,7,7,7,7,6
+6,7,k,7,7,k,7,6
+.,6,w,k,k,w,6,.
+.,.,w,w,w,w,.,.
+.,.,.,w,w,.,.,.
+`,
   e_nester: `
 .,.,.,b,b,.,.,.
 .,.,b,y,y,b,.,.
@@ -2689,6 +3075,36 @@ b,b,w,b,b,w,b,b
 .,8,8,8,8,8,8,.
 8,.,8,.,.,8,.,8
 .,8,.,8,8,.,8,.
+`,
+  i_gas: `
+.,.,r,r,.,.,.,.
+.,.,r,r,.,.,.,.
+.,r,r,r,r,r,r,.
+.,r,y,y,y,y,r,.
+.,r,y,k,k,y,r,.
+.,r,y,y,y,y,r,.
+.,r,r,r,r,r,r,.
+.,.,.,.,.,.,.,.
+`,
+  i_daitong: `
+.,.,8,8,8,8,.,.
+.,8,8,8,8,8,8,.
+.,.,w,w,w,w,.,.
+.,.,w,k,k,w,.,.
+.,r,r,r,r,r,r,.
+.,r,r,w,w,r,r,.
+.,r,r,r,r,r,r,.
+.,.,6,6,6,6,.,.
+`,
+  i_waxfinger: `
+.,.,.,w,w,.,.,.
+.,.,w,7,7,w,.,.
+.,.,w,7,7,w,.,.
+.,.,w,7,7,w,.,.
+.,.,w,7,7,w,.,.
+.,.,.,w,w,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
 `,
   i_crowbar: `
 .,.,.,.,.,7,7,.
@@ -4872,6 +5288,7 @@ function saveGame(){
         })),
         read: state.read, opened: state.opened, flags: state.flags,
         battles: state.battles, items: state.items,
+        music: state.music || [], topics: state.topics || [],
         photo,
         hp: state.hp, achv: state.achv, vistaSeen: state.vistaSeen,
         area: AREA ? AREA.id : 'room',
@@ -4926,6 +5343,8 @@ function applySave(s){
   state.read = s.read || {}; state.opened = s.opened || {};
   state.flags = s.flags || {}; state.battles = s.battles || {};
   state.items = s.items || [];
+  state.music = s.music || [];
+  state.topics = s.topics || [];
   state.hp = s.hp || 0;
   state.achv = s.achv || {};
   state.vistaSeen = s.vistaSeen || {};
@@ -5217,7 +5636,7 @@ function update(dt){
       const [hc, hr] = here();
       const td = TILES[(MAP[hr] || '')[hc]];
       if(td && td.hurt && state.started){
-        floatHurt(hurtPlayer(rnd(td.hurt)));
+        floatHurt(hurtPlayer(rnd(td.hurt)), true);
         state.flags.cut = true;
       }
     }
@@ -5275,21 +5694,23 @@ function interact(){
     openVista(o.vista);
     return;
   }
-  if(o.exit){                                            // 走到另一個區域
+  if(o.need && !o.need()){                               // ① 前置條件：沒滿足就什麼都不能做
+    return say(o.name, o.needLines || ['現在還不行。']);
+  }
+  const fought = state.battles[o.battle];
+  if(o.battle && (!fought || fought === 'flee')){        // ② 有東西擋著就先打
+    startBattle(o.battle, o); return;
+  }
+  if(o.lock && !state.opened[o.id]){                     // ③ 上鎖就先解
+    if(canBypass(o)){ solve(o, true); return; }          // 特定陣營／種族直接打開
+    openPuzzle(o); return;
+  }
+  if(o.exit){                                            // ④ 最後才是走過去
     const x = o.exit;
     state.after = () => loadArea(x.to, x.col, x.row);
     say(o.name, o.lines || ['過去。']);
     return;
   }
-  if(o.need && !o.need()){                               // 條件還沒滿足
-    return say(o.name, o.needLines || ['現在還不行。']);
-  }
-  if(o.lock && !state.opened[o.id]){
-    if(canBypass(o)){ solve(o, true); return; }                // 特定陣營／種族直接打開
-    openPuzzle(o); return;
-  }
-  const fought = state.battles[o.battle];
-  if(o.battle && (!fought || fought === 'flee')){ startBattle(o.battle, o); return; }
   const ds = visibleDocs(o);
   if(ds.length === 1){ openDoc(ds[0]); return; }
   if(ds.length > 1){ openList(o.name, ds); return; }
@@ -5436,7 +5857,7 @@ function hide(id){
 }
 document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => hide(b.closest('.overlay').id));
 document.querySelectorAll('.overlay').forEach(ov => {
-  ov.addEventListener('click', e => { if(e.target === ov && !['setup','battleOverlay','title','quitOverlay'].includes(ov.id)) hide(ov.id); });
+  ov.addEventListener('click', e => { if(e.target === ov && !['setup','battleOverlay','title','quitOverlay','airOverlay'].includes(ov.id)) hide(ov.id); });
 });
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -5493,7 +5914,7 @@ function openPuzzle(o){
   $('puzMsg').textContent = '';
   hideToast();
   const T2 = o.lock.type;
-  const board = ['seq','wire','tune','switch'].includes(T2);
+  const board = !['code','item'].includes(T2);   // 除了密碼與道具，其餘都用盤面
   $('puzCode').style.display = T2 === 'code' ? 'block' : 'none';
   $('puzItem').style.display = T2 === 'item' ? 'block' : 'none';
   $('puzBoard').style.display = board ? 'block' : 'none';
@@ -5537,6 +5958,9 @@ function initBoard(o){
   const L = o.lock;
   if(L.type === 'seq') L._in = [];
   if(L.type === 'choice') L._step = 0;
+  if(L.type === 'music'  && !L._n) L._n = [];
+  if(L.type === 'topics' && !L._p) L._p = [];
+  if(L.type === 'broadcast' && L._t === undefined) L._t = '';
   if(L.type === 'wire' && !L._at) L._at = L.wires.map(() => -1);   // -1 = 還沒接上
   if(L.type === 'tune' && !L._at) L._at = L.dials.map(d => d.min);
   if(L.type === 'switch' && !L._at){
@@ -5550,6 +5974,9 @@ function initBoard(o){
 
 function boardSolved(o){
   const L = o.lock;
+  if(L.type === 'music')  return (L._n || []).length >= (L.notes || 16);
+  if(L.type === 'topics') return (L._p || []).length === (L.pick || 3);
+  if(L.type === 'broadcast') return !!(L._t || '').trim();
   if(L.type === 'choice') return (L._step || 0) >= L.steps.length;
   if(L.type === 'seq')    return L._in.join('|') === L.seq.join('|');
   if(L.type === 'wire')   return L.wires.every((w, i) => L._at[i] === w.goal);
@@ -5558,7 +5985,697 @@ function boardSolved(o){
   return false;
 }
 
-/* 手把盤面：十字鍵 + 兩顆圓鈕，只有上／下／A／B 按得動 */
+/* ── 天空留言板：把所有人的宣言撈回來散在天上 ── */
+let skyMsgs = null, skyAnim = null;
+
+async function loadSky(){
+  if(skyMsgs) return skyMsgs;
+  const F = SKY.fields;
+  try{
+    if(SKY.csvUrl){
+      const res = await fetch(SKY.csvUrl);
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      const rows = parseCSV(await res.text());
+      const list = rows.map(r => ({ text:(r[F.text] || '').trim(), name:(r[F.name] || '').trim() }))
+                       .filter(x => x.text);
+      if(list.length){ skyMsgs = list.slice(-SKY.max); return skyMsgs; }
+    } else if(SKY.jsonUrl){
+      const res = await fetch(SKY.jsonUrl + (SKY.jsonUrl.includes('?') ? '&' : '?') + 'what=sky');
+      const d = await res.json();
+      if(d && d.list && d.list.length){ skyMsgs = d.list.slice(-SKY.max); return skyMsgs; }
+    }
+  }catch(err){ console.warn('天空留言板讀取失敗，改用內建資料', err); }
+  skyMsgs = SKY.baked.slice();
+  return skyMsgs;
+}
+
+function skyStop(){ if(skyAnim) cancelAnimationFrame(skyAnim); skyAnim = null; }
+
+function skyScene(mine, sign, onDone){
+  const cv = $('airCanvas');
+  const c = airCanvasSetup();
+  const others = (skyMsgs || SKY.baked).filter(m => m.text !== mine);
+  const drift = others.map((m, i) => ({
+    m,
+    x: 0.06 + ((i * 0.37) % 0.88),
+    y: 0.15 + ((i * 0.23) % 1.5),
+    sp: 0.000018 + (i % 5) * 0.0000065,
+    sz: 12 + (i % 3) * 2,
+  }));
+  const t0 = performance.now();
+
+  const loop = () => {
+    const now = performance.now(), el = now - t0;
+    const W = cv.width, H = cv.height;
+    airSky(c, W, H, now);
+
+    c.textAlign = 'center';
+    drift.forEach(d => {
+      d.y -= d.sp * 16;
+      if(d.y < -0.12){ d.y = 1.12; d.x = Math.random() * 0.86 + 0.07; }
+      const y = d.y * H;
+      const edge = Math.min(1, Math.min(d.y + 0.12, 1.12 - d.y) / 0.2);
+      c.globalAlpha = 0.42 * edge;
+      c.font = d.sz + 'px sans-serif';
+      c.fillStyle = '#9fd4e4';
+      c.fillText(d.m.text, d.x * W, y);
+      c.globalAlpha = 0.26 * edge;
+      c.font = Math.round(d.sz * 0.75) + 'px sans-serif';
+      c.fillText('—— ' + d.m.name, d.x * W, y + d.sz * 1.35);
+      c.globalAlpha = 1;
+    });
+
+    const p = Math.min(1, el / 1400);                     // 自己那句慢慢亮起來
+    const size = Math.max(18, Math.min(30, W / Math.max(10, mine.length)));
+    c.font = '600 ' + size + 'px sans-serif';
+    c.globalAlpha = p;
+    c.shadowColor = 'rgba(111,179,201,.9)'; c.shadowBlur = 22;
+    c.fillStyle = '#eaf6fa';
+    c.fillText(mine, W / 2, H * 0.44);
+    c.shadowBlur = 0;
+    c.font = Math.round(size * 0.55) + 'px sans-serif';
+    c.fillStyle = 'rgba(111,179,201,.9)';
+    c.fillText('—— ' + sign + '　FM 94.5', W / 2, H * 0.44 + size * 1.2);
+    c.globalAlpha = 1;
+    c.textAlign = 'left';
+
+    skyAnim = requestAnimationFrame(loop);
+  };
+  loop();
+
+  $('airWho').textContent = '';
+  $('airLine').textContent = '天上全是別人喊出來的話。你的那句也在裡面了。';
+  $('airTip').textContent = '點一下離開';
+  $('airOverlay').onclick = () => { skyStop(); onDone(); };
+}
+
+/* ── 發信：玩家自己寫一句要對所有人說的話 ───────────────────── */
+const DECL_MAX = 60;
+
+function buildDecl(o, box){
+  const L = o.lock;
+  const wrap = document.createElement('div'); wrap.className = 'declbox';
+
+  const pre = document.createElement('div'); pre.className = 'declpre';
+  const tops = (state.topics || []).map(k => DOCS[k] && DOCS[k].title).filter(Boolean);
+  pre.innerHTML = '開場曲：<b>' + ((state.music || []).length ? '已經吹好了' : '還沒決定') + '</b><br>'
+                + '今天要講的：<b>' + (tops.length ? tops.join('、') : '還沒挑') + '</b><br>'
+                + '播報人：<b>' + (me.name || '你') + '</b>';
+  wrap.appendChild(pre);
+
+  const ta = document.createElement('textarea');
+  ta.id = 'declInput';
+  ta.maxLength = DECL_MAX;
+  ta.placeholder = '最後，你想對所有還聽得到的人說什麼？';
+  ta.value = L._t || '';
+  wrap.appendChild(ta);
+
+  const row = document.createElement('div'); row.className = 'declrow';
+  const go = document.createElement('button');
+  go.className = 'pbtn go'; go.textContent = '送出去';
+  const cnt = document.createElement('span'); cnt.className = 'cnt';
+  const sync = () => {
+    L._t = ta.value;
+    cnt.textContent = ta.value.length + ' / ' + DECL_MAX + ' 字';
+    go.style.opacity = ta.value.trim() ? '1' : '.45';
+  };
+  ta.addEventListener('input', sync);
+  go.onclick = () => {
+    if(!ta.value.trim()){ puzWrong(['總得說點什麼。'], '還沒寫'); return; }
+    L._t = ta.value.trim();
+    solve(o);
+  };
+  row.appendChild(go); row.appendChild(cnt);
+  wrap.appendChild(row);
+
+  const note = document.createElement('span');
+  note.className = 'note'; note.style.margin = '0';
+  note.textContent = '這句話會跟著訊號一起送出去，而且會留在天上。';
+  wrap.appendChild(note);
+
+  box.appendChild(wrap);
+  sync();
+  setTimeout(() => ta.focus(), 60);
+}
+
+/* ── 大字報：電波文字從遠方升起 ─────────────────────────────── */
+let airAnim = null;
+
+function airCanvasSetup(){
+  const cv = $('airCanvas');
+  cv.width = cv.clientWidth; cv.height = cv.clientHeight;
+  return cv.getContext('2d');
+}
+
+function airSky(c, W, H, t){
+  const g = c.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#05070a'); g.addColorStop(0.6, '#0b1420'); g.addColorStop(1, '#13202c');
+  c.fillStyle = g; c.fillRect(0, 0, W, H);
+  for(let i = 0; i < 90; i++){                       // 星
+    const x = (i * 977) % W, y = (i * 613) % (H * 0.7);
+    const a = 0.25 + 0.35 * Math.sin(t / 700 + i);
+    c.fillStyle = 'rgba(219,226,234,' + a.toFixed(3) + ')';
+    c.fillRect(x, y, 1.5, 1.5);
+  }
+  c.fillStyle = '#0a0f16';                            // 遠方的地平線與天線塔
+  c.fillRect(0, H * 0.82, W, H * 0.18);
+  c.strokeStyle = 'rgba(111,179,201,.35)'; c.lineWidth = 2;
+  const tx = W * 0.16, ty = H * 0.82;
+  c.beginPath(); c.moveTo(tx - 12, ty); c.lineTo(tx, ty - 70);
+  c.lineTo(tx + 12, ty); c.moveTo(tx - 7, ty - 30); c.lineTo(tx + 7, ty - 30); c.stroke();
+  const blink = (Math.sin(t / 400) + 1) / 2;
+  c.fillStyle = 'rgba(209,68,60,' + (0.3 + blink * 0.7).toFixed(2) + ')';
+  c.beginPath(); c.arc(tx, ty - 72, 3, 0, 7); c.fill();
+}
+
+/* 一個字一個字往上浮，帶掃描線與抖動，像電波組出來的。太長會自動折行 */
+function airBanner(c, W, H, text, sign, p){
+  const perLine = Math.max(6, Math.min(14, Math.floor(W / 48)));
+  const lines = [];
+  for(let i = 0; i < text.length; i += perLine) lines.push(text.slice(i, i + perLine));
+  const longest = Math.max(...lines.map(l => l.length));
+  const size = Math.max(17, Math.min(38, (W * 0.84) / longest));
+  const lh = size * 1.4;
+  const baseY = H * 0.44 - (lines.length - 1) * lh / 2;
+  const total = Math.max(1, text.length);
+  let idx = 0;
+
+  c.font = '600 ' + size + 'px sans-serif';
+  c.textAlign = 'center';
+  lines.forEach((ln, li) => {
+    const totalW = ln.length * size * 1.06;
+    const x0 = W / 2 - totalW / 2 + size * 0.53;
+    const targetY = baseY + li * lh;
+    ln.split('').forEach((ch, i) => {
+      const start = (idx / total) * 0.42;             // 全部在 p=0.9 之前落定
+      idx++;
+      const d = Math.max(0, Math.min(1, (p - start) / 0.48));
+      if(d <= 0) return;
+      const ease = 1 - Math.pow(1 - d, 3);
+      const y = H * 0.94 - ease * (H * 0.94 - targetY);
+      const jit = (1 - ease) * Math.sin(i * 3.1 + p * 30) * 4;
+      const x = x0 + i * size * 1.06 + jit;
+      c.globalAlpha = Math.min(1, ease * 1.4);
+      c.fillStyle = 'rgba(111,179,201,.35)';
+      c.fillText(ch, x + 2, y + 2);
+      c.fillStyle = '#dff2f8';
+      c.shadowColor = 'rgba(111,179,201,.9)'; c.shadowBlur = 18 * ease;
+      c.fillText(ch, x, y);
+      c.shadowBlur = 0;
+      c.globalAlpha = 1;
+      for(let sc = 0; sc < size; sc += 3){             // 掃描線
+        c.fillStyle = 'rgba(5,7,10,.30)';
+        c.fillRect(x - size / 2, y - size + sc, size, 1);
+      }
+    });
+  });
+
+  if(p > 0.93 && sign){                                // 字全部落定才簽名
+    c.globalAlpha = Math.min(1, (p - 0.93) / 0.07);
+    c.font = '600 ' + Math.round(size * 0.55) + 'px sans-serif';
+    c.fillStyle = 'rgba(111,179,201,.9)';
+    c.fillText('—— ' + sign + '　FM 94.5', W / 2, baseY + lines.length * lh + size * 0.2);
+    c.globalAlpha = 1;
+  }
+  c.textAlign = 'left';
+}
+
+function airStop(){ if(airAnim) cancelAnimationFrame(airAnim); airAnim = null; }
+
+function airPlay(text, sign, hold){
+  const c = airCanvasSetup();
+  const cv = $('airCanvas');
+  const t0 = performance.now();
+  airStop();
+  const loop = () => {
+    const now = performance.now(), el = now - t0;
+    const W = cv.width, H = cv.height;
+    airSky(c, W, H, now);
+    const p = Math.min(1, el / (hold || 3600));
+    airBanner(c, W, H, text, sign, p);
+    airAnim = requestAnimationFrame(loop);
+  };
+  loop();
+}
+
+/* ── 整段播出 ───────────────────────────────────────────────── */
+function runBroadcast(text){
+  const sign = me.name || '你';
+  const tops = (state.topics || []).map(k => DOCS[k]).filter(Boolean);
+  const seq = [];
+
+  seq.push({ who:'ON AIR', line:'ON AIR 的燈亮起來。推桿推到底。', wait:900 });
+  seq.push({ who:'開場曲', line:'（你吹的那段從喇叭裡送了出去。）',
+             fn:() => playNotes(state.music || []),
+             wait:((state.music || []).length ? 6600 : 400) });
+  seq.push({ who:sign, line:'「這裡是 FM 94.5。今天由我代班。」' });
+  tops.forEach((d, i) => {
+    seq.push({ who:sign, line:'「第' + '一二三'[i] + '件事——' + d.title + '。」' });
+    seq.push({ who:sign, line:'「' + (d.body[1] || d.body[0]) + '」' });
+  });
+  seq.push({ who:sign, line:'「最後。」' });
+  seq.push({ who:sign, line:'「我想說的是——」' });
+  seq.push({ banner:true, who:'', line:'', wait:5200 });
+  ['嘿！半年前可是說過，會來驗證你的選擇吧？',
+   '現在就是這個時候囉！',
+   '怎樣？這半年來累嗎？還是有夠慘的？',
+   '哈哈、我可是都一直關注著！',
+   '現在喊出自己的話很爽吧？體驗一下？',
+   '這裡是FM94.5！總是與你在雲端碰面～',
+  ].forEach((l, i) => seq.push({ who: i ? '收音機' : '旁邊的舊收音機', line:'「' + l + '」' }));
+  seq.push({ who:'', line:'訊號還在往外送。天上那行字沒有散。' });
+  seq.push({ sky:true, who:'', line:'……', last:true });
+
+  let i = 0, busy = false;
+  loadSky();                                      // 先在背景抓，等下才不用等
+  show('airOverlay');
+  airPlay(text, sign, 4400);
+
+  const finish = () => {
+    airStop(); skyStop();
+    hide('airOverlay');
+    state.flags.aired = true;
+    try{ localStorage.setItem(SKY_KEY, JSON.stringify({ text, name:sign })); }catch(err){}
+    playBGM('special');
+    say('播出', ['訊號送出去了。', { who:'player', text:'……接下來就是我的節目了。' }]);
+    checkAchievements();
+    saveGame();
+  };
+
+  const step = () => {
+    if(i >= seq.length){ finish(); return; }
+    const s = seq[i++];
+    if(s.sky){                                    // 最後一幕：天空留言板
+      sendReport('broadcast', {
+        id:'declaration', name:text,
+        detail:(state.topics || []).map(k => DOCS[k] && DOCS[k].title).filter(Boolean).join('／'),
+      });
+      busy = true;
+      $('airWho').textContent = '';
+      $('airLine').textContent = '……';
+      $('airTip').textContent = '……';
+      loadSky().then(() => { busy = false; skyScene(text, sign, finish); });
+      return;
+    }
+    $('airWho').textContent = s.who || '';
+    $('airLine').textContent = s.line || '';
+    $('airTip').textContent = s.last ? '點一下結束' : '點一下繼續';
+    if(s.banner){ $('airLine').textContent = '「' + text + '」'; }
+    if(s.fn) s.fn();
+    if(s.wait){
+      busy = true;
+      $('airTip').textContent = '……';
+      setTimeout(() => { busy = false; $('airTip').textContent = s.last ? '點一下結束' : '點一下繼續'; }, s.wait);
+    }
+  };
+
+  $('airOverlay').onclick = () => { if(!busy) step(); };
+  step();
+}
+
+/* ── 高音直笛：自己吹一段開場曲 ──────────────────────────────
+   簡譜 1～7 是中音，(1)(2)(3) 是高音。用 WebAudio 現場合成。 */
+const SOLFA = [
+  ['1', 523.25], ['2', 587.33], ['3', 659.25], ['4', 698.46], ['5', 783.99],
+  ['6', 880.00], ['7', 987.77], ['(1)', 1046.50], ['(2)', 1174.66], ['(3)', 1318.51],
+];
+
+let actx = null;
+function audioCtx(){
+  if(!actx){
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return null;
+    actx = new AC();
+  }
+  if(actx.state === 'suspended') actx.resume();
+  return actx;
+}
+
+/* 吹一顆音。直笛偏木質，用三角波加一點點正弦 */
+function blow(ac, freq, t, dur){
+  const g = ac.createGain();
+  g.connect(ac.destination);
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(0.20, t + 0.03);
+  g.gain.setValueAtTime(0.18, t + dur - 0.08);
+  g.gain.linearRampToValueAtTime(0, t + dur);
+  [['triangle', 1], ['sine', 0.5]].forEach(([type, mul]) => {
+    const o = ac.createOscillator();
+    o.type = type; o.frequency.value = freq;
+    const gg = ac.createGain(); gg.gain.value = mul;
+    o.connect(gg); gg.connect(g);
+    o.start(t); o.stop(t + dur + 0.02);
+  });
+}
+
+const HOLD = -1, REST = -2, BEAT = 0.38;
+
+/* 把 16 拍的格子折成「音高 + 幾拍」，延音併進前一個音，休止就是空的 */
+function foldBeats(list){
+  const seq = [];
+  list.forEach(v => {
+    if(v === HOLD && seq.length){ seq[seq.length - 1].beats++; return; }
+    if(v === REST || v === HOLD){ seq.push({ f:0, beats:1 }); return; }
+    if(v < 0 || !SOLFA[v]) return;
+    seq.push({ f:SOLFA[v][1], beats:1 });
+  });
+  return seq;
+}
+
+function playNotes(list, done){
+  const ac = audioCtx();
+  if(!ac){ if(done) done(); return 0; }
+  const duck = bgmEl ? bgmEl.volume : 0;
+  if(bgmEl) bgmEl.volume = duck * 0.25;                 // 吹的時候背景音樂讓一下
+  const seq = foldBeats(list);
+  let t = ac.currentTime + 0.06, total = 0.06;
+  seq.forEach(s => {
+    const dur = s.beats * BEAT;
+    if(s.f) blow(ac, s.f, t, dur - 0.06);
+    t += dur; total += dur;
+  });
+  const ms = (total + 0.3) * 1000;
+  setTimeout(() => { if(bgmEl) bgmEl.volume = duck; if(done) done(); }, ms);
+  return ms;
+}
+
+function buildFlute(o, box){
+  const L = o.lock, n = L.notes || 16;
+  const wrap = document.createElement('div'); wrap.className = 'flute';
+
+  if(L.sheet){
+    const sm = document.createElement('div'); sm.className = 'sheetmusic';
+    L.sheet.split('\n').forEach(line => {
+      const d = document.createElement('div'); d.textContent = line; sm.appendChild(d);
+    });
+    wrap.appendChild(sm);
+  }
+
+  const label = v => v === HOLD ? '—' : v === REST ? '0' : SOLFA[v] ? SOLFA[v][0] : '·';
+  const staff = document.createElement('div'); staff.className = 'staff';
+  for(let i = 0; i < n; i++){
+    if(i && i % 4 === 0){                                // 每四拍一條小節線
+      const bar = document.createElement('span'); bar.className = 'barline';
+      staff.appendChild(bar);
+    }
+    const s = document.createElement('i');
+    if(L._n[i] !== undefined){ s.textContent = label(L._n[i]); }
+    else { s.className = 'empty'; s.textContent = '·'; }
+    staff.appendChild(s);
+  }
+  wrap.appendChild(staff);
+
+  const keys = document.createElement('div'); keys.className = 'keysrow';
+  const push = v => {
+    if(L._n.length >= n) return;
+    L._n.push(v);
+    buildBoard(o);
+  };
+  SOLFA.forEach(([lb], i) => {
+    const b = document.createElement('button');
+    b.className = 'nk' + (i >= 7 ? ' hi' : '');
+    b.textContent = lb;
+    b.onclick = () => {
+      const ac = audioCtx();
+      if(ac) blow(ac, SOLFA[i][1], ac.currentTime + 0.01, 0.3);
+      push(i);
+    };
+    keys.appendChild(b);
+  });
+  [[HOLD, '—', '延一拍'], [REST, '0', '空一拍']].forEach(([v, lb, sub]) => {
+    const b = document.createElement('button');
+    b.className = 'nk sp';
+    b.innerHTML = lb + '<small>' + sub + '</small>';
+    b.onclick = () => {
+      if(v === HOLD && !L._n.length){ puzWrong(['前面還沒有音可以延。'], '先吹一個'); return; }
+      push(v);
+    };
+    keys.appendChild(b);
+  });
+  wrap.appendChild(keys);
+
+  const acts = document.createElement('div'); acts.className = 'wireacts';
+  const mk = (lb, cls, fn) => {
+    const b = document.createElement('button');
+    b.className = 'pbtn' + (cls ? ' ' + cls : ''); b.textContent = lb;
+    b.onclick = fn; acts.appendChild(b); return b;
+  };
+  mk('試聽', '', () => { if(L._n.length) playNotes(L._n); });
+  mk('刪一拍', '', () => { L._n.pop(); buildBoard(o); });
+  mk('全部重來', '', () => { L._n = []; buildBoard(o); });
+  const ok = mk('就用這段', 'go', () => {
+    if(L._n.length < n){ puzWrong(['還沒填滿 ' + n + ' 拍。'], '再一點點'); return; }
+    state.music = L._n.slice();
+    playNotes(L._n, () => solve(o));
+  });
+  if(L._n.length < n) ok.style.opacity = '.45';
+  const note = document.createElement('span');
+  note.className = 'note'; note.style.margin = '0';
+  const bars = Math.floor(L._n.length / 4);
+  note.textContent = '已經填了 ' + L._n.length + ' / ' + n + ' 拍（' + bars + ' 小節）。'
+                   + '「—」把前一個音拉長，「0」空一拍。';
+  acts.appendChild(note);
+  wrap.appendChild(acts);
+
+  box.appendChild(wrap);
+}
+
+/* ── 挑三則要播報的題材：只有讀過的東西才播得出來 ── */
+function buildTopics(o, box){
+  const L = o.lock, pick = L.pick || 3;
+  const got = ALL_DOCS.filter(k => state.read[k]);
+  const wrap = document.createElement('div');
+
+  if(!got.length){
+    const p = document.createElement('p');
+    p.className = 'note'; p.style.margin = '0 0 10px';
+    p.textContent = '你還沒有任何可以拿來講的東西。先去把這棟房子看過一遍。';
+    wrap.appendChild(p);
+    box.appendChild(wrap);
+    return;
+  }
+
+  const list = document.createElement('div'); list.className = 'topiclist';
+  got.forEach(k => {
+    const d = DOCS[k]; if(!d) return;
+    const on = L._p.includes(k);
+    const b = document.createElement('button');
+    b.className = on ? 'on' : '';
+    b.innerHTML = '<span class="box">' + (on ? '✓' : '') + '</span>'
+                + '<span>' + d.title + '<span class="sub">' + (d.code || '') + '　' + (d.from || '') + '</span></span>';
+    b.onclick = () => {
+      const i = L._p.indexOf(k);
+      if(i >= 0) L._p.splice(i, 1);
+      else if(L._p.length < pick) L._p.push(k);
+      else { puzWrong(['最多只能挑 ' + pick + ' 則。先拿掉一則。'], '版面滿了'); return; }
+      buildBoard(o);
+    };
+    list.appendChild(b);
+  });
+  wrap.appendChild(list);
+
+  const acts = document.createElement('div'); acts.className = 'wireacts';
+  const ok = document.createElement('button');
+  ok.className = 'pbtn go'; ok.textContent = '就播這三則';
+  ok.onclick = () => {
+    if(L._p.length !== pick){ puzWrong(['要剛好挑 ' + pick + ' 則。'], '還沒挑滿'); return; }
+    state.topics = L._p.slice();
+    solve(o);
+  };
+  if(L._p.length !== pick) ok.style.opacity = '.45';
+  const note = document.createElement('span');
+  note.className = 'note'; note.style.margin = '0';
+  note.textContent = '已經挑了 ' + L._p.length + ' / ' + pick + ' 則，可以讀的有 ' + got.length + ' 則。';
+  acts.appendChild(ok); acts.appendChild(note);
+  wrap.appendChild(acts);
+  box.appendChild(wrap);
+}
+
+/* ── 線頭上的動物記號 ── */
+const ANIMAL = {
+  '鼠': `
+.,.,k,k,.,.,k,k,.,.,.,.
+.,k,7,7,k,k,7,7,k,.,.,.
+.,k,7,7,7,7,7,7,k,.,.,.
+k,7,7,k,7,7,k,7,7,k,.,.
+k,7,7,7,7,7,7,7,7,k,.,.
+.,k,7,7,r,r,7,7,k,.,.,.
+.,.,k,k,7,7,k,k,.,k,k,.
+.,.,.,.,k,k,.,.,k,.,.,k
+.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.`,
+  '貓': `
+.,k,.,.,.,.,.,.,k,.,.,.
+.,k,k,.,.,.,.,k,k,.,.,.
+k,y,y,k,k,k,y,y,k,.,.,.
+k,y,y,y,y,y,y,y,k,.,.,.
+k,y,k,y,y,y,k,y,k,.,.,.
+k,y,y,y,r,y,y,y,k,.,.,.
+.,k,y,y,y,y,y,k,.,k,.,.
+.,.,k,k,k,k,k,.,.,.,k,.
+.,.,.,.,.,.,.,.,.,.,.,k
+.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.`,
+  '狗': `
+.,k,k,.,.,.,.,k,k,.,.,.
+k,b,b,k,k,k,b,b,k,.,.,.
+k,b,b,b,b,b,b,b,k,.,.,.
+k,b,k,b,b,b,k,b,k,.,.,.
+k,b,b,b,b,b,b,b,k,.,.,.
+.,k,b,7,7,7,b,k,.,.,.,.
+.,.,k,7,r,7,k,.,k,k,.,.
+.,.,.,k,k,k,.,.,k,.,k,.
+.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.`,
+};
+
+function animalCanvas(ch){
+  const src = ANIMAL[ch]; if(!src) return null;
+  const rows = src.trim().split(/\r?\n/).map(l => l.split(',').map(s => s.trim()));
+  const cv = document.createElement('canvas');
+  cv.width = rows[0].length; cv.height = rows.length;
+  cv.className = 'animcap';
+  const c = cv.getContext('2d');
+  rows.forEach((row, y) => row.forEach((cell, x) => {
+    const col = PALETTE[cell];
+    if(col){ c.fillStyle = col; c.fillRect(x, y, 1, 1); }
+  }));
+  return cv;
+}
+
+/* ── 摩斯電鍵 ────────────────────────────────────────────────
+   螢幕上直接給訊號，玩家用點／劃打進去，被遮住的字幕會一格一格解出來。 */
+const MORSE = {
+  'A':'.-','B':'-...','C':'-.-.','D':'-..','E':'.','F':'..-.','G':'--.','H':'....',
+  'I':'..','J':'.---','K':'-.-','L':'.-..','M':'--','N':'-.','O':'---','P':'.--.',
+  'Q':'--.-','R':'.-.','S':'...','T':'-','U':'..-','V':'...-','W':'.--','X':'-..-',
+  'Y':'-.--','Z':'--..','0':'-----','1':'.----','2':'..---','3':'...--','4':'....-',
+  '5':'.....','6':'-....','7':'--...','8':'---..','9':'----.',
+};
+const MORSE_REV = Object.fromEntries(Object.entries(MORSE).map(([k, v]) => [v, k]));
+
+function morseOf(text){
+  return text.split(' ').map(w => w.split('').map(ch => MORSE[ch] || '?').join(' ')).join(' / ');
+}
+
+/* 小丑騎腳踏車的靜止畫面。lock.pic 有填就用圖片，沒有就程式畫 */
+function drawClown(cv){
+  const c = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  c.imageSmoothingEnabled = false;
+  const g = c.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#141c26'); g.addColorStop(1, '#0c1218');
+  c.fillStyle = g; c.fillRect(0, 0, W, H);
+  c.fillStyle = 'rgba(111,179,201,.06)';
+  for(let i = 0; i < 40; i++) c.fillRect((i*37) % W, (i*23) % H, 2, 2);
+
+  const px = (x, y, w, h, col) => { c.fillStyle = col; c.fillRect(x, y, w, h); };
+  const bx = W/2 - 30, by = H - 40;
+  px(bx-2, by+16, 34, 2, '#2a3038');                       // 地面陰影
+  c.strokeStyle = '#8a939d'; c.lineWidth = 2;              // 兩個輪子
+  c.beginPath(); c.arc(bx+4, by+8, 8, 0, 7); c.stroke();
+  c.beginPath(); c.arc(bx+26, by+8, 8, 0, 7); c.stroke();
+  c.beginPath(); c.moveTo(bx+4, by+8); c.lineTo(bx+15, by-2);
+  c.lineTo(bx+26, by+8); c.moveTo(bx+15, by-2); c.lineTo(bx+22, by-8); c.stroke();
+  px(bx+12, by-16, 6, 14, '#c9756c');                      // 身體
+  px(bx+8,  by-14, 4, 10, '#dcbf55');                      // 手
+  px(bx+18, by-14, 4, 10, '#dcbf55');
+  px(bx+11, by-28, 8, 12, '#e8eef4');                      // 白臉
+  px(bx+13, by-24, 2, 2, '#141821'); px(bx+16, by-24, 2, 2, '#141821');
+  px(bx+14, by-21, 3, 2, '#d1443c');                       // 紅鼻
+  px(bx+12, by-19, 6, 1, '#d1443c');                       // 笑
+  px(bx+9,  by-31, 12, 4, '#5aa7d8');                      // 帽
+  px(bx+13, by-35, 5, 4, '#63b477');
+  px(bx+7,  by-27, 3, 4, '#dcbf55'); px(bx+20, by-27, 3, 4, '#dcbf55');   // 兩撮頭髮
+  c.fillStyle = 'rgba(0,0,0,.35)';                         // 邊角壓暗
+  c.fillRect(0, 0, W, 4); c.fillRect(0, H-4, W, 4);
+}
+
+function morseMask(answer, out){
+  return answer.split('').map((ch, i) => {
+    if(ch === ' ') return '\u3000';
+    return i < out.length ? (out[i] === ch ? ch : out[i]) : '＊';
+  }).join('');
+}
+
+function morsePush(o, sym){
+  const L = o.lock, m = L._m;
+  if(sym === '.' || sym === '-'){ m.buf += sym; }
+  else if(sym === 'letter'){
+    if(!m.buf) return;
+    const ch = MORSE_REV[m.buf];
+    if(!ch){ m.buf = ''; puzWrong(['這串不是任何一個字母。'], '打錯了'); buildBoard(o); return; }
+    m.out += ch; m.buf = '';
+  }
+  else if(sym === 'space'){
+    if(m.buf){ const ch = MORSE_REV[m.buf]; if(ch) m.out += ch; m.buf = ''; }
+    if(m.out && !m.out.endsWith(' ')) m.out += ' ';
+  }
+  else if(sym === 'del'){
+    if(m.buf) m.buf = m.buf.slice(0, -1);
+    else m.out = m.out.slice(0, -1);
+  }
+  if(m.out.length > L.answer.length) m.out = m.out.slice(0, L.answer.length);
+  if(boardSolved(o)) return solve(o);
+  if(m.out.length === L.answer.length && m.out !== L.answer){
+    puzWrong(L.wrong || ['畫面沒有反應。'], '不太對');
+    m.out = ''; m.buf = '';
+  }
+  buildBoard(o);
+}
+
+function buildMorse(o, box){
+  const L = o.lock, m = L._m;
+
+  const tv = document.createElement('div'); tv.className = 'tvbox';
+  if(L.pic){
+    const img = document.createElement('img');
+    img.src = L.pic; img.alt = '';
+    img.style.cssText = 'display:block;width:100%;height:auto;image-rendering:pixelated;border-radius:4px';
+    tv.appendChild(img);
+  } else {
+    const cv = document.createElement('canvas');
+    cv.width = 160; cv.height = 110;
+    tv.appendChild(cv);
+    drawClown(cv);
+  }
+  box.appendChild(tv);
+
+  const cap = document.createElement('div'); cap.className = 'tvcap';
+  cap.textContent = morseMask(L.answer, m.out);
+  box.appendChild(cap);
+
+  const sig = document.createElement('div'); sig.className = 'tvsig';
+  sig.textContent = morseOf(L.answer);
+  box.appendChild(sig);
+
+  const row = document.createElement('div'); row.className = 'morsebuf';
+  const cur = document.createElement('div'); cur.className = 'cur';
+  cur.textContent = m.buf || '　';
+  const cnt = document.createElement('div'); cnt.className = 'cnt';
+  cnt.textContent = m.out.replace(/ /g, '').length + ' / ' + L.answer.replace(/ /g, '').length + ' 個字母';
+  row.appendChild(cur); row.appendChild(cnt);
+  box.appendChild(row);
+
+  const keys = document.createElement('div'); keys.className = 'morsekeys';
+  [['.', '·', 'dit', '短'], ['-', '−', 'dah', '長'],
+   ['letter', '字母', '', '送出這個字'], ['space', '空格', '', '換一個字'],
+   ['del', '⌫', '', '刪除']].forEach(([sym, label, cls, sub]) => {
+    const b = document.createElement('button');
+    b.className = 'mk ' + cls;
+    b.innerHTML = label + (sub ? '<small>' + sub + '</small>' : '');
+    b.onclick = () => { hideToast(); morsePush(o, sym); };
+    keys.appendChild(b);
+  });
+  box.appendChild(keys);
+}
+
+/* 手把盤面：十字鍵 + 兩顆圓鈕 */
 function padPress(o, key){
   const L = o.lock;
   if(!L || !L._in) return;
@@ -5690,8 +6807,9 @@ function buildWirePanel(o, box){
   L.wires.forEach((w, i) => {
     const el = document.createElement('div'); el.className = 'plug';
     const nm = document.createElement('span'); nm.textContent = w.name;
-    const cap = document.createElement('span'); cap.className = 'tipcap';
-    cap.style.background = wireColor(w.name);
+    const mark = animalCanvas(w.name[0]);          // 鼠／貓／狗 用圖示，其餘用色點
+    const cap = mark || document.createElement('span');
+    if(!mark){ cap.className = 'tipcap'; cap.style.background = wireColor(w.name); }
     el.appendChild(nm); el.appendChild(cap);
     el.dataset.i = i;
     left.appendChild(el); plugs.push(el);
@@ -5788,6 +6906,10 @@ function buildBoard(o){
     box.appendChild(r); return r;
   };
 
+  if(L.type === 'broadcast'){ buildDecl(o, box); return; }
+  if(L.type === 'music'){  buildFlute(o, box); return; }
+  if(L.type === 'topics'){ buildTopics(o, box); return; }
+  if(L.type === 'morse'){  buildMorse(o, box); return; }
   if(L.type === 'seq'){
     if(L.pad){ buildPad(o, box); return; }
     const r = mkRow('');
@@ -5822,8 +6944,10 @@ function buildBoard(o){
                 + step.q + '</span>';
     const r = mkRow('');
     step.options.forEach((op, k) => {
+      const label = typeof op === 'string' ? op : op.t;
+      if(typeof op === 'object' && op.item && !hasItem(op.item)) return;   // 沒帶東西就不出現這個選項
       const btn = document.createElement('button');
-      btn.className = 'pbtn'; btn.textContent = op;
+      btn.className = 'pbtn'; btn.textContent = label;
       btn.onclick = () => {
         if(k === step.goal){
           L._step = i + 1;
@@ -6017,6 +7141,13 @@ function solve(o, viaBypass){
   if(o.battleAfterOpen){
     const r = state.battles[o.battleAfterOpen];
     if(!r || r === 'flee') state.after = () => startBattle(o.battleAfterOpen, o);
+  }
+  if(o.lock && o.lock.after){                 // 解開之後接一段自訂演出
+    const fn = o.lock.after;
+    if(opened.length) say(o.name, opened.concat(extra));
+    state.after = () => fn(o);
+    if(!opened.length) fn(o);
+    return;
   }
   say(o.name, opened.concat(extra));
 }
@@ -7631,6 +8762,12 @@ function moveCam(){
   cam.y = ROWS*T <= vh ? Math.round((ROWS*T - vh)/2)
         : Math.round(Math.max(0, Math.min(ROWS*T - vh, P.y + T/2 - vh/2)));
   if(state.pan) cam.y -= Math.round(state.pan.offset);  // 眺望時往上多帶一段
+  const sk = performance.now();
+  if(sk < shakeUntil){                                   // 受傷時畫面抖一下
+    const k = (shakeUntil - sk) / 300;
+    cam.x += Math.round((Math.random() - .5) * shakeMag * 2 * k);
+    cam.y += Math.round((Math.random() - .5) * shakeMag * 2 * k);
+  }
 }
 
 /* 戶外遠景：天空、遠山、城市剪影。內容是靜態的，
@@ -7742,9 +8879,32 @@ function playerTag(){
 const hurtPops = [];
 let lastHurtCell = '';
 
-function floatHurt(n){
+let hurtFlash = 0, shakeUntil = 0, shakeMag = 0;
+
+function floatHurt(n, big){
   hurtPops.push({ n, x:P.x + T/2, y:P.y, t0:performance.now() });
   if(hurtPops.length > 6) hurtPops.shift();
+  const now = performance.now();
+  hurtFlash = now + (big ? 520 : 380);          // 角色轉紅
+  shakeUntil = now + (big ? 340 : 240);         // 畫面震動
+  shakeMag = big ? 5 : 3;
+}
+
+/* 把一格 sprite 染紅之後畫出來（受傷閃爍用） */
+const tintCv = document.createElement('canvas');
+const tintCx = tintCv.getContext('2d');
+function drawTinted(img, sx, sy, sw, sh, dx, dy, dw, dh, col, a){
+  tintCv.width = sw; tintCv.height = sh;
+  tintCx.imageSmoothingEnabled = false;
+  tintCx.clearRect(0, 0, sw, sh);
+  tintCx.globalCompositeOperation = 'source-over';
+  tintCx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+  tintCx.globalCompositeOperation = 'source-atop';
+  tintCx.globalAlpha = a;
+  tintCx.fillStyle = col;
+  tintCx.fillRect(0, 0, sw, sh);
+  tintCx.globalAlpha = 1;
+  ctx.drawImage(tintCv, 0, 0, sw, sh, dx, dy, dw, dh);
 }
 
 function drawHurtPops(){
@@ -8013,9 +9173,12 @@ function shrinkToDataURL(file, maxW, cb){
 
 /* ── 確認視窗 ── */
 let confirmAction = null;
-function askConfirm(title, text, onYes){
+function askConfirm(title, text, onYes, danger){
   $('confirmTitle').textContent = title;
   $('confirmText').textContent = text;
+  const y = $('confirmYes');
+  y.textContent = danger ? '確定，我知道會不見' : '確定';
+  y.classList.toggle('danger', !!danger);
   confirmAction = onYes;
   show('confirmOverlay');
 }
@@ -8037,7 +9200,12 @@ $('rescueBtn').onclick = () => {
     });
 };
 
-$('wipeSave').onclick = () => {
+$('wipeSave').onclick = () => askConfirm('清除目前進度',
+  '讀過的資料、拿到的道具、解開的機關、成就會全部歸零，回到剛進門的狀態。'
+  + '存檔格裡的四份不會動，等一下還讀得回來。',
+  () => wipeSave(), true);
+
+function wipeSave(){
   state.read = {}; state.opened = {}; state.flags = {};
   state.battles = {}; state.items = [];
   state.hp = 0; state.achv = {}; state.vistaSeen = {};
@@ -8156,8 +9324,9 @@ const COVER = {
   quit:   'data:image/webp;base64,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',
 };
 
-const SLOTS_N  = 3;
+const SLOTS_N  = 4;    // 有玩家一個人有四隻角色
 const QUIT_KEY = SAVE_KEY + ':quit';
+const SKY_KEY  = SAVE_KEY + ':sky';    // 播出過才看得到天空，順便存自己那句話
 const SKIP_KEY = SAVE_KEY + ':skiptitle';
 
 /* 舊版的單一存檔搬進自動存檔格 */
@@ -8190,6 +9359,12 @@ function slotInfo(n){
 /* ── 存檔格 ── */
 function buildSlots(){
   const box = $('slotsBody'); box.innerHTML = '';
+
+  const tip = document.createElement('div');
+  tip.className = 'note'; tip.style.cssText = 'margin:0 0 10px';
+  tip.textContent = '一隻角色玩完就存進一格，回標題按「重新開始」換下一隻。'
+                  + '清除進度不會動到這裡的 ' + SLOTS_N + ' 份。';
+  box.appendChild(tip);
   for(let n = 1; n <= SLOTS_N; n++){
     const info = slotInfo(n);
     const row = document.createElement('div');
@@ -8235,9 +9410,30 @@ function buildSlots(){
     row.appendChild(sn); row.appendChild(si); row.appendChild(sb);
     box.appendChild(row);
   }
+
+  const any = [...Array(SLOTS_N)].some((_, i) => slotInfo(i + 1));
+  if(any){
+    const foot = document.createElement('div');
+    foot.style.cssText = 'margin-top:12px;text-align:right';
+    const all = document.createElement('button');
+    all.className = 'mini danger'; all.textContent = '清空全部存檔格';
+    all.onclick = () => askConfirm('清空全部存檔格',
+      '四個格子裡的角色會全部刪掉，包含已經通關的那幾隻。這個沒辦法復原。',
+      () => wipeAllSlots(), true);
+    foot.appendChild(all);
+    box.appendChild(foot);
+  }
 }
 
 function openSlots(){ buildSlots(); show('slotsOverlay'); }
+
+/* 存檔格是唯一跨角色保留的地方，只有這裡動得到 */
+function wipeAllSlots(){
+  for(let n = 1; n <= SLOTS_N; n++){
+    try{ localStorage.removeItem(slotKey(n)); }catch(err){}
+  }
+  buildSlots();
+}
 
 function saveSlot(n){
   const note = $('slotsNote');
@@ -8266,7 +9462,8 @@ function loadSlot(n){
 
 /* ── 進場畫面 ── */
 let tsel = 0;
-const tbtns = () => [...$('titleMenu').querySelectorAll('button')];
+const tbtns = () => [...$('titleMenu').querySelectorAll('button')]
+                      .filter(b => b.style.display !== 'none');
 
 function tmove(d){
   const b = tbtns();
@@ -8295,6 +9492,15 @@ function paintTitle(swap){
     art.style.backgroundImage = url;
   }
   const has = [1, 2, 3].some(n => slotInfo(n)) || !!readSave();
+  const fresh = $('freshBtn');
+  if(fresh){ fresh.style.display = has ? '' : 'none'; }
+  const skyB = $('skyBtn');
+  if(skyB){
+    let seen = false;
+    try{ seen = !!localStorage.getItem(SKY_KEY); }catch(err){}
+    skyB.style.display = seen ? '' : 'none';
+    if(tsel >= tbtns().length) tsel = 0;
+  }
   $('titleFoot').innerHTML = (has ? '有進度可以繼續　' : '')
     + '<span class="kb">↑↓ 選擇　Enter 確認</span>'
     + (BGM.credit ? '<br>' + BGM.credit : '');
@@ -8307,6 +9513,33 @@ $('titleMenu').addEventListener('click', e => {
   if(act === 'start'){ hide('title'); show('setup'); syncSettings(); }
   if(act === 'load'){ openSlots(); }
   if(act === 'quit'){ show('quitOverlay'); playBGM('special'); }
+  if(act === 'fresh'){
+    askConfirm('重新開始',
+      '目前這一輪的進度會全部歸零，從頭開始。'
+      + '存檔格裡的四份不會動——想留著現在這隻，先去「讀取」把它存進一格再回來。',
+      () => {
+        wipeSave();
+        paintTitle(); tsel = 0; tmove(0);
+        hide('title'); show('setup'); syncSettings();
+      }, true);
+  }
+  if(act === 'sky'){
+    let mine = null;
+    try{ mine = JSON.parse(localStorage.getItem(SKY_KEY) || 'null'); }catch(err){}
+    if(!mine || !mine.text) return;
+    show('airOverlay');
+    $('airWho').textContent = '';
+    $('airLine').textContent = '……';
+    $('airTip').textContent = '……';
+    playBGM('special');
+    skyMsgs = null;                                  // 每次都重抓，別人可能又喊了新的
+    loadSky().then(() => {
+      skyScene(mine.text, mine.name || '你', () => {
+        hide('airOverlay');
+        playBGM('title');
+      });
+    });
+  }
 });
 
 $('quitOverlay').addEventListener('click', () => {
