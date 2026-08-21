@@ -267,7 +267,8 @@
   #btlItems{align-items:center;}
 
   /* ── 道具欄 ── */
-  #inv{
+  #inv{ display:none; }   /* 道具改成只用背包（B 鍵／背包鈕），橫條不再顯示 */
+  #inv-unused{
     display:flex;gap:4px;align-items:center;flex-wrap:nowrap;justify-content:center;
     width:100%;max-width:680px;
     background:rgba(0,0,0,.18);border:1px solid var(--line);
@@ -286,6 +287,14 @@
   #inv .invtab.on{
     color:var(--signal); border-color:var(--signal);
     background:rgba(111,179,201,.12);
+  }
+  .sheet.dos header{ background:#04140a; }
+  .dosbody{
+    margin:0; padding:14px 16px; max-height:60vh; overflow-y:auto;
+    background:#03100a; color:#4ade80;
+    font-family:var(--mono); font-size:12px; line-height:1.75;
+    white-space:pre-wrap; word-break:break-all;
+    text-shadow:0 0 6px rgba(74,222,128,.35);
   }
   .bagbody{ padding:12px 14px; overflow-y:auto; max-height:64vh; }
   .baghead{
@@ -370,6 +379,7 @@
     padding:9px 13px;font-size:13px;cursor:pointer;
   }
   .pbtn:hover{border-color:var(--signal);}
+  .pbtn.sel{border-color:var(--signal);color:var(--signal);}
   .pbtn.on{border-color:var(--signal);color:var(--signal);background:var(--line);}
   .pbtn.sw{width:38px;height:52px;position:relative;}
   .pbtn.sw::after{
@@ -1284,6 +1294,15 @@
   </div>
 </div>
 
+<!-- 老電腦的 DOS 畫面 -->
+<div class="overlay" id="dosOverlay">
+  <div class="sheet dos">
+    <header><h2>系統B</h2><span class="meta">A:\</span></header>
+    <pre class="dosbody" id="dosBody"></pre>
+    <footer><span class="kbd">ESC 關閉</span><button data-close>退出</button></footer>
+  </div>
+</div>
+
 <!-- 背包：完整的道具視圖 -->
 <div class="overlay" id="bagOverlay">
   <div class="sheet">
@@ -1593,16 +1612,6 @@
       </div>
 
       <div class="field">
-        <label>通關回報 <span class="val" id="reportSrc"></span></label>
-        <div class="row" style="margin-top:8px">
-          <button class="mini" id="reportTest">送出測試回報</button>
-          <button class="mini danger" id="reportClear">清掉待送佇列</button>
-        </div>
-        <div class="note">把 report.gs 部署成網頁應用程式，網址填進最上面的 <code>REPORT.url</code> 就會開始回報。
-          按測試之後如果變成「已同步」就是通了；停在「待送 N 筆」代表送不出去。</div>
-      </div>
-
-      <div class="field">
         <label>存檔</label>
         <div class="row">
           <button class="mini" id="slotsBtn">存檔格</button>
@@ -1614,8 +1623,7 @@
 
       <div class="field">
         <label>編輯與進度</label>
-        <label class="toggle"><input type="checkbox" id="gridToggle"> 顯示座標網格（也可以按 G）</label>
-        <label class="toggle" style="margin-top:8px"><input type="checkbox" id="tagToggle"> 在角色頭上顯示稱號</label>
+        <label class="toggle"><input type="checkbox" id="tagToggle"> 在角色頭上顯示稱號</label>
         <div class="row" style="margin-top:10px">
           <button class="mini danger" id="resetRead">清除閱讀進度</button>
           <span class="note" id="readState" style="margin:0"></span>
@@ -1719,15 +1727,20 @@ const SKY = {
   fields: { text:'宣言', name:'角色' },
   max: 48,
 
+  /* 讀不到線上留言板時：隨機抓幾則播報內容撒在天上，不用留話 */
   baked: [
-    { text:'我還在。', name:'北邊的某個人' },
-    { text:'水塔的水可以喝，煮過就好。', name:'不具名' },
-    { text:'誰看到我妹妹請跟她說我往南走了', name:'不具名' },
-    { text:'台四線中段有塌方，繞海邊。', name:'跑船的' },
-    { text:'不要相信那個賣藥的。', name:'不具名' },
-    { text:'今天也活著。明天再說。', name:'不具名' },
-    { text:'如果聽得到，敲三下窗戶。', name:'不具名' },
-    { text:'謝謝那個放歌的人。', name:'不具名' },
+    { text:'聽說有人目擊到南邊出現了大型喊水會結凍的生物，請記得繞道～', name:'' },
+    { text:'北方最近地震很勤啊，岩漿都咕嚕咕嚕冒出來？', name:'' },
+    { text:'銀神教最近連教主都出門趴趴造囉？', name:'' },
+    { text:'天海幫聚集越來越多怪人啦，你該不會也是其中之一？', name:'' },
+    { text:'不少密醫加入了奇怪結社的行列，還有高薪待遇！', name:'' },
+    { text:'報告～彰化花壇有個營地小孩走丟啦～', name:'' },
+    { text:'吃香菜可以增強超能力？來自北方密醫最新的研究！', name:'' },
+    { text:'有人真的能用微波爐穿越時空？聽聽專家怎麼說！', name:'' },
+    { text:'有獎徵答時間～挖咖摸斗！下一句要接什麼？', name:'' },
+    { text:'聽說北方大量缺乘乘，南方大量缺結冰水，南北互通做個貿易？', name:'' },
+    { text:'101上有開一間女僕咖啡廳？協會人這麼會玩的嗎？', name:'' },
+    { text:'夜鷺有夜市？有彈珠檯打香腸？是怎樣文藝復興喔？', name:'' },
   ],
 };
 
@@ -1777,7 +1790,7 @@ const ACHIEVEMENTS = [
     check:() => allLocks().every(id => state.opened[id]) },
   { id:'all_docs',   name:'一份不漏',     desc:'讀完所有找得到的資料。',
     check:() => ALL_DOCS.length > 0 && readCount() >= ALL_DOCS.length },
-  { id:'aired',      name:'訊號出去了',   desc:'接下了這個頻率。',
+  { id:'aired',      name:'荒漠人的主張',   desc:'完成 FM94.5 的最後一場放送。',
     check:() => !!state.flags.aired, clear:true },
 
   { id:'exploded',   name:'那捲不能倒帶',  desc:'被舊型卡帶機炸過。', hidden:true,
@@ -1790,6 +1803,10 @@ const ACHIEVEMENTS = [
     check:() => !!state.flags.brokehp },
   { id:'sanjiao',    name:'拈花微笑',     desc:'在神明廳擲出三個聖茭，得到了回應。', hidden:true,
     check:() => !!state.flags.sanjiao },
+  { id:'fingertip',  name:'指尖的回憶',   desc:'用那根大拇指打開了上三樓的門。',
+    check:() => !!state.opened.stairs_up },
+  { id:'prankster',  name:'整人專家',     desc:'用要你命8000終結了銀無功。', hidden:true,
+    check:() => state.battles.silvercent === 'win' },
   { id:'zapped',     name:'雷得裡酥內嫩', desc:'在屋外被閃電正面擊中。', hidden:true,
     check:() => !!state.flags.zapped },
   { id:'awei_gone',  name:'阿偉去哪了？', desc:'掀開提籃，做出了選擇。', hidden:true,
@@ -1800,16 +1817,27 @@ const ACHIEVEMENTS = [
     check:() => !!state.opened.douhua },
   { id:'wushi',      name:'5566得第一',   desc:'知道要打就去哪裡打。', hidden:true,
     check:() => !!state.opened.dancers },
+  { id:'assoc_drama', name:'八點檔收聽中', desc:'聽完協會的三段私房對話。', hidden:true,
+    check:() => me.factionId === 'association'
+             && ['played_a1','played_a2','played_a3'].every(f => state.flags[f]) },
+  { id:'yelu_pot',    name:'南方大悶鍋', desc:'聽完夜鷺的三段私房對話。', hidden:true,
+    check:() => me.factionId === 'yelu'
+             && ['played_y1','played_y2','played_y3'].every(f => state.flags[f]) },
+  { id:'wander_tmi',  name:'其實我沒有想要知道那麼多', desc:'看完流浪者的三段私房紀錄。', hidden:true,
+    check:() => me.factionId === 'wanderer'
+             && ['played_w1','played_w2','played_w3'].every(f => state.flags[f]) },
+  { id:'allmats',    name:'全知聽眾視角', desc:'十份播報材料，一份不漏全部讀完。', hidden:true,
+    check:() => ['pocket','linetag','taperec','bed_note','heater_card',
+                 'letter1','note_carpet','sofa_note','reeltape','letter2']
+                .every(k => state.read[k]) },
   { id:'memeking',   name:'梗王之王',     desc:'把三份迷因測驗全部看完。（有夠LKK）',
     check:() => !!(state.flags.meme2025 && state.flags.meme2035 && state.flags.meme2045) },
   { id:'adfan',      name:'無課玩家不跳廣告', desc:'把信箱裡的傳單全部看完。',
     check:() => ['ad_cult','ad_gang','ad_doctor','ad_pineapple'].every(k => state.read[k]) },
   { id:'wannaplay',  name:'我想玩個遊戲', desc:'把小丑的訊號解出來。', hidden:true,
     check:() => !!state.opened['tv#2'] },
-  { id:'homecoming', name:'請回來',       desc:'把照片放回神桌上。', hidden:true,
-    check:() => !!state.opened.altar },
   { id:'listener',   name:'聽見遠方',     desc:'把收訊本從頭讀到尾。', hidden:true,
-    check:() => ['recv_north','recv_south','recv_gang','recv_cult','recv_stage','recv_sky']
+    check:() => ['recv_sky']
                   .every(k => state.read[k]) },
   { id:'no_flee',    name:'一次都沒跑',   desc:'通關時沒有從任何遭遇逃走。', hidden:true,
     check:() => !!state.flags.aired && !state.flags.fled },
@@ -1842,22 +1870,10 @@ const ACHIEVEMENTS = [
 const DOCS = {
 
   /* ── 屋外 ───────────────────────────────────────────────── */
-  junction_note: { title:'外牆的接線盒', code:'EXT-1', from:'屋外牆面',
-    body:['外牆上一排接線盒，線一條一條往不同方向牽出去，數量比一般住家多太多。',
-          '每個盒子上都貼著手寫標籤：北、南、海邊、台。',
-          '最右邊那個沒有標籤，膠帶撕掉了，只剩下一塊沒曬到的白。'] },
-  mailbox_note: { title:'信箱裡的東西', code:'EXT-2', from:'信箱',
-    body:['信箱塞滿了，最上面那疊已經被雨打爛。',
-          '還看得清楚的最後一張是七月初的傳單。',
-          '更底下壓著一封沒有署名的信，封口是完整的，沒有拆過。'] },
-  sngnote: { title:'派遣單', code:'SNG-1', from:'SNG 車',
-    body:['一張塞在遮陽板上的派遣單，抬頭是某家電視台，日期是災變前。',
-          '用途欄被人劃掉重寫成兩個字：自用。',
-          '後座堆著捲好的纜線和一箱電池，都還能用。'] },
-  linetag: { title:'電線上的標籤', code:'EXT-3', from:'電線上',
-    body:['線上綁著一片褪色的塑膠牌。',
-          '「這條是活的，不要碰。」',
-          '背面用另一種筆補了一行：「我是說真的。」'] },
+  linetag: { title:'播報材料-022號', code:'MAT-022', from:'電線上',
+    body:['一張捲起來綁在電線上的播報材料，右上角編號022。',
+          '「北方最近地震很勤啊，岩漿都咕嚕咕嚕冒出來？',
+          '話說人一生應該可以喝一次岩漿吧？有沒有人要分享口感啊？」'] },
   airvoice: { title:'隱約的廣播音', code:'AIR-1', from:'車上的收音機',
     body:['駕駛座的窗戶破了，車上的收音機還開著，混著雜訊。',
           '「……接下來就在 95.2＋7 見面吧！」',
@@ -1910,46 +1926,16 @@ const DOCS = {
           '「手指沒帶在身上。不如先去看電視吧？」'] },
 
   /* ── 一樓二樓：打過一場的痕跡 ─────────────────────────────── */
-  shells_note: { title:'地上的彈殼', code:'RUIN-1', from:'一樓地板',
-    body:['牆邊掃出一小堆彈殼，像是有人事後整理過，掃到一起卻沒有丟掉。',
-          '口徑不只一種。',
-          '有幾顆已經生鏽，有幾顆還是亮的。'] },
-  barricade_note: { title:'堆起來的家具', code:'RUIN-2', from:'翻倒的櫃子',
-    body:['幾件家具被拖過來疊成一道矮牆，朝向鐵捲門那一側。',
-          '疊的人很清楚自己在擋什麼方向。',
-          '木板上有幾個穿過去的洞，邊緣往內翻。'] },
-  nest_note: { title:'窩裡的東西', code:'RUIN-3', from:'海綿堆成的窩',
-    body:['沙發的海綿、碎布、幾張撕爛的傳單，鋪成一個淺淺的凹陷。',
-          '底下混著一些不屬於這裡的東西：鑰匙、打火機、一支手電筒的尾蓋。',
-          '都是從別人身上掉下來的。'] },
-  hole_note: { title:'牆上的洞', code:'RUIN-4', from:'二樓牆面',
-    body:['隔間牆上一整排洞，從走廊一直連到浴室。',
-          '高度都在腰際，很整齊。',
-          '從洞看過去，另一邊的牆上有對應的一排。'] },
-  firstaid_note: { title:'急救箱', code:'RUIN-5', from:'急救箱',
-    body:['白鐵的急救箱，鎖扣被撬過又鎖回去。',
-          '裡面只剩下繃帶跟一瓶見底的消毒水。',
-          '箱蓋內側用原子筆記著日期，一行一行，最後一行沒寫完。'] },
 
   /* ── 生活層：他把整個家搬上三樓 ───────────────────────────── */
   tvnote: { title:'電視框上的貼紙', code:'HOME-1', from:'客廳電視',
     body:['螢幕黑著，映出整個客廳，還有站在客廳裡的你。',
           '電視框右下角貼著一張手寫標籤紙，邊角翹起來了：「94.5」。',
           '寫得很大，像是怕自己忘記。'] },
-  sofa_note: { title:'沙發縫裡的東西', code:'HOME-2', from:'沙發',
-    body:['遙控器、一張發票、一顆掉下來的鈕扣。',
-          '發票的日期是災變前，品項是兩份便當。'] },
-  kitchen_note: { title:'流理台上的便利貼', code:'HOME-3', from:'流理台',
-    body:['「米沒了」「瓦斯行電話 →」，箭頭指向的地方是空白的。',
-          '最下面那張字比較新：「今天不要煮，直接泡。」'] },
-  shoe_note: { title:'鞋櫃', code:'HOME-4', from:'鞋櫃',
-    body:['三層鞋櫃，只有最上層是滿的。',
-          '下面兩層擺著別的尺寸，鞋頭朝內，很久沒有動過。',
-          '玄關地上只有一雙拖鞋。'] },
-  tin_letter: { title:'鐵盒裡的東西', code:'HOME-5', from:'餅乾鐵盒',
-    body:['鐵盒裡不是餅乾。',
-          '一疊繳費單、一本存摺，底下壓著那個金屬打火機。',
-          '存摺的戶名被水漬糊掉了，最後一筆數字停在 2053 年的夏天。'] },
+  sofa_note: { title:'播報材料-486號', code:'MAT-486', from:'沙發',
+    body:['從沙發縫裡摸出來的播報材料，右上角編號486。',
+          '「有人真的能用微波爐穿越時空？聽聽專家怎麼說！',
+          '我還有人用老跑車當時光機咧，大家想鑽進去的東西是不是越來越新潮了？」'] },
   lease: { title:'租賃契約本', code:'HOME-9', from:'二樓書櫃',
     body:['一本紅色封皮的租賃契約本，格式是老式的。',
           '出租人那一欄空著，沒有房東的印章。',
@@ -1959,7 +1945,7 @@ const DOCS = {
   olddiary: { title:'流理台裡的日記', code:'HOME-10', from:'流理台',
     body:['一本被塞在鍋子底下的日記，只有幾頁有字。',
           '「8/25　大地震後外面出現了怪獸。」',
-          '「9/13　保存的食物已經都吃光了，政府也不救，接下來該怎麼辦？」',
+          '「9/13　保存的食物已經都吃光了，只能拔外面的菜，政府也不救，接下來該怎麼辦？」',
           '「9/17　阿嬤走了……該死的爛政府，應該要組織搜救隊啊！」',
           '「10/21　阿麟說要自己出去找生路……外面都是怪物又有什麼用？」',
           '「10/31　有人闖進來了……這裡已經沒東西了也不聽……」',
@@ -1971,14 +1957,6 @@ const DOCS = {
           '就連有人要來掀房子也能早一步開溜～」',
           { who:'player', text:'……順風耳？這是在說他自己嗎？' }] },
 
-  desk_note: { title:'書桌上的稿紙', code:'HOME-6', from:'書桌',
-    body:['一疊稿紙，寫的是開場白。同一句改了七八次。',
-          '「各位聽眾，早安。」',
-          '「各位，早安。」',
-          '「早安。有人在嗎。」最後這句被畫掉了。'] },
-  closet_note: { title:'衣櫃', code:'HOME-7', from:'衣櫃',
-    body:['一邊掛著他的衣服，另一邊是空的，衣架還留在桿子上。',
-          '底層抽屜裡摺著兩件小孩的外套，尺寸差了兩號。'] },
   /* ── GHOST 支線：書桌抽屜 ─────────────────────────────── */
   ghost_diary: { title:'才寫第一頁的日記', code:'GH-1', from:'書桌抽屜',
     body:['攤開來只有第一篇：',
@@ -2019,48 +1997,42 @@ const DOCS = {
      每份的寫法：
        { v:'faction', association:'協會玩家看到的行' }            ← 其他陣營看不到這行
        { v:'faction', association:null, else:'非協會玩家看到的行' } ← 協會玩家看不到這行 */
-  gossip_a1: { title:'藍標錄音帶（A面）', code:'GOS-A1', from:'老錄音機',
-    body:['磁帶咬進磁頭，先是幾秒空白，然後出現人聲。',
-          { v:'faction', association:'無情的聲音「……話說你到底幾天沒睡了？營養劑有按時吃嗎？」' },
-          { v:'faction', association:'溫和的聲音「三天而已應該還行吧……現在沒有感覺那麼累。」' },
-          { v:'faction', association:'無情的聲音「等到昏倒就來不及啦，看你的血液報告一堆數值沒有達標，這幾天該補回來了。」' },
-          { v:'faction', association:'溫和的聲音「咦……？」' },
-          { v:'faction', association:'無情的聲音「還咦？身體不顧好也不想想最後麻煩到的會是誰，三天後我要看到數據是正常的。不然就別想再用工作逃避囉。」' },
-          { v:'faction', association:'溫和的聲音「嗚、有時候覺得你這樣好像我媽……」' },
-          { v:'faction', association:null, else:'【待補：非協會玩家聽到的內容】' },
-          '（翻到B面，全是雜訊。）'] },
-  gossip_a2: { title:'綠標MP3的音檔', code:'GOS-A2', from:'MP3播放器', flag:'played_a2',
-    body:['播放鍵按下去，耳機裡先竄出一小段電流聲。',
-          { v:'faction', association:'【待補：協會玩家聽到的內容】' },
-          { v:'faction', association:null, else:'【待補：非協會玩家聽到的內容】' }] },
-  gossip_a3: { title:'紅標USB裡的檔案', code:'GOS-A3', from:'終端機', flag:'played_a3',
-    body:['隨身碟裡只有一個沒有副檔名的檔案，點兩下居然開得起來。',
-          { v:'faction', association:'【待補：協會玩家看到的內容】' },
-          { v:'faction', association:null, else:'【待補：非協會玩家看到的內容】' }] },
-  gossip_y1: { title:'空白CD的音軌', code:'GOS-Y1', from:'CD隨身聽',
-    body:['雷射頭讀了幾秒，跳過刮痕，聲音出來了。',
-          { v:'faction', yelu:'【待補：夜鷺玩家聽到的內容】' },
-          { v:'faction', yelu:null, else:'【待補：非夜鷺玩家聽到的內容】' }] },
-  gossip_y2: { title:'錄影帶的畫面', code:'GOS-Y2', from:'紅色跑車播放器',
-    body:['雪花閃了幾下，畫面穩住了。',
-          { v:'faction', yelu:'【待補：夜鷺玩家看到的內容】' },
-          { v:'faction', yelu:null, else:'【待補：非夜鷺玩家看到的內容】' }] },
-  gossip_y3: { title:'錄音筆的內容', code:'GOS-Y3', from:'微型錄音筆', flag:'played_y3',
-    body:['錄音筆卡了一下，然後開始轉。',
-          { v:'faction', yelu:'【待補：夜鷺玩家聽到的內容】' },
-          { v:'faction', yelu:null, else:'【待補：非夜鷺玩家聽到的內容】' }] },
-  gossip_w1: { title:'磁片裡的存檔', code:'GOS-W1', from:'老電腦',
-    body:['讀取燈狂閃，螢幕跳出一份存檔紀錄。',
-          { v:'faction', wanderer:'【待補：流浪者玩家看到的內容】' },
-          { v:'faction', wanderer:null, else:'【待補：非流浪者玩家看到的內容】' }] },
-  gossip_w2: { title:'3310的簡訊匣', code:'GOS-W2', from:'3310手機', flag:'played_w2',
-    body:['解鎖音效響起，簡訊匣裡存著一串舊訊息。',
-          { v:'faction', wanderer:'【待補：流浪者玩家看到的內容】' },
-          { v:'faction', wanderer:null, else:'【待補：非流浪者玩家看到的內容】' }] },
-  gossip_w3: { title:'黑膠唱片的聲音', code:'GOS-W3', from:'迷你唱片機',
-    body:['唱針落在裂痕之間，霹啪聲裡浮出旋律，然後是說話聲。',
-          { v:'faction', wanderer:'【待補：流浪者玩家聽到的內容】' },
-          { v:'faction', wanderer:null, else:'【待補：非流浪者玩家聽到的內容】' }] },
+  gossip_a1: { title:'101上的女僕咖啡廳？', code:'GOS-A1', from:'老錄音機',
+    flag:'played_a1', notFaction:'association',
+    body:['錄音帶轉了半天，只錄到幾句別人轉述的閒話。',
+          '「聽說101上有開一間女僕咖啡廳？協會人這麼會玩的嗎？」'] },
+  gossip_a2: { title:'那批疫苗的傳聞', code:'GOS-A2', from:'MP3播放器',
+    flag:'played_a2', notFaction:'association',
+    body:['MP3裡只有一段短短的路邊閒聊。',
+          '「有打過2027到2028那批疫苗的人，生下的小孩容易變成超能者？真的假的？」'] },
+  gossip_a3: { title:'食堂阿姨與彗星炒飯', code:'GOS-A3', from:'終端機',
+    flag:'played_a3', notFaction:'association',
+    body:['隨身碟裡的檔案大多壞了，只有一則留言還能讀。',
+          '「協會的食堂阿姨很會做菜，要是拿材料請她重現小當家彗星炒飯不知道可不可以？」'] },
+  gossip_y1: { title:'小蜜蜂發財車', code:'GOS-Y1', from:'CD隨身聽',
+    flag:'played_y1', notFaction:'yelu',
+    body:['CD跳針跳得厲害，只聽得清一段。',
+          '「南部好像常常會有一台改造的小蜜蜂發財車來中部，每次都會搜刮到一堆飲料跟零食，真不曉得情報哪裡來的。」'] },
+  gossip_y2: { title:'侵蝕者的壽命', code:'GOS-Y2', from:'紅色跑車播放器',
+    flag:'played_y2', notFaction:'yelu',
+    body:['錄影帶的畫面糊成雪花，只有音軌還算完整。',
+          '「侵蝕者的壽命取決於打針跟消耗多寡……如果一直逃跑的話，就可以活很久了？」'] },
+  gossip_y3: { title:'夜鷺有夜市？', code:'GOS-Y3', from:'微型錄音筆',
+    flag:'played_y3', notFaction:'yelu',
+    body:['錄音筆裡是一段吵雜的路邊對話。',
+          '「你說夜鷺有夜市？有彈珠檯打香腸？還有阿勇師辦桌跟歌仔戲？是怎樣文藝復興喔？」'] },
+  gossip_w1: { title:'拙火結社招生中', code:'GOS-W1', from:'老電腦',
+    flag:'played_w1', notFaction:'wanderer',
+    body:['磁片裡大部分的檔案讀不出來，只有一份文宣完整。',
+          '「不想加入幫派為非作歹，也不要跟奇怪的宗教團體鬼混嗎？那就加入拙火結社！開發人體潛能！」'] },
+  gossip_w2: { title:'誰來主持公道', code:'GOS-W2', from:'3310手機',
+    flag:'played_w2', notFaction:'wanderer',
+    body:['簡訊匣裡只有一封像是轉寄了很多手的訊息。',
+          '「現在這麼亂就沒有人來主持公道嗎？如果有個充滿正義的超能者跟侵蝕者團體會保護善良的人就好了……」'] },
+  gossip_w3: { title:'九陣營測試正夯', code:'GOS-W3', from:'迷你唱片機',
+    flag:'played_w3', notFaction:'wanderer',
+    body:['唱片的裂痕之間，混進了一段完全不相干的錄音。',
+          '「流浪者九陣營測試正夯！看看你的屬性，與不同陣營速配指數……什麼？你說中部都是混亂邪惡在加入的？」'] },
 
   /* ── 信箱裡的傳單 ──────────────────────────────────────── */
   ad_cult: { title:'銀神教招募文宣', code:'AD-1', from:'信箱',
@@ -2091,168 +2063,63 @@ const DOCS = {
     body:['鏡面有一層薄薄的水垢。',
           '斜著看的時候會浮出用手指寫過的字——寫的人大概以為擦掉就沒了。',
           '「今天也要好好說話。」'] },
-  heater_card: { title:'熱水器保固卡', code:'HOME-9', from:'熱水器',
-    body:['貼在機殼側面的水電行貼紙，電話號碼被畫掉重寫過。',
-          '保固卡上最後一次維修的日期，是災變那一年的春天。',
-          '欄位下面有人補了一行：「以後自己修。」'] },
-  bed_note: { title:'床頭的書', code:'HOME-10', from:'床墊',
-    body:['一本翻到一半的書，夾著書籤停在同一頁很久了。',
-          '那一頁沒有畫線，也沒有摺角。'] },
+  heater_card: { title:'播報材料-508號', code:'MAT-508', from:'熱水器',
+    body:['塞在熱水器機殼縫裡的播報材料，右上角編號508。',
+          '「不少密醫加入了奇怪結社的行列，聽說那邊聚集越來越多研究材料，',
+          '還有高薪待遇，不用再像之前戰戰兢兢啦！身為密醫的你不上嗎？」'] },
+  bed_note: { title:'播報材料-077號', code:'MAT-077', from:'床墊',
+    body:['夾在床頭那本書裡當書籤的播報材料，右上角編號077。',
+          '「天海幫聚集越來越多怪人啦，你該不會也是其中之一？報酬高嗎？',
+          '蝦你說會被邀請到消波塊裡面一日遊？」'] },
 
   /* ── 三樓：神明廳改的播音室 ───────────────────────────────── */
-  altar_note: { title:'神桌上的紙條', code:'ALT-1', from:'神桌',
-    body:['壓在器材底下的一張紙，字寫得很端正，跟這棟房子裡其他地方的潦草完全不同。',
-          '「借用一下，很快就還。」',
-          '日期是五年前。'] },
-  tablets_note: { title:'紙箱上的字', code:'ALT-2', from:'收起來的牌位',
-    body:['一個用報紙墊過底、封口封得很仔細的紙箱，放在牆角離窗戶最遠的地方。',
-          '側面用麥克筆寫著：「等安頓好再請回來。」',
-          '箱子上沒有灰塵。有人固定在擦。'] },
-  photo_back: { title:'照片背面', code:'ALT-3', from:'神桌',
-    body:['照片立起來之後，你才看到背面有字，鉛筆寫的，很輕。',
-          '「等大家都回來，再拍一張。」',
-          '這一句沒有日期。'] },
 
   /* ── L1 生活層：他這個人 ───────────────────────────────── */
-  fridgenote: { title:'冰箱上的便條', code:'NOTE-F', from:'小冰箱',
-    body:['「牛奶過期了不要喝。」「電費繳了。」「三號線不要碰。」',
-          '最下面那張只寫了一個時間，沒有說是什麼時間。'] },
-  calendar: { title:'月曆', code:'CAL-1', from:'牆上',
-    body:['大部分格子是空的，只有幾天畫了圈。',
-          '畫圈的日子旁邊都寫著同一個字：「回」。',
-          '最後一個圈之後，就沒有再畫過了。'] },
-  note_floor: { title:'地上的便條', code:'NOTE-A', from:'地板',
-    body:['「三號線不要碰。」下面畫了一個箭頭指向左邊。'] },
-  note_carpet: { title:'踩皺的紙', code:'NOTE-B', from:'地毯上',
-    body:['一半是塗鴉，一半是數字，看起來像有人在等待時隨手寫的。',
-          '塗鴉是一隻鳥，畫得很潦草，翅膀上點了兩塊白。'] },
-  supply: { title:'物資清單', code:'SUP-021', from:'紙箱堆',
-    body:['電池、膠帶、耳機線、備用天線。數量欄大多寫著「1」。',
-          '最後兩項是別人補上去的，字跡不同：熱水、椅墊。'] },
-  unsent: { title:'沒寄出的信', code:'MAIL-000', from:'紙箱底部',
-    body:['寫給某個人的信，開頭是「等你聽到這段的時候」。',
-          '後面全空著。筆還夾在裡面。'] },
+  note_carpet: { title:'播報材料-261號', code:'MAT-261', from:'地毯上',
+    body:['被踩過一腳的播報材料，右上角編號261，鞋印剛好蓋在標題上。',
+          '「吃香菜可以增強超能力？來自北方密醫最新的研究！',
+          '要是被播出來的話，接下來香菜會被搶購一空吧？什麼？你不吃香菜？」'] },
 
   /* ── L2 事件層：主線四到主線五之間 ─────────────────────── */
-  schedule: { title:'節目編排表（最後一版）', code:'PRG-014', from:'釘在牆上',
-    body:['上半天是氣象與物資通報，下半天留給點播與尋人。時段被劃掉又重寫了好幾次。',
-          '最後一版多了一欄：「深夜：不定時」，後面畫了一個問號。',
-          '最底下那行字跡很潦草：「凌晨不要關機。」'] },
-  letter1: { title:'聽眾來信', code:'MAIL-062', from:'資料架',
-    body:['信紙被摺過很多次。字寫得很大，像是怕收信的人看不清楚。',
-          '「昨天那首歌我聽到了。我還在。」',
-          '沒有署名，也沒有地址。'] },
-  letter2: { title:'轉了很多手的信', code:'MAIL-088', from:'資料架',
-    body:['信封上蓋了兩個不同營地的章，邊角磨得很毛。',
-          '「我們這邊收得到你。訊號很弱，但收得到，孩子們會跟著唱。」',
-          '背面有人用鉛筆補了一行：「103.8 幫忙轉的。」'] },
-  hopping: { title:'跳頻紀錄表', code:'FRQ-01', from:'檔案櫃',
-    body:['一張手畫的表格，記著每次換頻率的日期和原因。',
-          '前面幾次的原因欄寫著「干擾」「功率不足」，字跡很輕鬆。',
-          '從某一次開始，原因欄只剩下一個字：「換。」',
-          '最後一列的日期填了，頻率欄是空的。'] },
-  stop: { title:'停播通知', code:'ADM-009', from:'檔案櫃',
-    body:['公文格式，內容只有兩行，宣布本頻段廣播業務暫停。',
-          '落款是自己寫給自己的。',
-          '日期那一欄是空的。'] },
-  roster_page: { title:'人員名冊殘頁', code:'HR-003', from:'檔案櫃',
-    body:['一張被撕過的名冊，只剩下三分之一。',
-          '能辨認的職稱只有兩個：主持、領航。',
-          '「領航」那一欄後面的名字被塗掉了，塗得很用力，紙都破了。'] },
-  assoc_form: { title:'巡查回報表', code:'ADM-101', from:'檔案櫃',
-    only:{ faction:['association'] },
-    body:['一張你認得的表格，欄位印得很整齊，但沒有填完。',
-          '「巡查項目：不明頻段。結論：」後面是空白。',
-          '右下角蓋了章，日期比停播還早三個月。'] },
+  letter1: { title:'播報材料-194號', code:'MAT-194', from:'資料架',
+    body:['一張播報材料，右上角編號194，邊緣被摺過很多次。',
+          '「報告～彰化花壇有個營地小孩走丟啦～',
+          '沒被吃掉的話就幫忙照顧一下，可能會有謝禮？還是要去密醫那邊看看咧？」'] },
+  letter2: { title:'播報材料-730號', code:'MAT-730', from:'資料架',
+    body:['一張播報材料，右上角編號730，背面蓋了兩個不同營地的章。',
+          '「聽說北方大量缺乘乘，南方大量缺結冰水，要不要乾脆南北互通一下？',
+          '做個貿易保證之後大賺一筆！」'] },
   tapelabel: { title:'錄音帶標籤', code:'TAP-A', from:'錄音帶堆',
     body:['一疊帶子貼著手寫標籤：颱風夜、開播日、給小孩的、不要播。',
           '「不要播」那捲不在這裡，架上只剩下標籤。',
           '最上面那捲是舊型的，標籤上用紅筆寫著：',
           '「請將 A 面放入並倒帶，否則會爆炸」'] },
-  taperec: { title:'帶子內容記錄', code:'TAP-B', from:'錄音帶堆',
-    body:['一本簿子逐捲記下時間長度與內容摘要，字跡工整。',
-          '中間有二十幾行只寫了時間，摘要欄一片空白。',
-          '空白結束之後，摘要欄再也沒有寫滿過。'] },
-  mesh_memo: { title:'器材旁的筆記', code:'NOTE-M', from:'錄音帶堆',
-    body:['一疊壓在器材下面的筆記，畫著一堆小圓點，圓點之間用短線連起來。',
-          '「每支機器都是一個節點，跳一次就遠一點。不用基地台，不用執照。」',
-          '「藍牙就夠了。只要人夠多。」',
-          '最下面一行：「如果每個人身上都有訊號，那還需要電台嗎？」',
-          '那行字被畫掉了，又用另一枝筆描回來。'] },
-  reeltape: { title:'倒帶後的內容', code:'TAP-C', from:'舊型卡帶機',
-    body:['帶子從頭轉起，前面是一大段空白。',
-          '然後有人清了清喉嚨，開始念一串數字。',
-          '念到一半突然停下來，壓低聲音說「等一下」，接著就沒有了。'] },
-  syslog: { title:'系統日誌', code:'SYS-LOG', from:'終端機',
-    body:['自動播出程序每天固定啟動，從沒有失敗紀錄。',
-          '目前循環中的檔案只有一個，檔名是一支感冒藥的名字。',
-          '最後一次人工登入距離現在很久了，帳號名稱是三個字母。'] },
-  msgbox: { title:'未讀訊息', code:'SYS-MSG', from:'終端機',
-    body:['收件匣裡有十七封同格式的訊息，都是空白內容，只有時間戳。',
-          '每一封的間隔剛好是二十四小時。',
-          '第十八封沒有出現。'] },
-  playlist: { title:'自動播放清單', code:'SYS-PL', from:'終端機',
-    body:['清單裡只有兩個項目：一段廣告，和一段沒有標題的錄音。',
-          '廣告已經播了三千多次。',
-          '沒有標題的那一項長度是四分十一秒，播放次數是零。'] },
-  powerlog: { title:'電力回報', code:'SYS-PWR', from:'終端機',
-    body:['供電恢復。自動播出程序重新啟動。',
-          '待處理事項只剩下一條：把櫃子裡的東西播出去。',
-          '後面接著一行設定值：SAFE=95＿＿',
-          '後兩位被刪掉了，游標還停在那裡閃。'] },
-  logbook1: { title:'播出日誌・上冊', code:'LOG-1', from:'播音台',
-    body:['每天的開播時間都一樣，字跡工整。',
-          '頁緣有人一天一天標著天數。',
-          '中段開始，收播時間欄位陸續變成空白。'] },
-  logbook2: { title:'播出日誌・下冊', code:'LOG-2', from:'播音台',
-    body:['整本只寫了三行，日期跳得很開。',
-          '第二行是：「今天也沒有人回話。照常。」',
-          '最後一行只有一個數字：1773。'] },
-  monitorlog: { title:'監控紀錄', code:'MON-1', from:'監控台',
-    body:['螢幕上是一整排進出紀錄，多半是同一組代號反覆出現。',
-          '中間夾著三筆別人的，時間都在深夜，間隔不到兩週。',
-          '第三筆之後，那組每天都會出現的代號就沒有再出現了。'] },
+  taperec: { title:'播報材料-313號', code:'MAT-313', from:'錄音帶堆',
+    body:['夾在帶堆裡的一張播報材料，右上角編號313。',
+          '「銀神教最近連教主都出門趴趴造囉，看來是有什麼好玩的事要發生了？',
+          '還是發現了捲心酥礦脈之類的啊？」'] },
+  reeltape: { title:'播報材料-359號（試錄）', code:'MAT-359', from:'舊型卡帶機',
+    body:['帶子從頭轉起，前面是一大段空白，然後是他清嗓子的聲音。',
+          '「有獎徵答時間～挖咖摸斗！下一句要接什麼？」',
+          '接著是很長的停頓，像在等聽眾回答，然後帶子就結束了。'] },
   konami: { title:'監控台旁的紙條', code:'NOTE-K', from:'監控台旁',
     body:['被壓在鍵盤下的一張紙，字寫得很急。',
           '「上上下下BABA一定行」',
           '下面畫了一個笑臉。'] },
-  breaker: { title:'跳電紀錄', code:'ELE-2', from:'電閘箱',
-    body:['一張貼在箱門內側的紙，記著每次跳電的時間。',
-          '最後幾筆之間的間隔越來越短。',
-          '最下面一行字跡不同：「不要全部關掉。」'] },
-  freq952: { title:'頻率備忘', code:'FRQ-02', from:'調頻盤',
-    body:['調頻盤鎖在一個沒有登記的頻段上。',
-          '旁邊壓著一張紙：「如果哪天訊號斷了，回到這裡。」',
-          '紙的背面還有一行小字：「＋7。他會知道的。」'] },
-  memo_board: { title:'布告欄公告', code:'BRD-1', from:'布告欄',
-    body:['值班規則、通聯守則、緊急停機步驟。膠帶已經失去黏性，紙角全翹起來。',
-          '空白處被人補了一句：「說話時要當作真的有人在聽。」',
-          { v:'faction',
-            association:'角落蓋著一個你認得的核可章，日期比停播通知還晚。',
-            yelu:'邊緣有一組手寫代號，跟你們標安全路線的寫法一樣。',
-            wanderer:'紙背後夾著一張手繪簡圖，畫的是這附近的水源。' }] },
   day1773: { title:'牆上的便條', code:'NOTE-D', from:'布告欄',
     body:['一張用紅筆寫的便條，貼在最顯眼的位置。',
           '「這是開始播報的第 1773 天，值得紀念！」',
           '旁邊沒有第 1774 天。'] },
-  pocket: { title:'口袋裡的紙', code:'NOTE-W', from:'洗衣機',
-    body:['洗過一次又乾掉的紙，字暈開了。',
-          '還看得出來是一組數字的後兩位：27。'] },
-  spare: { title:'備品清單', code:'SUP-B', from:'塑膠籃',
-    body:['天線夾板、絕緣膠帶、束線帶。旁邊註記「上面那支又歪了」。'] },
+  pocket: { title:'播報材料-145號', code:'MAT-145', from:'洗衣機',
+    body:['一張洗過又乾掉的播報材料，右上角編號145，字暈開了但還讀得出來。',
+          '「聽說有人目擊到南邊出現了大型喊水會結凍的生物，',
+          '請記得繞道～被變成冰柱不負責喔～」'] },
   flutesheet: { title:'直笛樂譜《卡加布列島》', code:'MUS-1', from:'桌上',
     body:['一張手抄的簡譜，四個小節，用鉛筆畫了小節線，紙邊都被翻軟了。',
           '《卡加布列島》　四四拍',
           '3 6 6 (1) ｜ 7 6 — — ｜ 6 3 6 (1) ｜ (3)(3) 6 —',
           '括號是高音。最後一個 6 底下畫了一條長長的線，要拉滿。',
           '空白處有人寫了一行：「隨便吹什麼都可以，反正是自己的節目。」'] },
-  safenote: { title:'櫃子裡的紙條', code:'SAFE-1', from:'保險箱',
-    body:['「這捲不要放在架上。」',
-          '「如果有人找到它，代表我已經走了。」',
-          '「不是死了，是走了。這兩件事不一樣。」'] },
-  wiring: { title:'配線圖', code:'ELE-1', from:'配電箱',
-    body:['手繪的線路圖，從配電箱一路畫到天線。',
-          '中間有一段被塗改過三次，最後寫著「先修上面再開下面」。'] },
   toolnote: { title:'信號塔操作指南', code:'MAN-1', from:'保險箱',
     body:['一張護貝過的指南，對摺兩次，跟帶子一起收在保險箱裡。',
           '「紅接黃、藍接綠，老鼠的兒子會打洞！」',
@@ -2264,89 +2131,8 @@ const DOCS = {
           '「窮的接空孔，富的接紅孔。」'] },
 
   /* ── 陣營限定：三邊各一份 ───────────────────────────────── */
-  wallmark: { title:'牆角的記號', code:'MARK-1', from:'線團後面',
-    only:{ faction:['wanderer'] },
-    body:['線團後面的牆上刻了一個小記號，是「這裡可以待」的意思。',
-          '刻痕看起來很新。'] },
-  yelu_clip: { title:'曬衣夾上的字', code:'MARK-2', from:'曬衣架',
-    only:{ faction:['yelu'] },
-    body:['其中一個夾子上用油性筆寫了一組很短的代號。',
-          '那是你們標記安全路線的寫法。',
-          '箭頭指向南邊。'] },
 
   /* ── L3 溢流層：被動收到的資訊之海碎片 ─────────────────── */
-  recv_north: { title:'收訊本・北', code:'RCV-N', from:'收訊本',
-    body:['一本手抄的簿子，每一頁最上面寫著方位和時間，下面是一句一句抄下來的話。',
-          '「拘束器又不夠了。」「這個月第幾次了？」',
-          '「空中花園有人在澆花。」',
-          '「一個聽起來很年輕的聲音，在講三十年前的事。」'] },
-  recv_south: { title:'收訊本・南', code:'RCV-S', from:'收訊本',
-    body:['「濃縮液剩下的量，撐不到下個月。」',
-          '「有人在田裡數鳳梨。數了兩遍。」',
-          '「討伐班長……換人了嗎？」',
-          '最後那句後面，抄的人自己補了一個問號。'] },
-  recv_gang: { title:'收訊本・海邊', code:'RCV-E', from:'收訊本',
-    body:['「大斷崖那邊晚上有燈。不是營火。」',
-          '「有人在賣一種銀色的方盒子，說可以把災獸叫過來。」',
-          '「升降梯要通行證。通行證從人手上來。」'] },
-  recv_cult: { title:'收訊本・銀', code:'RCV-A', from:'收訊本',
-    body:['「他們在數人頭。數到一個數字就會停下來禱告。」',
-          '「經文裡說，最初的那一個還在。」',
-          '旁邊有一行小字：「最初的那一個，是什麼？」'] },
-  recv_stage: { title:'收訊本・台', code:'RCV-T', from:'收訊本',
-    body:['「歌劇院那邊每週有表演，票是免費的。」',
-          '「看完之後有人說，覺得自己好像也可以。」',
-          '「散場之後，有幾個人沒有回家。」'] },
-  recv_sky: { title:'收訊本・天', code:'RCV-W', from:'收訊本',
-    body:['「北邊的雨從三月就沒有停過。」',
-          '「南邊在下冰。下冰欸。」',
-          '「兩邊都有人說看到會飛的大東西。翅膀很大。」',
-          '這一頁的字寫得比其他頁都大。'] },
-};
-
-/* ── 玩家數值來源 ────────────────────────────────────────────────────
-   mode:
-     'baked'     只用下面 BATTLE_STATS 算（預設，離線也能跑）
-     'firestore' 從 Firestore REST 讀
-     'rtdb'      從 Realtime Database REST 讀
-
-   讀不到、逾時、欄位缺漏 → 一律退回 baked，遊戲不會卡住。
-   settings 面板底部會顯示這次是用哪一種來源。 */
-const PLAYER_SOURCE = {
-  /* 'roster' = 直接用名冊上的 hp / atk / def 三欄，不用另外連線，離線也能跑 */
-  mode: 'roster',
-
-  /* 下面這些只有 mode 改成 sheet / firestore / rtdb 才會用到 */
-  sheetUrl: '', sheetKey: 'characterId',
-  projectId: '', apiKey: '',
-  docPath: 'characters/{id}', rtdbUrl: '', nodePath: 'characters/{id}',
-  idField: 'characterId',
-  fields: { hp:'hp', atk:'atk', def:'def' },
-  timeout: 4000,
-
-  /* ⚠ 平台上的數值範圍跟這個小房間差很多，直接套會變成一刀秒殺或永遠打不完。
-     下面把「平台區間」線性壓到「房間區間」，所以強的還是強、弱的還是弱，
-     但雙方都落在這個房間打得起來的範圍裡。
-
-     PLATFORM 請照名冊的實際最小／最大值填 —— 同步腳本跑完會直接印給你。
-     ROOM 是房間這邊的目標區間，敵人血量 210～380、攻擊 20～40，照這個抓的。 */
-  PLATFORM: { hp:[100, 220], atk:[10, 26], def:[10, 24] },
-  ROOM:     { hp:[140, 250], atk:[16, 32], def:[ 5, 20] },
-
-  scale(raw){
-    const map = (v, from, to) => {
-      const t = (Number(v) - from[0]) / ((from[1] - from[0]) || 1);
-      return to[0] + Math.max(0, Math.min(1, t)) * (to[1] - to[0]);
-    };
-    const hp  = map(raw.hp,  this.PLATFORM.hp,  this.ROOM.hp);
-    const atk = map(raw.atk, this.PLATFORM.atk, this.ROOM.atk);
-    const def = map(raw.def, this.PLATFORM.def, this.ROOM.def);
-    return {
-      max: Math.round(hp),
-      atk: [Math.round(atk * 0.85), Math.round(atk * 1.15)],
-      def: Math.round(def),
-    };
-  },
 
   /* 最後再套一次上下限，擋掉名冊上的極端值 */
   clamp: { max:[90, 260], atk:[10, 40], def:[0, 22] },
@@ -2530,7 +2316,7 @@ const ENEMIES = {
            { who:'player', text:'……這個打不動。真的打不動。' }],
     moves:[{ text:'電流順著鋼架劈下來，整座塔都在嗡嗡響。', atk:[30,45] },
            { text:'它甩動甲殼撞過來，像一節脫軌的列車。', atk:[26,40] }],
-    win:['七星刀劃過的裂口冒著白煙。',
+    win:['要你命8000砸出的裂口冒著白煙。',
          '銀無功整條從塔上鬆脫，摔進樓下的草叢，不動了。',
          '塔架上只剩下一圈被磨得發亮的痕跡。'],
     lose:['電流打得你眼前發白。','你連滾帶爬地退下鐵梯。'],
@@ -2593,12 +2379,10 @@ const ENEMIES = {
 const ITEMS = {
   screwdriver: { name:'螺絲起子',     art:'i_screwdriver', desc:'柄上纏了幾圈電火布。',
                  battle:{ atk:[45,70], text:'你用螺絲起子往前刺。' } },
-  pliers:      { name:'老虎鉗',       art:'i_pliers',      desc:'握把上纏著厚厚的防滑帶，是絕緣的。',
-                 battle:{ atk:[55,85], text:'你抄起老虎鉗砸過去。' } },
   gas:         { name:'汽油',         art:'i_gas',         desc:'從 SNG 車油箱抽出來的，裝在一個舊塑膠桶裡。' },
   daitong:     { name:'大同寶寶',     art:'i_daitong',     desc:'棒球帽、紅衣服、憨憨的笑。底座刻著一組編號。' },
   smallkey:    { name:'小鑰匙',       art:'i_smallkey',    desc:'從遊戲機裡彈出來的小鑰匙，齒紋很細。像是抽屜用的。' },
-  waxfinger:   { name:'蠟製的手指',   art:'i_waxfinger',   desc:'一根蠟做的食指，指腹上的紋路壓得很清楚。做的人知道要按哪裡。' },
+  waxfinger:   { name:'T-800的大拇指', art:'i_waxfinger',  desc:'一根做得幾可亂真的大拇指，指腹的紋路壓得很清楚。魔鬼終結者同款。' },
   crowbar:     { name:'鐵撬',         art:'i_crowbar',     desc:'一端被敲扁了，握起來剛剛好。',
                  battle:{ atk:[60,90], text:'你掄起鐵撬砸下去。' } },
   bandage:     { name:'繃帶',         art:'i_bandage',     desc:'壓縮包裝的急救繃帶，封口還沒開。點一下就能用。',
@@ -2609,6 +2393,8 @@ const ITEMS = {
                  heal:45, use:'你一口氣倒了半盒，臉頰塞得鼓鼓的。' },
   balm:        { name:'一條根藥膏',   art:'i_balm',        desc:'綠色小圓罐，蓋上的字被手指磨掉一半。阿嬤的味道。',
                  heal:80, use:'你挖了一大坨抹在痠的地方，涼意整個竄上來。' },
+  bomee:       { name:'波MEE果菜汁',   art:'i_bomee',       desc:'鋁罐裝的綜合果菜汁。冰箱倒了它還好好的，鋁罐無敵。',
+                 heal:45, use:'你把整罐灌下去，蔬果味在末世裡顯得特別奢侈。' },
   celery:      { name:'律律芹菜汁',   art:'i_celery',      desc:'瓶身畫著一根挺直的芹菜。喝起來據說是紀律的味道。',
                  heal:40, use:'你捏著鼻子灌下去。……意外地清爽？' },
   lambcan:     { name:'羊肉爐罐頭',   art:'i_lambcan',     desc:'鐵罐上印著滾燙的湯鍋，成分表第一項是薑。',
@@ -2643,10 +2429,9 @@ const ITEMS = {
   nokia:       { name:'3310手機',     art:'i_nokia',       desc:'一台3310，螢幕居然還會亮。點一下開機。' },
   vinyl:       { name:'裂痕黑膠唱片', art:'i_vinyl',       desc:'有幾道細裂痕的黑膠唱片。——需要唱片機，放針要小心。' },
   recpen:      { name:'微型錄音筆',   art:'i_recpen',      desc:'口紅大小的錄音筆，只有一顆按鍵。點一下播放。' },
-  sword:       { name:'神力加持七星刀', art:'i_sword',     desc:'七星排成勺形的短刀，刀柄纏著褪色的紅線。握著會微微發熱——但現在還不到用它的時機。',
+  sword:       { name:'神力加持要你命8000', art:'i_sword', desc:'西瓜刀、鐵鎚、拖鞋、瓦斯罐……用紅線和膠帶纏成一大捆的傳說兇器。現在還不到用它的時機。',
                  battle:{ only:'silvercent', atk:[9999,9999], consume:true,
-                          text:'七星刀出鞘，刀光落下的瞬間，銀甲像紙一樣裂開！' } },
-  photo:       { name:'全家福',       art:'i_photo',       desc:'四個人站在鐵捲門前面，照片邊角有摺痕。' },
+                          text:'你把要你命8000整組掄了出去——轟！銀甲像紙一樣裂開！' } },
   fuse:        { name:'備用保險絲',   art:'i_fuse',        desc:'玻璃管裡的絲還是完整的。' },
   tape:        { name:'無標題錄音帶', art:'i_tape',        desc:'標籤被撕掉了，只剩下一圈膠痕。' },
 };
@@ -2817,7 +2602,7 @@ const AREAS = {
         lines:['隔著玻璃往裡面看，東西堆得到處都是。',
                { who:'player', text:'住得很隨便，可是器材擺得很整齊。' }] },
       { id:'junction', name:'接線盒', col:2, row:2, w:1, h:1, solid:true, color:'#4a5560',
-        docs:['junction_note'] },
+         },
       { id:'tower', name:'天線塔', col:11, row:2, w:2, h:1, solid:true, color:'#4a5560',
         lines:['抬頭看，屋頂上架著一支跟房子完全不成比例的天線塔。',
                '塔身中段纏著一圈一圈被刮亮的痕跡——像有什麼長長的東西，反覆盤過。',
@@ -2829,32 +2614,25 @@ const AREAS = {
                  else:{ who:'player', text:'……上面住著東西。打雷的時候，離塔遠一點。' } }] },
       { id:'sng', name:'SNG 車', col:1, row:5, w:4, h:2, solid:true, color:'#5c6a72',
         battle:'driller',
-        lock:{ type:'item', item:'screwdriver', consume:false, give:'pliers',
+        lock:{ type:'choice', give:'gas',
+               title:'車尾的油箱',
+               steps:[
+                 { q:'油箱搖起來還有聲音，是滿的。要怎麼弄出來？',
+                   options:['把油箱敲破','找根管子虹吸','直接拆下整個油箱'], goal:1 },
+                 { q:'車上有一截透明軟管。虹吸要先做什麼？',
+                   options:['管子插進去用力吹','管子插進去先吸','把車子墊高'], goal:1 },
+               ],
+               damage:[8,14],
+               hurtFlag:'gassed',
+               failTitle:'滿嘴汽油！',
+               fail:['你嗆了一大口，喉嚨到胃像被點著一樣。'],
                locked:['一台很像以前電視台的 SNG 車，停在牆邊。',
-                       '車身側板還完整，裡面的設備看起來也沒被拆過。',
-                       '工具箱鎖在側板後面，螺絲鏽死了。',
-                       '車尾的油箱蓋被撬過又蓋回去，邊緣有牙齒的痕跡。'],
-               wrong:['這個轉不動螺絲。'],
-               opened:['側板卸下來，工具箱就在裡面。',
-                       '大部分是纜線和接頭，還有一把還能用的老虎鉗。'] },
-        lock2:{ type:'choice', give:'gas',
-                title:'車尾的油箱',
-                steps:[
-                  { q:'油箱搖起來還有聲音，是滿的。要怎麼弄出來？',
-                    options:['把油箱敲破','找根管子虹吸','直接拆下整個油箱'], goal:1 },
-                  { q:'車上有一截透明軟管。虹吸要先做什麼？',
-                    options:['管子插進去用力吹','管子插進去先吸','把車子墊高'], goal:1 },
-                ],
-                damage:[8,14],
-                hurtFlag:'gassed',
-                failTitle:'滿嘴汽油！',
-                fail:['你嗆了一大口，喉嚨到胃像被點著一樣。'],
-                locked:['車尾的油箱蓋被撬過又蓋回去，邊緣有牙齒的痕跡。',
-                        '搖起來還有聲音，是滿的。'],
-                opened:['油從管子流進塑膠桶裡，味道嗆得眼睛發酸。',
-                        '差不多裝了一半，夠了。'] },
-        docs:['sngnote','tank_note'],
-        openedLines:['側板開著，油箱空了一半，管子還插在裡面。'] },
+                       '車尾的油箱蓋被撬過又蓋回去，邊緣有牙齒的痕跡。',
+                       '搖起來還有聲音，是滿的。'],
+               opened:['油從管子流進塑膠桶裡，味道嗆得眼睛發酸。',
+                       '差不多裝了一半，夠了。'] },
+        docs:['tank_note'],
+        openedLines:['油箱空了一半，管子還插在裡面。'] },
       { id:'sngradio', name:'收音機', col:5, row:6, w:1, h:1, solid:true, color:'#4b5560',
         docs:['airvoice'] },
       { id:'pole', name:'電線桿', col:14, row:4, w:1, h:2, solid:true, color:'#6b5c45',
@@ -2879,7 +2657,7 @@ const AREAS = {
         docs:['linetag'],
         openedLines:['線好好地綁在桿子上。'] },
       { id:'mailbox', name:'信箱', col:5, row:8, w:1, h:1, solid:true, color:'#6a7078',
-        docs:['mailbox_note','ad_cult','ad_gang','ad_doctor','ad_pineapple'],
+        docs:['ad_cult','ad_gang','ad_doctor','ad_pineapple'],
         lines:['鐵皮信箱塞得滿滿的，全是傳單，日曬到褪色。'] },
       { id:'weeds', name:'雜草叢', col:10, row:6, w:2, h:1, solid:false, color:'#5c7a5f',
         lines:['草長到膝蓋，只有從門口到車子那條路被踩出一道痕。',
@@ -2980,7 +2758,7 @@ const AREAS = {
     objects: [
       /* — 廚房 — */
       { id:'sink', name:'流理台', col:2, row:1, w:3, h:1, solid:true, color:'#7a828a',
-        docs:['kitchen_note','olddiary'],
+        docs:['olddiary'],
         lines:['櫃門全被拉開，裡面的東西掃到地上。',
                '有人在這裡找過東西，找得很急。'] },
       { id:'kcabinet', name:'廚房吊櫃', col:6, row:1, w:1, h:1, solid:true, color:'#5c4d38',
@@ -3024,14 +2802,13 @@ const AREAS = {
                opened:['你掏出一對木頭做的月牙——是擲茭。',
                        '兩片都被摸得光滑，一看就用了很多年。'] },
         give:'jiaobei',
-        docs:['barricade_note'],
-        openedLines:['縫隙空了，只剩灰。'] },
+                openedLines:['縫隙空了，只剩灰。'] },
       { id:'shells', name:'掃成一堆的彈殼', col:1, row:5, w:1, h:1, solid:false, color:'#c9a86c',
-        docs:['shells_note'] },
+         },
 
       /* — 客廳 — */
       /* 電視是兩段式的：先修好（lock），修好之後再點一次進畫面（lock2）。 */
-      { id:'carvhs', name:'紅色跑車播放器', col:10, row:1, w:1, h:1, solid:true, color:'#a03a32',
+      { id:'carvhs', name:'紅色跑車播放器', col:10, row:1, w:1, h:1, solid:true, color:'#a03a32', gossip:'y2',
         lock:{ type:'item', item:'vhsold', consume:false,
                locked:['電視旁擺著一台紅色跑車造型的錄放影機，帶口在車尾。',
                        '車頭燈是待機指示燈，還亮著。','（需要一卷錄影帶）'],
@@ -3082,7 +2859,7 @@ const AREAS = {
         docs:['tvnote','clown_note'],
         openedLines:['畫面裡的小丑還騎在那台腳踏車上，笑著。'] },
       /* 遊戲機：GHOST 支線的起點。輸入 99 條命密技（上上下下BABA）彈出小鑰匙 */
-      { id:'turntable', name:'迷你唱片機', col:12, row:2, w:1, h:1, solid:false, color:'#6b5a42',
+      { id:'turntable', name:'迷你唱片機', col:12, row:2, w:1, h:1, solid:false, color:'#6b5a42', gossip:'w3',
         lock:{ type:'item', item:'vinyl', consume:false,
                locked:['雜物箱上疊著一台手提式的迷你唱片機，唱針收在架上。',
                        '（需要一張唱片）'],
@@ -3130,8 +2907,7 @@ const AREAS = {
                opened:['六個數字轉到定位，蓋子彈開一條縫。',
                        '——年份加月份。他來到這裡的那個月。'] },
         give:'lighter',
-        docs:['tin_letter'],
-        openedLines:['鐵盒開著，裡面剩下繳費單和存摺。'] },
+                openedLines:['鐵盒開著，裡面剩下繳費單和存摺。'] },
       { id:'shrinebaby', name:'大同寶寶', col:9, row:1, w:1, h:1, solid:true, color:'#c9756c',
         lock:{ type:'choice',
                steps:[
@@ -3199,8 +2975,7 @@ const AREAS = {
                        '底下混著一些不屬於這個家的東西。'],
                opened:['你把鐵條抽出來。是一根被敲扁一端的鐵撬。'] },
         give:'crowbar',
-        docs:['nest_note'],
-        openedLines:['窩還在，裡面剩下鑰匙和幾個瓶蓋。'] },
+                openedLines:['窩還在，裡面剩下鑰匙和幾個瓶蓋。'] },
 
       /* — 走道與樓梯 — */
       { id:'extmount', name:'牆上的滅火器', col:4, row:8, w:1, h:1, solid:false, color:'#a03a32',
@@ -3223,8 +2998,7 @@ const AREAS = {
                wrong:['還有沒扳上的。'],
                opened:['五個全部扳上，箱子裡的燈亮了。',
                        '樓上傳來機器一台一台重新啟動的聲音。'] },
-        docs:['breaker'],
-        openedLines:['開關都在上面。'] },
+                openedLines:['開關都在上面。'] },
       { id:'stairs1', name:'上樓的樓梯', col:1, row:8, w:2, h:2, solid:true, color:'#5c4d38',
         exit:{ to:'f2', col:2, row:7 },
         lines:['磨石子樓梯，扶手被摸得發亮。',
@@ -3242,8 +3016,7 @@ const AREAS = {
                opened:['你把鞋輕輕倒過來，掌心掉出一台3310手機。',
                        { who:'player', text:'……藏在阿嬤的鞋裡。誰會找到這裡來啊。' }] },
         give:'nokia',
-        docs:['shoe_note'],
-        lines:['各種老舊的鞋整齊排著：大人的皮鞋、小孩的布鞋，尺寸差了好幾號。',
+                lines:['各種老舊的鞋整齊排著：大人的皮鞋、小孩的布鞋，尺寸差了好幾號。',
                '最上層單獨擺著一雙桃紅色的低跟鞋，鞋面擦得乾乾淨淨。',
                { who:'player', text:'……阿嬤款的。只有這雙被特別照顧過。' }] },
       { id:'slipper', name:'拖鞋', col:8, row:7, w:1, h:1, solid:false, color:'#6a6a72',
@@ -3273,7 +3046,7 @@ const AREAS = {
     ],
     objects: [
       /* — 臥室（已經沒人睡了） — */
-      { id:'discman', name:'CD隨身聽', col:12, row:6, w:1, h:1, solid:false, color:'#8a939d',
+      { id:'discman', name:'CD隨身聽', col:12, row:6, w:1, h:1, solid:false, color:'#8a939d', gossip:'y1',
         lock:{ type:'item', item:'cdblank', consume:false,
                locked:['走廊的窗台下放著一台CD隨身聽，蓋子開著。',
                        '防震標籤都泛黃了，但按鍵還有回彈。','（需要一張CD）'],
@@ -3294,7 +3067,7 @@ const AREAS = {
                        '袋底壓著一張發票，品項就只有這一罐。'] },
         give:'tomato',
         openedLines:['空袋子摺好塞在牆邊。'] },
-      { id:'tapedeck', name:'老錄音機', col:5, row:5, w:1, h:1, solid:true, color:'#4b4640',
+      { id:'tapedeck', name:'老錄音機', col:5, row:5, w:1, h:1, solid:true, color:'#4b4640', gossip:'a1',
         lock:{ type:'item', item:'tapeblue', consume:false,
                locked:['一台雙卡式的老錄音機擺在地上，倉門開著，是空的。',
                        '電池蓋用膠帶纏著，看來還有電。','（需要一卷錄音帶）'],
@@ -3302,7 +3075,7 @@ const AREAS = {
                opened:['卡帶咬進磁頭，喇叭沙沙作響——','（之後隨時可以回來重聽）'] },
         docs:['gossip_a1'],
         openedLines:['藍標錄音帶還躺在倉門裡。'] },
-      { id:'oldpc', name:'老電腦', col:5, row:2, w:1, h:1, solid:true, color:'#7a828a',
+      { id:'oldpc', name:'老電腦', col:5, row:2, w:1, h:1, solid:true, color:'#7a828a', gossip:'w1',
         lock:{ type:'choice',
                steps:[
                  { q:'螢幕停在開機選單，游標在「系統A」上閃。',
@@ -3331,12 +3104,11 @@ const AREAS = {
                fail:['整排書骨牌一樣塌下來。','你花了點時間把它們立回去。'],
                locked:['一個塞得滿滿的書櫃，大多是舊雜誌。',
                        '中段夾著一本紅色封皮的簿子，露出「契約」兩個字。'],
-               opened:['契約本抽出來的瞬間，一張照片從內頁飄落——',
-                       '是一張全家福。四個人站在這棟房子門口，鐵捲門還很新。'] },
-        give:'photo',
+               opened:['你把紅皮的契約本整本抽了出來。',
+                       '封面壓著很深的摺痕，被翻過很多次。'] },
         docs:['lease'],
         openedLines:['契約本抽出來過，那一格書斜斜地靠著。'] },
-      { id:'shoebox', name:'牆角的鞋盒', col:6, row:3, w:1, h:1, solid:false, color:'#8a7a5c',
+      { id:'shoebox', name:'牆角的鞋盒', col:1, row:3, w:1, h:1, solid:false, color:'#8a7a5c',
         lock:{ type:'choice',
                steps:[
                  { q:'鞋盒上用膠帶貼著手寫的「易碎 勿搖」。',
@@ -3379,8 +3151,7 @@ const AREAS = {
                opened:['生日蠟燭、白蠟燭、芳香蠟燭……',
                        '最底下還有一對畫著花果的紅燭，包裝都沒拆。'] },
         give:'candles',
-        docs:['closet_note'],
-        openedLines:['紙盒拿走了，衣櫃深處空出一塊。'] },
+                openedLines:['紙盒拿走了，衣櫃深處空出一塊。'] },
       { id:'desk', name:'書桌', col:4, row:1, w:2, h:1, solid:true, color:'#5c4d38',
         lock:{ type:'item', item:'smallkey', consume:true,
                locked:['桌面被翻過，只有抽屜還鎖著。鎖孔很小，是一把小鑰匙的那種舊鎖。',
@@ -3392,14 +3163,14 @@ const AREAS = {
                        '裡面塞得滿滿的全是紙——日記、揉爛的紙條、帳單，一疊一疊。',
                        { who:'player', text:'……這整個抽屜，都是他不會講出來的話。' }] },
         give:'floppy',
-        docs:['desk_note','ghost_diary','ghost_crumpled','ghost_note1000','ghost_bill','ghost_reminder'],
+        docs:['ghost_diary','ghost_crumpled','ghost_note1000','ghost_bill','ghost_reminder'],
         openedLines:['抽屜開著，紙一張一張攤在桌面上。'] },
       { id:'bedframe', name:'空的床架', col:1, row:4, w:3, h:1, solid:true, color:'#6b5a6a',
         lines:['床架還在，床墊不見了。',
                '四個角的螺絲都被拆下來排在地上，拆的人很有耐心。',
                { who:'player', text:'……床墊被搬到樓上去了。' }] },
       { id:'hole', name:'牆上的洞', col:7, row:2, w:1, h:1, solid:true, color:'#242c36',
-        docs:['hole_note'] },
+         },
 
       /* — 衛浴 — */
       { id:'towel', name:'毛巾架', col:8, row:1, w:1, h:2, solid:true, color:'#5a6673',
@@ -3415,15 +3186,9 @@ const AREAS = {
         give:'mp3green',
         lines:['橫桿上掛著兩條毛巾，一條乾透變硬，一條根本沒動過。'] },
       { id:'heater', name:'熱水器', col:10, row:1, w:1, h:1, solid:true, color:'#8a939d',
-        lock:{ type:'item', item:'pliers', consume:true,
-               locked:['牆上的熱水器，進水那一端的接頭鬆了，一直在滴水。',
-                       '地上的積水就是從這裡來的。',
-                       '手轉不動，得用工具。'],
-               wrong:['這個轉不動接頭。'],
-               opened:['你把接頭鎖緊，滴水停了。',
-                       '房子突然安靜下來——原來那個聲音一直都在。'] },
-        docs:['heater_card'],
-        openedLines:['接頭鎖緊了，不滴了。'] },
+        lines:['牆上的熱水器，進水那一端的接頭鬆了，水一滴一滴落下來。',
+               '地上的積水就是從這裡來的。'],
+        docs:['heater_card'] },
       { id:'mirror', name:'碎掉的鏡子', col:12, row:1, w:2, h:1, solid:true, color:'#8fb8c9',
         lock:{ type:'choice',
                steps:[
@@ -3488,8 +3253,7 @@ const AREAS = {
                opened:['鎖扣「喀」一聲斷了，箱門彈開。',
                        '裡面只剩下一捲繃帶和一瓶見底的消毒水。'] },
         give:'bandage',
-        docs:['firstaid_note'],
-        openedLines:['箱子開著，裡面空了。'] },
+                openedLines:['箱子開著，裡面空了。'] },
 
       /* — 走道與樓梯 — */
       { id:'stairs_dn', name:'下樓的樓梯', col:1, row:8, w:2, h:2, solid:true, color:'#5c4d38',
@@ -3541,9 +3305,18 @@ const AREAS = {
                '床架沒有一起搬上來，只有床墊。'] },
       { id:'blanket', name:'掉在地上的毯子', col:3, row:6, w:1, h:1, solid:false, color:'#7a6a5a',
         lines:['半條拖在地上，另一半還掛在床墊邊。'] },
-      { id:'fridge', name:'小冰箱', col:4, row:7, w:1, h:1, solid:true, color:'#6a7078',
-        docs:['fridgenote'],
-        lines:['插頭還插著，但沒有電。門上貼滿便條。'] },
+      { id:'fridge', name:'小冰箱', col:4, row:7, w:1, h:1, solid:true, color:'#8a939d',
+        lock:{ type:'choice', give:'bomee',
+               steps:[
+                 { q:'冰箱沒電很久了，門縫滲出一股悶悶的味道。要打開嗎？',
+                   options:['憋一口氣打開','算了'], goal:0 },
+               ],
+               failTitle:'你把手放下了',
+               fail:['冰箱沉默地立在原地。'],
+               locked:['一台小冰箱，插頭還插著，但早就沒電了。'],
+               opened:['一股酸味衝出來——裡面大部分的東西都不能看了。',
+                       '只有一罐波MEE果菜汁還好好的。'] },
+        openedLines:['冰箱門虛掩著，酸味散得差不多了。'] },
       { id:'puffbox', name:'冰箱上的紙盒', col:5, row:7, w:1, h:1, solid:false, color:'#a05a4a',
         lock:{ type:'choice',
                steps:[
@@ -3562,7 +3335,7 @@ const AREAS = {
         lines:['三個泡麵碗疊在混音器材旁邊，湯都沒倒，乾成一圈一圈深色的痕。',
                { who:'player', text:'……吃飯跟工作在同一張桌子上。' }] },
       { id:'calendar', name:'月曆', col:5, row:1, w:1, h:1, solid:true, color:'#6b5a42',
-        docs:['calendar'] },
+         },
 
       /* — 開場的準備 — */
       { id:'checklist', name:'牆上的準備清單', col:11, row:1, w:2, h:1, solid:true, color:'#8a8f96',
@@ -3579,7 +3352,7 @@ const AREAS = {
                        '殘響在吸音牆之間散掉，房間安靜下來。',
                        { who:'player', text:'……開場就用這段。' }] },
         openedLines:['直笛放在譜架上。開場曲已經決定了。'] },
-      { id:'topicboard', name:'播報提示板', col:12, row:4, w:2, h:1, solid:true, color:'#6b5a42',
+      { id:'topicboard', name:'播報提示板', col:12, row:6, w:2, h:1, solid:true, color:'#6b5a42',
         lock:{ type:'topics', pick:3,
                locked:['主控台前立著一塊軟木提示板，正對著主播的位子，上面別著空白的夾子。',
                        '播的時候視線不用離開麥克風，低頭就能看著唸。',
@@ -3593,16 +3366,9 @@ const AREAS = {
         lines:['牆上還掛著神明彩，布面褪成暗紅色。',
                '前面被一塊布蓋起來了，蓋得很平整，四個角都拉過。'] },
       { id:'altar', name:'神桌', col:1, row:3, w:2, h:1, solid:true, color:'#8a3f2c',
-        lock:{ type:'item', item:'photo', consume:true,
-               locked:['一張老神桌，紅色桌巾還鋪著，上面擺的卻是混音器材和一捲一捲的線。',
-                       '器材底下壓著一張紙，抽不出來。',
-                       '桌面正中央空出一小塊，什麼都沒放，也沒有積灰。'],
-               wrong:['這個放上去不對。'],
-               opened:['你把照片立在空出來的那一塊上，靠著香爐。',
-                       '器材底下那張紙鬆了，可以抽出來了。',
-                       { who:'player', text:'……先這樣吧。' }] },
-        docs:['altar_note','photo_back'],
-        openedLines:['照片立在桌上，正對著門口。'] },
+        lines:['一張老神桌，紅色桌巾還鋪著，上面擺的卻是混音器材和一捲一捲的線。',
+               '桌面正中央空出一小塊，什麼都沒放，也沒有積灰。',
+               { who:'player', text:'……那裡本來應該放著什麼吧。' }] },
       { id:'censer', name:'香爐', col:3, row:3, w:1, h:1, solid:true, color:'#6d7783',
         need: () => state.items.includes('candles'),
         needLines:['香灰是滿的，表面壓得很平。',
@@ -3629,7 +3395,7 @@ const AREAS = {
                         { who:'player', text:'……跟著它。' }] },
         openedLines:['花果燭燒得很穩，香煙仍往陽台的方向流。'] },
       { id:'tablets', name:'收起來的牌位', col:1, row:4, w:2, h:1, solid:true, color:'#6b5c45',
-        docs:['tablets_note'] },
+         },
       { id:'cushion', name:'蒲團', col:3, row:4, w:1, h:1, solid:false, color:'#8a3f2c',
         jiao:true,
         need: () => state.items.includes('jiaobei'),
@@ -3658,28 +3424,11 @@ const AREAS = {
         },
         openedLines:['所有指示燈都亮著。','終端機那邊多了一筆新紀錄。'] },
 
-      { id:'mic', name:'主播的位子', col:11, row:5, w:2, h:1, solid:true, color:'#6d7783',
+      { id:'mic', name:'主播的位子', col:11, row:5, w:1, h:1, solid:true, color:'#6d7783',
         gather:'up',
         lines:['麥克風的防噴罩上積了一層灰，轉椅的椅面凹陷位置很固定——',
                '有人長時間坐在這裡，對著它說話。',
                { who:'player', text:'開關按下去，好像還是活的。' }] },
-      { id:'logbook', name:'播出日誌', col:13, row:5, w:1, h:1, solid:true, color:'#7a6c4e',
-        docs:['logbook1','logbook2'] },
-      { id:'deck', name:'盤帶機', col:8, row:2, w:2, h:1, solid:true, color:'#4b4640',
-        lock:{ type:'item', item:'tape', consume:true,
-               locked:['轉軸上是空的，上一捲已經被拿走了。','空軸還可以放新的帶子。'],
-               wrong:['這個放不進轉軸。'],
-               opened:['帶子開始轉。喇叭裡先是一段空白，然後有人開口說話。',
-                       '「如果你聽得到這段，代表你把電接回來了，也把上面那支扶正了。」',
-                       '「那你應該也知道要怎麼讓訊號出去。剩下的就交給你。」',
-                       '「說話的時候要當作真的有人在聽。這句話我講了一千七百多天，是真的。」',
-                       '「我不會告訴你我在哪。但你送出去的東西，我一定收得到。」',
-                       { who:'player', text:'……原來一直在等這個。' }] },
-        need: () => state.flags.signal,
-        needLines:['帶子放得進去，但發射端沒有反應。',
-                   { who:'player', text:'訊號出不去。得先上去看看天線。' }],
-        onOpen: () => { state.flags.heard = true; },
-        openedLines:['帶子還在轉。'] },
       { id:'rack', name:'機櫃', col:14, row:2, w:1, h:1, solid:true, color:'#2f3742',
         lock:{ type:'item', item:'screwdriver', consume:false,
                locked:['風扇在轉，聲音很低。','側板被一排螺絲鎖死了。'],
@@ -3689,11 +3438,11 @@ const AREAS = {
                        { who:'player', text:'……得去別的地方找一顆。他那種人，會把備品收在自認很「安全」的地方。' }] },
         openedLines:['側板開著，保險絲座全是燒過的。'] },
       { id:'drawer', name:'控台抽屜', col:11, row:4, w:1, h:1, solid:false, color:'#5c4d38',
-        lock:{ type:'code', code:'1773', digits:4, hint:'四位數字',
-               locked:['控台下的抽屜，鎖上有四個轉輪。',
-                       '轉輪旁邊刻著很小的字：「第幾天」。'],
+        lock:{ type:'code', code:'20500823', digits:8, hint:'八位數字',
+               locked:['控台下的抽屜，鎖上有八個轉輪。',
+                       '轉輪旁邊刻著很小的字：「開始播報的日子？」'],
                wrong:['轉輪沒有動靜。'],
-               opened:['轉輪對上的瞬間，抽屜彈了開來。'] },
+               opened:['八個轉輪對上的瞬間，抽屜彈了開來。'] },
         give:'screwdriver',
         openedLines:['抽屜裡剩下一些迴紋針和橡皮筋。'] },
       { id:'snackbag', name:'機櫃上的乘乘', col:14, row:7, w:1, h:1, solid:false, color:'#5c7a5f',
@@ -3711,7 +3460,7 @@ const AREAS = {
         openedLines:['機器上少了一包乘乘，那一格的灰塵印還在。'] },
       { id:'terminal', name:'終端機', col:14, row:8, w:1, h:1, solid:true, color:'#33505a',
         terminal:true,
-        docs:['syslog','msgbox','playlist'] },
+         },
       { id:'shelf', name:'資料架', col:1, row:7, w:1, h:2, solid:true, color:'#5c4d38',
         lock:{ type:'choice',
                steps:[
@@ -3724,10 +3473,9 @@ const AREAS = {
                        '中段插著一個不屬於檔案的方形紙套。'],
                opened:['紙套裡是一張黑膠唱片，盤面有幾道細細的裂痕。'] },
         give:'vinyl',
-        docs:['schedule','letter1','letter2'] },
+        docs:['letter1','letter2'] },
       { id:'cabinet', name:'檔案櫃', col:3, row:8, w:1, h:1, solid:true, color:'#4a4a52',
-        docs:['hopping','stop','roster_page','assoc_form','note_floor'],
-        lines:['抽屜半開，櫃腳邊還散落著一疊被抽出來的文件。'] },
+                lines:['抽屜半開，櫃腳邊還散落著一疊被抽出來的文件。'] },
       { id:'tapes', name:'錄音帶堆', col:6, row:8, w:2, h:1, solid:true, color:'#55504a',
         lock:{ type:'choice',
                steps:[
@@ -3740,7 +3488,7 @@ const AREAS = {
                        '其中一卷的藍色標籤特別新。'],
                opened:['你把藍標那卷抽出來。','A面已經被倒到最前面，像是等著被播。'] },
         give:'tapeblue',
-        docs:['tapelabel','taperec','mesh_memo'] },
+        docs:['tapelabel','taperec'] },
       { id:'boxes', name:'紙箱堆', col:10, row:8, w:2, h:1, solid:true, color:'#6b5c45',
         lock:{ type:'choice',
                steps:[
@@ -3752,7 +3500,7 @@ const AREAS = {
                locked:['幾個紙箱疊在牆邊，最上面那箱的封膠有動過的痕跡。'],
                opened:['膠帶撕開，箱口的縫裡掉出一支貼紅標的USB隨身碟。'] },
         give:'usbred',
-        docs:['supply','unsent'] },
+         },
 
       /* — 線材與雜物 — */
       { id:'cables', name:'一整束線', col:8, row:5, w:2, h:1, solid:false, color:'#3a4048',
@@ -3760,8 +3508,7 @@ const AREAS = {
         lines:['從機櫃拉到窗邊，中途用膠帶固定在地上。',
                '靠牆那一段的膠皮被咬得亂七八糟，銅線都露出來了。'] },
       { id:'cable2', name:'纏成一團的線', col:13, row:8, w:1, h:1, solid:false, color:'#3a4048',
-        docs:['wallmark'],
-        lines:['分不出哪條接哪裡。字條上寫著「別動」。'] },
+                lines:['分不出哪條接哪裡。字條上寫著「別動」。'] },
       { id:'papers2', name:'踩皺的紙', col:6, row:6, w:1, h:1, solid:false, color:'#8a8f96',
         docs:['note_carpet'] },
       { id:'reel', name:'舊型卡帶機', col:7, row:7, w:1, h:1, solid:true, color:'#4b4640',
@@ -3784,7 +3531,7 @@ const AREAS = {
       /* 密技移去一樓的遊戲機了，這裡改成直接可讀，
          鍵盤下那張「上上下下BABA一定行」就是遊戲機的線索 */
       { id:'monitor', name:'監控台', col:12, row:8, w:1, h:1, solid:true, color:'#39424e',
-        docs:['monitorlog','konami'],
+        docs:['konami'],
         lines:['一台獨立的監控台，螢幕上滾著舊紀錄。',
                '鍵盤底下壓著一張紙，露出一角。'] },
 
@@ -3800,12 +3547,11 @@ const AREAS = {
                        '「——那邊有沒有人在聽？沒關係，反正我也習慣了。」',
                        '「這一台我還會開一陣子。有話想問就過來。」',
                        { who:'player', text:'他還在。' }] },
-        docs:['freq952'],
-        openedLines:['指針穩定停在滿格，那個聲音還在講。'] },
+                openedLines:['指針穩定停在滿格，那個聲音還在講。'] },
 
       { id:'board', name:'布告欄', col:6, row:1, w:2, h:1, solid:true, color:'#6b5a42',
         photo:true,
-        docs:['memo_board','day1773'] },
+        docs:['day1773'] },
       { id:'onair', name:'ON AIR 燈', col:13, row:1, w:2, h:1, solid:true, color:'#7a2f2c',
         lines:['燈是暗的。','開關還在，但沒有電。'],
         linesAired:['燈亮著。', { who:'player', text:'現在真的在播了。' }] },
@@ -3849,7 +3595,7 @@ const AREAS = {
                { who:'player', text:'訊號要傳出去，得從更高的地方。' }] },
       { id:'aircon', name:'冷氣室外機', col:1, row:3, w:2, h:1, solid:true, color:'#6a7078',
         lines:['沒在運轉。上面積了灰，還放著一個空花盆。'] },
-      { id:'washer', name:'洗衣機', col:10, row:3, w:1, h:2, solid:true, color:'#7a828a',
+      { id:'washer', name:'洗衣機', col:11, row:3, w:1, h:2, solid:true, color:'#7a828a',
         lock:{ type:'choice',
                steps:[
                  { q:'內槽的縫裡卡著一根口紅大小的東西，裝在防水袋裡。',
@@ -3863,8 +3609,7 @@ const AREAS = {
         docs:['pocket'],
         lines:['蓋子開著，裡面是空的。','內槽底下卡著一張洗過的紙。'] },
       { id:'clothes', name:'曬衣架', col:4, row:4, w:3, h:1, solid:true, color:'#5a6673',
-        docs:['yelu_clip'],
-        lines:['上面什麼都沒有，夾子還一個一個夾著。','其中幾個夾子的位置排得很整齊。'] },
+                lines:['上面什麼都沒有，夾子還一個一個夾著。','其中幾個夾子的位置排得很整齊。'] },
       { id:'crate', name:'塑膠籃', col:2, row:5, w:1, h:1, solid:true, color:'#5c7a5f',
         lock:{ type:'choice',
                steps:[
@@ -3878,7 +3623,7 @@ const AREAS = {
                opened:['一張封面全白的CD，盒子擦得很乾淨。',
                        '內圈用細字筆寫了很小的字，看不清楚。'] },
         give:'cdblank',
-        docs:['spare'] },
+         },
       { id:'planter', name:'角落的盆栽', col:1, row:4, w:1, h:1, solid:true, color:'#6b5c45',
         need: () => !!state.opened['censer#2'],
         needLines:['冷氣機底下擺著一盆枯掉的盆栽。','土倒是鬆的，不像放了很久。'],
@@ -3891,8 +3636,9 @@ const AREAS = {
                fail:['土跟枯枝撒了一地，你蹲著收拾了半天。'],
                locked:['煙的盡頭就是這盆枯掉的盆栽。','土面有被壓實過的痕跡。'],
                opened:['指尖碰到一塊硬布。',
-                       '油布包著一把短刀——刀身七顆星，排成勺形。',
-                       '刀柄纏著褪色的紅線，握上去的瞬間，掌心微微發熱。'] },
+                       '油布裡是一大捆用紅線和膠帶纏在一起的東西——',
+                       '西瓜刀、鐵鎚、拖鞋、瓦斯罐……握上去的瞬間，掌心微微發熱。',
+                       { who:'player', text:'……這是傳說中的，要你命8000。' }] },
         give:'sword',
         openedLines:['盆栽的土翻鬆了，油布摺好壓在盆邊。'] },
       { id:'safe', name:'保險箱', col:8, row:5, w:1, h:1, solid:true, color:'#39424e', art:'safe',
@@ -3905,8 +3651,8 @@ const AREAS = {
                bypassLines:['你把手貼在面板上。','轉輪自己一格一格轉了過去。'] },
         give:'tape',
         battleAfterOpen:'echo',
-        docs:['safenote','toolnote'] },
-      { id:'douhua', name:'翻倒的盆', col:11, row:3, w:1, h:1, solid:false, color:'#c9c2b8',
+        docs:['toolnote'] },
+      { id:'douhua', name:'翻倒的盆', col:10, row:5, w:1, h:1, solid:false, color:'#c9c2b8',
         lock:{ type:'code', code:'30', digits:2, hint:'兩位數字',
                locked:['地上用粉筆畫著幾條白線，像路邊攤的停車格。',
                        '白線正中央倒扣著一個盆，盆底黏著半乾的、白白嫩嫩的不明物體。',
@@ -3955,10 +3701,10 @@ const AREAS = {
         openedLines:['天線立得很正。'] },
       { id:'panel', name:'配電箱', col:3, row:2, w:1, h:1, solid:true, color:'#6a7078',
         lock:{ type:'wire',
-               wires:[{ name:'貓標記', ports:['黃孔','綠孔','藍孔','紅孔','空孔','備用孔','接地孔'], goal:4 },
+               wires:[{ name:'貓標記', ports:['黃孔','綠孔','藍孔','紅孔','空孔','備用孔','接地孔'], free:true },
                       { name:'紅線',   ports:['黃孔','綠孔','藍孔','紅孔','空孔','備用孔','接地孔'], goal:0 },
-                      { name:'狗標記', ports:['黃孔','綠孔','藍孔','紅孔','空孔','備用孔','接地孔'], goal:3 },
-                      { name:'黑線',   ports:['黃孔','綠孔','藍孔','紅孔','空孔','備用孔','接地孔'], goal:5 },
+                      { name:'狗標記', ports:['黃孔','綠孔','藍孔','紅孔','空孔','備用孔','接地孔'], free:true },
+                      { name:'黑線',   ports:['黃孔','綠孔','藍孔','紅孔','空孔','備用孔','接地孔'], free:true },
                       { name:'藍線',   ports:['黃孔','綠孔','藍孔','紅孔','空孔','備用孔','接地孔'], goal:1 },
                       { name:'鼠標記', ports:['黃孔','綠孔','藍孔','紅孔','空孔','備用孔','接地孔'], goal:6 }],
                locked:['配電箱的蓋子沒鎖，六條線全被扯了下來，垂在箱底。',
@@ -3968,8 +3714,7 @@ const AREAS = {
                        '端子旁原本掛指南的掛勾空著，只剩一截斷掉的塑膠繩。'],
                wrong:['接錯了，指示燈閃了一下紅。'],
                opened:['三條線各就各位，指示燈轉成綠的。'] },
-        docs:['wiring'],
-        openedLines:['線接得好好的。'] },
+                openedLines:['線接得好好的。'] },
       { id:'centnest', name:'塔上的銀影', col:6, row:2, w:1, h:1, solid:false, color:'#8a939d',
         battle:'silvercent',
         lines:['銀無功不在了。塔架上留著一整圈被甲殼磨亮的痕跡。',
@@ -4006,8 +3751,7 @@ const AREAS = {
                after: (o) => runBroadcast(o.lock._t) },
         openedLines:['推桿在最上面。訊號還在送。'] },
       { id:'notebook', name:'收訊本', col:9, row:3, w:1, h:1, solid:true, color:'#7a6c4e',
-        docs:['recv_north','recv_south','recv_gang','recv_cult','recv_stage','recv_sky'],
-        lines:['一本被壓在鐵板下的簿子，紙頁被風翻得很毛。'] },
+                lines:['一本被壓在鐵板下的簿子，紙頁被風翻得很毛。'] },
       { id:'ledge', name:'鐵網', col:4, row:4, w:1, h:1, solid:true, color:'#4a5560',
         battle:'gecko',
         lines:['鐵網往樓的側面延伸下去，是維修用的。',
@@ -4064,6 +3808,1032 @@ const PALETTE = {
 };
 
 const ART = {
+  a_aircon: `
+5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5
+5,7,7,7,7,7,7,7,7,7,7,7,7,7,7,5
+5,k,5,5,k,5,5,k,5,5,k,5,5,k,5,5
+5,7,7,7,7,7,7,7,7,7,7,7,7,7,7,5
+5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5
+.,.,5,.,.,.,.,.,.,.,.,.,.,5,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+`,
+  a_altar: `
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+d,d,d,d,d,d,d,d,d,d,d,d,d,d,d,d
+d,y,d,d,d,d,d,d,d,d,d,d,d,d,y,d
+d,d,d,d,d,d,d,d,d,d,d,d,d,d,d,d
+d,d,.,.,d,d,d,d,d,d,d,d,.,.,d,d
+d,d,.,.,d,d,d,d,d,d,d,d,.,.,d,d
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+`,
+  a_arcade: `
+.,5,5,5,5,5,5,.
+.,5,9,9,9,9,5,.
+.,5,9,8,9,8,5,.
+.,5,5,5,5,5,5,.
+.,5,r,y,k,r,5,.
+.,5,5,5,5,5,5,.
+.,5,.,.,.,.,5,.
+.,.,.,.,.,.,.,.
+`,
+  a_bag: `
+.,.,.,.,.,.,.,.
+.,.,r,.,.,r,.,.
+.,.,r,r,r,r,.,.
+.,r,w,w,w,w,r,.
+.,r,w,r,r,w,r,.
+.,r,w,w,w,w,r,.
+.,r,r,r,r,r,r,.
+.,.,.,.,.,.,.,.
+`,
+  a_barricade: `
+.,.,.,.,b,b,b,b,.,.,.,.,d,d,d,d,.,.,.,.,.,.,.,.
+.,b,b,b,b,b,b,b,.,.,d,d,d,d,d,d,.,.,b,b,b,b,.,.
+b,b,b,7,b,b,b,b,.,d,d,d,7,d,d,d,.,b,b,b,b,b,b,.
+b,b,b,b,b,b,b,b,d,d,d,d,d,d,d,d,b,b,b,7,b,b,b,.
+b,b,b,b,b,b,b,b,d,d,d,d,d,d,d,d,b,b,b,b,b,b,b,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+`,
+  a_basket: `
+.,.,r,7,7,r,.,.
+.,r,y,y,y,y,r,y
+.,y,7,y,7,y,7,.
+.,y,y,7,y,7,y,.
+.,.,y,y,y,y,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_bedframe: `
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+d,d,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,d,d
+d,d,d,d,d,d,d,d,d,d,d,d,d,d,d,d,d,d,d,d,d,d,d,d
+d,d,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,d,d
+d,d,d,d,d,d,d,d,d,d,d,d,d,d,d,d,d,d,d,d,d,d,d,d
+d,d,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,d,d
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+`,
+  a_bedmat: `
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,w,w,w,w,w,w,w,w,w,w,w,w,w,w,.
+.,w,7,7,7,7,7,7,7,7,7,7,7,7,w,.
+.,w,7,7,7,7,7,7,7,7,7,7,7,7,w,.
+.,w,w,w,w,w,w,w,w,w,w,w,w,w,w,.
+.,w,w,w,w,w,w,w,w,w,w,w,w,w,w,.
+.,w,9,9,9,9,9,9,9,9,9,9,9,9,w,.
+.,w,9,9,9,9,9,9,9,9,9,9,9,9,w,.
+.,w,9,9,9,9,9,9,9,9,9,9,9,9,w,.
+.,w,w,w,w,w,w,w,w,w,w,w,w,w,w,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+`,
+  a_bike: `
+.,.,.,.,5,.,.,.
+.,.,.,5,5,.,.,.
+.,.,5,.,.,5,.,.
+.,5,5,5,5,5,5,5
+.,5,.,5,5,.,.,5
+5,.,5,.,.,5,.,5
+.,5,.,.,.,.,5,.
+.,.,.,.,.,.,.,.
+`,
+  a_blanket: `
+.,.,.,.,.,.,.,.
+.,.,9,9,9,9,.,.
+.,9,9,9,9,9,9,.
+.,9,9,8,9,9,9,.
+.,.,9,9,9,9,9,.
+.,.,.,9,9,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_bloom: `
+.,w,.,.,w,.,.,.
+g,.,g,w,.,g,.,w
+.,g,g,g,g,g,.,.
+g,g,g,g,g,g,g,.
+.,g,g,g,g,g,.,.
+g,g,g,g,g,g,g,.
+.,b,.,b,b,.,b,.
+.,.,.,.,.,.,.,.
+`,
+  a_book: `
+.,.,.,.,.,.,.,.
+.,r,r,r,r,r,r,.
+.,r,w,w,w,w,r,.
+.,r,w,w,w,w,r,.
+.,r,r,r,r,r,r,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_books: `
+.,d,d,d,d,d,d,d
+.,d,r,y,g,b,r,d
+.,d,y,r,b,g,y,d
+.,d,d,d,d,d,d,d
+d,d,b,g,r,y,d,d
+.,d,d,d,d,d,d,d
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_boombox: `
+.,5,5,5,5,5,5,5
+.,5,w,7,y,7,5,5
+.,5,k,k,5,k,k,5
+.,5,k,k,5,k,k,5
+.,5,5,5,5,5,5,5
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_boxes: `
+.,.,.,.,b,b,b,b,b,b,.,.,.,.,.,.
+.,.,.,.,b,7,7,7,7,b,.,.,.,.,.,.
+.,b,b,b,b,b,b,b,b,b,b,b,b,.,.,.
+.,b,7,7,7,7,b,b,7,7,7,7,b,.,.,.
+.,b,b,b,b,b,b,b,b,b,b,b,b,.,.,.
+.,b,7,7,7,7,b,b,7,7,7,7,b,.,.,.
+.,b,b,b,b,b,b,b,b,b,b,b,b,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+`,
+  a_breaker: `
+.,5,5,5,5,5,5,.
+.,5,y,7,7,7,5,.
+.,5,7,7,7,7,5,.
+.,5,k,7,k,7,5,.
+.,5,5,5,5,5,5,.
+.,.,.,5,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_cables: `
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,7,7,.,.,7,7,7,7,.,.,7,7,.,.
+.,7,.,.,7,7,.,.,.,.,7,7,.,.,7,.
+.,7,.,7,.,.,.,7,7,.,.,.,7,.,7,.
+.,.,7,7,.,.,7,.,.,7,.,.,7,7,.,.
+.,.,.,.,7,7,.,.,.,.,7,7,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+`,
+  a_calendar: `
+.,w,w,w,w,w,w,.
+.,w,r,7,7,r,w,.
+.,w,w,w,w,w,w,.
+.,w,7,w,7,w,w,.
+.,w,w,7,w,w,w,.
+.,w,w,w,w,w,w,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_cans: `
+.,.,.,9,9,.,.,.
+.,.,9,9,9,9,.,.
+.,.,9,y,9,9,.,.
+.,9,9,9,9,9,9,.
+.,9,9,7,9,9,9,.
+.,9,9,9,9,9,9,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_carvhs: `
+.,.,.,.,.,.,.,.
+.,.,r,r,r,r,.,.
+.,r,r,9,9,r,r,.
+r,r,r,r,r,r,r,r
+r,k,r,r,r,r,k,r
+.,k,.,.,.,.,k,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_censer: `
+.,.,y,.,y,.,.,.
+.,y,.,y,.,y,.,.
+.,.,7,7,7,.,.,.
+.,7,7,7,7,7,.,.
+.,7,7,7,7,7,.,.
+.,.,7,.,7,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_chairs: `
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,5,5,.,.,.,.,.,.,5,5,.,.,.,.
+.,.,5,5,5,5,.,.,.,.,5,5,5,5,.,.
+.,.,5,.,.,5,.,.,.,.,5,.,.,5,.,.
+.,.,5,5,5,5,.,.,.,.,5,5,5,5,.,.
+.,.,5,.,.,5,.,.,.,.,5,.,.,5,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+`,
+  a_closet: `
+d,d,d,d,d,d,d,d,d,d,d,d,d,d,d,d
+d,7,d,d,d,d,7,d,d,7,d,d,d,d,7,d
+d,7,d,d,d,d,7,d,d,7,d,d,d,d,7,d
+d,7,d,d,.,.,7,d,d,7,.,.,d,d,7,d
+d,7,d,d,d,d,7,d,d,7,d,d,d,d,7,d
+d,d,d,d,d,d,d,d,d,d,d,d,d,d,d,d
+d,.,.,.,.,.,.,.,.,.,.,.,.,.,.,d
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+`,
+  a_clothesline: `
+5,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,5
+5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5
+5,.,w,.,.,9,.,.,.,r,.,.,.,.,w,.,.,.,.,b,.,.,5,.
+5,.,w,.,.,9,.,.,.,r,.,.,.,.,w,.,.,.,.,.,.,.,5,.
+5,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,5
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+`,
+  a_coil: `
+.,.,.,.,.,.,.,.
+.,.,7,7,7,7,.,.
+.,7,.,.,.,.,7,.
+.,7,.,7,7,.,7,.
+.,7,.,.,.,.,7,.
+.,.,7,7,7,7,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_console: `
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5
+5,k,9,k,7,k,9,k,7,k,9,k,7,k,9,k,7,k,9,k,7,k,9,k,7,k,9,k,7,k,k,5
+5,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,5
+5,y,k,y,k,y,k,y,k,y,k,y,k,y,k,y,k,y,k,y,k,y,k,y,k,y,k,y,k,y,k,5
+5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+`,
+  a_cooler: `
+.,7,7,7,7,7,7,.
+.,7,w,w,w,w,7,.
+.,8,8,8,8,8,8,.
+.,8,9,9,9,9,8,.
+.,8,9,9,9,9,8,.
+.,8,8,8,8,8,8,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_corkboard: `
+b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b
+b,y,y,y,y,y,y,b,y,y,y,y,y,y,b,b
+b,y,7,w,7,y,y,b,y,w,7,w,7,y,b,b
+b,y,y,y,y,y,y,b,y,y,y,y,y,y,b,b
+b,b,b,b,b,b,b,b,b,b,b,b,b,b,b,b
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+`,
+  a_crate: `
+.,.,.,.,.,.,.,.
+.,g,g,g,g,g,g,.
+.,g,7,g,7,g,g,.
+.,g,g,g,g,g,g,.
+.,g,7,g,7,g,g,.
+.,g,g,g,g,g,g,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_cupboard: `
+.,d,d,d,d,d,d,.
+.,d,7,d,d,7,d,.
+.,d,d,d,d,d,d,.
+.,d,7,d,d,7,d,.
+.,d,d,d,d,d,d,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_cushion: `
+.,.,.,.,.,.,.,.
+.,.,r,r,r,r,.,.
+.,r,r,7,7,r,r,.
+.,r,r,r,r,r,r,.
+.,.,r,r,r,r,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_dancers: `
+.,.,.,9,.,.,.,.,.,.,.,.,r,.,.,.
+.,.,9,9,9,.,.,.,.,.,.,r,r,r,.,.
+.,9,.,9,.,9,.,.,.,.,r,.,r,.,r,.
+.,.,.,9,.,.,.,.,.,.,.,.,r,.,.,.
+.,.,9,.,9,.,.,.,.,.,.,r,.,r,.,.
+.,.,9,.,.,9,.,.,.,.,r,.,.,r,.,.
+.,.,9,.,.,9,.,.,.,.,r,.,.,r,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+`,
+  a_deck: `
+5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5
+5,k,k,7,5,k,k,7,5,5,k,k,7,k,k,5
+5,7,7,7,7,7,7,5,5,7,7,7,7,7,7,5
+5,w,7,y,7,7,w,5,5,w,7,7,y,7,w,5
+5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+`,
+  a_desk: `
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+d,d,d,d,d,d,d,d,d,d,d,d,d,d,d,d
+d,7,d,d,d,d,d,d,d,d,d,d,d,7,d,d
+d,d,w,5,5,d,d,d,d,d,d,d,d,d,d,.
+d,d,d,d,d,d,d,d,d,7,d,d,d,d,d,d
+d,d,.,.,.,.,.,.,.,.,.,.,d,d,.,.
+d,d,.,.,.,.,.,.,.,.,.,.,d,d,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+`,
+  a_drawer: `
+.,.,.,.,.,.,.,.
+.,d,d,d,d,d,d,.
+.,d,7,7,7,7,d,.
+.,d,d,7,7,d,d,.
+.,d,d,d,d,d,d,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_filecab: `
+.,5,5,5,5,5,5,.
+.,5,w,7,7,7,5,.
+.,5,5,5,5,5,5,.
+.,5,w,7,7,7,5,.
+.,5,5,5,5,5,5,.
+.,5,w,7,7,7,5,.
+.,5,5,5,5,5,5,.
+.,.,.,.,.,.,.,.
+`,
+  a_firstaid: `
+.,w,w,w,w,w,w,.
+.,w,w,7,7,w,w,.
+.,w,7,r,r,7,w,.
+.,w,r,r,r,r,w,.
+.,w,7,r,r,7,w,.
+.,w,w,w,w,w,w,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_flute: `
+.,.,.,.,.,.,.,.
+.,y,.,.,.,.,.,.
+.,.,y,y,.,.,.,.
+.,.,.,y,y,.,.,.
+.,.,.,.,y,y,.,.
+.,.,.,.,.,y,k,.
+.,.,.,.,.,.,y,.
+.,.,.,.,.,.,.,.
+`,
+  a_fridge: `
+.,w,w,w,w,w,w,.
+.,w,7,7,7,7,w,.
+.,w,w,w,w,w,w,.
+.,w,7,7,7,7,w,.
+.,w,7,7,7,7,w,.
+.,w,w,w,w,w,w,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_generator: `
+.,.,.,.,5,5,5,5,5,5,5,5,5,.,.,.
+.,.,5,5,7,7,7,7,7,7,7,7,5,5,5,5
+.,.,5,7,r,y,y,7,7,7,7,7,7,5,5,.
+.,.,5,7,7,7,7,7,7,7,7,7,7,5,5,.
+.,.,5,5,5,5,5,5,5,5,5,5,5,5,5,5
+.,.,5,k,5,5,k,5,5,k,5,5,k,5,5,.
+.,.,.,1,1,.,.,.,.,.,.,1,1,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+`,
+  a_heater: `
+.,7,7,7,7,7,7,.
+.,7,w,w,w,w,7,.
+.,7,w,7,7,w,7,.
+.,7,7,7,7,7,7,.
+.,7,y,.,.,7,7,.
+.,7,7,7,7,7,7,.
+.,.,.,5,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_herb: `
+.,g,.,g,.,g,.,g
+g,.,g,.,g,.,g,.
+g,g,g,g,g,g,g,g
+.,b,.,b,.,b,.,b
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_hole: `
+7,7,7,7,7,7,7,7
+7,7,k,7,7,k,7,7
+7,k,k,k,7,k,k,7
+7,7,k,k,7,k,7,7
+7,7,7,7,7,7,7,7
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_junction: `
+.,5,5,5,5,5,5,.
+.,5,w,7,7,w,5,.
+.,5,7,7,7,7,5,.
+.,5,y,7,7,7,5,.
+.,5,7,7,7,7,5,.
+.,5,5,5,5,5,5,.
+.,.,.,5,.,.,.,.
+.,.,.,5,.,.,.,.
+`,
+  a_kettle: `
+.,.,.,5,5,.,.,.
+.,.,5,5,5,5,.,.
+.,5,7,5,5,5,5,.
+.,5,.,5,5,5,5,.
+.,.,5,5,5,5,.,.
+.,.,5,5,5,5,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_ladder: `
+5,.,.,.,.,.,5
+5,5,5,5,5,5,5
+5,.,.,.,.,.,5
+5,.,.,.,.,.,5
+5,5,5,5,5,5,5
+5,.,.,.,.,.,5
+5,.,.,.,.,.,5
+5,5,5,5,5,5,5
+`,
+  a_mailbox: `
+.,5,5,5,5,5,5,.
+.,5,r,7,7,r,5,.
+.,5,7,7,7,7,5,.
+.,5,w,5,5,5,5,.
+.,.,.,5,.,.,.,.
+.,.,.,5,.,.,.,.
+.,.,.,5,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_mast: `
+.,.,.,.,.,.,5,5,.,.,.,.,.,.,.,.
+.,.,.,.,.,5,7,7,5,.,.,.,.,.,.,.
+.,.,.,.,5,7,.,.,7,5,.,.,.,.,.,.
+.,.,.,.,5,.,.,.,.,5,.,.,.,.,.,.
+.,.,.,5,7,.,5,5,.,7,5,.,.,.,.,.
+.,.,.,5,.,.,7,7,.,.,5,.,.,.,.,.
+.,.,5,7,.,.,5,5,.,.,7,5,.,.,.,.
+.,.,5,.,.,.,7,7,.,.,.,5,.,.,.,.
+.,5,7,.,.,.,5,5,.,.,.,7,5,.,.,.
+.,5,.,.,.,.,7,7,.,.,.,.,5,.,.,.
+5,7,.,.,.,.,5,5,.,.,.,.,7,5,.,.
+5,.,.,.,.,.,7,7,.,.,.,.,.,5,.,.
+5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5
+.,5,.,.,.,.,.,.,.,.,.,.,5,.,.,.
+.,5,.,.,.,.,.,.,.,.,.,.,5,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+`,
+  a_meshhole: `
+7,7,7,7,7,7,7,7
+7,.,7,.,7,.,7,.
+.,7,.,7,.,7,.,7
+7,.,7,k,7,.,7,.
+.,7,.,k,k,7,.,7
+7,.,7,.,7,.,7,.
+.,7,.,7,.,7,.,7
+.,.,.,.,.,.,.,.
+`,
+  a_mirror: `
+5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5
+5,9,9,9,w,9,9,5,5,9,9,9,9,9,9,5
+5,9,9,w,9,9,9,5,5,9,9,w,9,9,9,5
+5,9,w,9,9,9,9,5,5,9,9,9,9,9,w,5
+5,9,9,9,9,9,9,5,5,9,w,9,9,9,9,5
+5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+`,
+  a_nest: `
+.,.,.,.,.,.,.,.
+.,.,6,7,6,7,.,.
+.,6,7,7,7,7,6,.
+.,6,7,.,.,7,6,.
+.,6,7,7,7,7,6,.
+.,.,6,7,7,6,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_noodles: `
+.,.,.,.,.,.,.,.
+.,.,w,w,w,w,.,.
+.,w,7,7,7,7,w,.
+.,w,y,y,y,y,w,.
+.,.,w,w,w,w,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_oldpc: `
+.,7,7,7,7,7,7,.
+.,7,k,k,k,k,7,.
+.,7,k,9,9,k,7,.
+.,7,7,7,7,7,7,.
+.,7,7,7,7,7,5,.
+.,7,w,7,7,7,5,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_onair: `
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,r,r,r,r,r,r,r,r,r,r,r,.,.,.
+.,.,r,7,7,r,7,r,7,7,r,7,r,.,.,.
+.,.,r,r,r,r,r,r,r,r,r,r,r,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+`,
+  a_paperboard: `
+5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5
+5,w,w,w,w,w,5,5,w,w,w,w,w,w,5,5
+5,w,7,w,7,w,5,5,w,7,w,w,7,w,5,5
+5,w,w,w,w,w,5,5,w,w,w,w,w,w,5,5
+5,w,7,7,w,w,5,5,w,w,7,7,w,w,5,5
+5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+`,
+  a_paperfloor: `
+.,.,.,.,.,.,.,.
+.,.,w,w,w,.,.,.
+.,w,w,w,w,w,.,.
+.,.,w,w,w,.,w,.
+.,.,.,w,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_path: `
+.,.,7,7,.,.,7,.
+.,7,.,.,7,7,.,.
+7,.,.,7,.,.,7,.
+.,7,7,.,.,7,7,.
+.,.,7,.,7,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_planter: `
+.,.,g,.,g,.,.,.
+.,g,.,g,.,g,.,.
+.,.,b,b,b,.,.,.
+.,.,b,7,b,.,.,.
+.,b,b,b,b,b,.,.
+.,.,b,b,b,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_pole: `
+.,.,.,5,5,.,.,.
+.,.,.,5,5,.,.,.
+5,5,5,5,5,5,5,.
+.,.,.,5,5,.,.,.
+.,.,.,5,5,.,.,.
+.,.,.,5,5,.,.,.
+.,.,.,5,5,.,.,.
+.,.,.,5,5,.,.,.
+.,.,.,5,5,.,.,.
+.,.,.,5,5,.,.,.
+.,.,.,5,5,.,.,.
+.,.,.,5,5,.,.,.
+.,.,.,5,5,.,.,.
+.,.,.,5,5,.,.,.
+.,.,.,5,5,.,.,.
+.,.,.,5,5,.,.,.
+`,
+  a_pot: `
+.,.,.,.,.,.,.,.
+.,w,w,w,w,w,.,.
+.,w,7,7,7,w,.,.
+.,.,w,w,w,.,.,.
+.,w,.,w,.,w,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_puddle: `
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,8,8,8,8,.,.,.,.,.,.,8,8,8,8,8,.,.,.,.,.,.,.
+.,8,8,9,9,8,8,.,.,.,.,8,8,9,9,8,8,8,.,.,8,8,.,.
+.,.,8,8,8,8,.,.,.,.,8,8,8,8,8,8,8,8,8,8,8,8,.,.
+.,.,.,.,.,.,.,.,.,.,.,8,8,8,8,8,.,.,.,8,8,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+`,
+  a_rack: `
+.,5,5,5,5,5,5,.
+.,5,y,7,k,7,5,.
+.,5,5,5,5,5,5,.
+.,5,7,k,7,y,5,.
+.,5,5,5,5,5,5,.
+.,5,k,k,7,7,5,.
+.,5,5,5,5,5,5,.
+.,.,.,.,.,.,.,.
+`,
+  a_radio: `
+.,.,.,.,.,.,.,.
+.,5,5,5,5,5,5,.
+.,5,w,7,7,y,5,.
+.,5,7,7,7,7,5,.
+.,5,k,k,7,7,5,.
+.,5,5,5,5,5,5,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_reel: `
+.,5,5,5,5,5,5,.
+.,5,k,5,5,k,5,.
+.,5,k,5,5,k,5,.
+.,5,5,5,5,5,5,.
+.,5,y,7,7,7,5,.
+.,5,5,5,5,5,5,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_rolldoor: `
+5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5
+7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7
+5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5
+7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7
+5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5
+7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7
+5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+`,
+  a_scratch: `
+.,.,.,.,.,.,.,.
+.,7,.,7,.,7,.,.
+7,.,7,.,7,.,7,.
+.,7,.,7,.,7,.,.
+7,.,7,.,7,.,7,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_seat: `
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,5,5,.,.,.,.,.,.,.,.,.,.
+.,.,.,5,5,5,5,.,.,.,.,.,.,.,.,.
+.,.,.,.,5,5,.,.,.,.,6,6,6,.,.,.
+.,.,.,.,5,5,.,.,.,6,6,6,6,6,.,.
+.,5,5,5,5,5,5,5,.,6,6,6,6,6,.,.
+.,.,.,.,.,.,.,.,.,6,.,.,.,6,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+`,
+  a_sender: `
+.,5,5,5,5,5,5,.
+.,5,y,7,y,7,5,.
+.,5,k,k,k,k,5,.
+.,5,7,7,7,7,5,.
+.,5,5,5,5,5,5,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_sheet: `
+.,.,.,.,.,.,.,.
+.,w,w,w,w,w,w,.
+.,w,k,w,7,k,w,.
+.,w,7,k,7,w,w,.
+.,w,w,w,w,w,w,.
+.,.,d,d,d,d,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_shelf: `
+d,d,d,d,d,d,d,d
+d,w,7,w,7,w,7,d
+d,d,d,d,d,d,d,d
+d,7,w,7,w,7,w,d
+d,d,d,d,d,d,d,d
+d,w,7,w,7,w,7,d
+d,d,d,d,d,d,d,d
+.,.,.,.,.,.,.,.
+d,d,d,d,d,d,d,d
+d,7,w,7,w,7,w,d
+d,d,d,d,d,d,d,d
+d,w,7,w,7,w,7,d
+d,d,d,d,d,d,d,d
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_shells: `
+.,.,.,.,.,.,.,.
+.,.,y,.,y,.,.,.
+.,y,.,y,.,y,.,.
+.,.,y,y,.,y,.,.
+.,y,.,y,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_shoebox: `
+.,.,.,.,.,.,.,.
+.,b,b,b,b,b,b,.
+.,b,w,w,w,w,b,.
+.,b,b,b,b,b,b,.
+.,b,7,7,7,7,b,.
+.,b,b,b,b,b,b,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_shoecab: `
+.,d,d,d,d,d,d,d,d,d,d,d,d,d,d,.
+.,d,7,d,7,d,7,d,d,7,d,7,d,r,d,.
+.,d,d,d,d,d,d,d,d,d,d,d,d,d,d,.
+.,d,7,d,7,d,d,d,d,d,7,d,7,d,d,.
+.,d,d,d,d,d,d,d,d,d,d,d,d,d,d,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+`,
+  a_shrinecloth: `
+r,r,r,r,r,r,r,r,r,r,r,r,r,r,r,r,r,r,r,r,r,r,r,r
+r,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,r
+r,y,y,r,r,r,r,r,r,r,r,r,r,r,r,r,r,r,r,r,r,y,y,r
+r,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,y,r
+r,r,r,r,r,r,r,r,r,r,r,r,r,r,r,r,r,r,r,r,r,r,r,r
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+`,
+  a_sink: `
+7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7
+7,w,w,w,w,w,w,w,w,w,5,5,7,w,w,w,w,w,w,w,w,w,5,7
+7,w,.,.,.,.,.,.,.,w,5,9,7,w,.,.,.,.,.,.,.,w,7,.
+7,w,w,w,w,w,w,w,w,w,w,7,7,w,w,w,w,w,w,w,w,w,w,7
+7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7
+7,.,5,.,.,.,.,.,.,.,5,.,.,5,.,.,.,.,.,.,.,5,.,7
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+`,
+  a_slipper: `
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,r,r,.,.,.,.
+.,r,r,r,r,.,.,.
+.,.,r,r,.,r,.,.
+.,.,.,.,r,r,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_sng: `
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,5,5,5,5,5,5,5,5,5,5,5,5,5,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,5,7,7,7,7,7,7,7,7,7,7,7,7,5,.,5,5,5,5,5,.,.,.,.,.,.,.,.,.,.,.
+.,5,7,9,9,9,9,9,9,7,7,7,7,7,5,.,5,w,7,7,5,.,.,.,.,.,.,.,.,.,.,.
+.,5,7,7,7,7,7,7,7,7,7,7,7,7,5,5,5,7,7,7,7,5,5,.,.,.,.,.,.,.,.,.
+.,5,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,5,.,.,.,.,.,.,.,.,.
+.,.,5,k,5,5,k,5,7,7,7,7,7,7,7,7,5,k,5,5,k,5,5,.,.,.,.,.,.,.,.,.
+.,.,.,1,1,.,.,1,1,.,.,.,.,.,.,1,1,.,.,1,1,.,.,.,.,.,.,.,.,.,.,.
+`,
+  a_sofa: `
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,6,6,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,6
+.,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,.,6
+.,6,7,7,6,6,7,7,6,6,w,7,6,6,7,7,6,6,7,7,6,.,.,6
+.,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,.,6
+.,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6
+.,.,6,.,.,.,.,6,.,.,.,.,.,.,6,.,.,.,.,.,.,6,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+`,
+  a_stairs: `
+7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7
+5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5
+.,.,7,7,7,7,7,7,7,7,7,7,7,7,.,.
+.,.,5,5,5,5,5,5,5,5,5,5,5,5,.,.
+.,.,.,.,7,7,7,7,7,7,7,7,.,.,.,.
+.,.,.,.,5,5,5,5,5,5,5,5,.,.,.,.
+.,.,.,.,.,.,7,7,7,7,.,.,.,.,.,.
+.,.,.,.,.,.,5,5,5,5,.,.,.,.,.,.
+.,.,.,.,.,.,7,7,7,7,.,.,.,.,.,.
+.,.,.,.,.,.,5,5,5,5,.,.,.,.,.,.
+.,.,.,.,7,7,7,7,7,7,7,7,.,.,.,.
+.,.,.,.,5,5,5,5,5,5,5,5,.,.,.,.
+.,.,7,7,7,7,7,7,7,7,7,7,7,7,.,.
+.,.,5,5,5,5,5,5,5,5,5,5,5,5,.,.
+7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+`,
+  a_stove: `
+.,5,5,5,5,5,5,.
+.,5,k,r,y,k,5,.
+.,5,7,7,7,7,5,.
+.,5,k,7,7,k,5,.
+.,5,5,5,5,5,5,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_table: `
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,d,d,d,d,.,.,.,.,.,.
+.,.,d,d,d,d,d,d,d,d,d,d,d,d,.,.
+.,d,7,d,d,d,d,d,d,d,d,d,7,d,.,.
+.,d,d,.,.,.,d,d,.,.,.,d,d,d,.,.
+.,.,.,w,.,6,.,.,6,.,w,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+`,
+  a_tabletsbox: `
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,b,b,b,b,b,b,b,b,b,b,b,b,.,.
+.,.,b,w,b,b,b,b,b,b,b,w,b,b,.,.
+.,.,b,b,b,b,b,b,b,b,b,b,b,b,.,.
+.,.,b,b,b,b,b,b,b,b,b,b,b,b,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+`,
+  a_tapespile: `
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,5,5,5,5,.,.,5,5,5,5,.,.,.,.
+.,.,5,9,9,5,.,.,5,7,7,5,.,5,5,.
+.,5,5,5,5,5,5,5,5,5,5,5,5,5,5,.
+.,5,r,r,5,5,b,7,5,5,w,7,5,y,5,.
+.,5,5,5,5,5,5,5,5,5,5,5,5,5,5,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+`,
+  a_tin: `
+.,.,.,.,.,.,.,.
+.,y,y,y,y,y,y,.
+.,y,7,7,7,7,y,.
+.,y,y,w,w,y,y,.
+.,y,y,y,y,y,y,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_toilet: `
+.,.,w,w,w,w,.,.
+.,.,w,7,7,w,.,.
+.,w,w,w,w,w,w,.
+.,w,7,7,7,7,w,.
+.,w,w,w,w,w,w,.
+.,.,w,w,w,w,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_toolbag: `
+.,.,.,.,.,.,.,.
+.,.,b,5,5,b,.,.
+.,b,b,b,b,b,b,.
+.,b,7,7,7,7,b,.
+.,b,7,7,7,7,b,.
+.,b,b,b,b,b,b,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_towel: `
+5,5,5,5,5,5,5,5
+.,.,w,.,.,7,.,.
+.,.,w,.,.,7,.,.
+.,.,w,.,.,7,.,.
+.,.,w,.,.,7,.,.
+.,.,.,.,.,.,.,.
+5,5,5,5,5,5,5,5
+.,.,w,.,.,w,.,.
+.,.,w,.,.,w,.,.
+.,.,w,.,.,w,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_towerbase: `
+.,.,.,.,.,.,.,5,5,.,.,.,.,.,.,.
+.,.,.,.,.,.,5,7,7,5,.,.,.,.,.,.
+.,.,.,.,.,5,7,.,.,7,5,.,.,.,.,.
+.,.,.,.,5,7,.,.,.,.,7,5,.,.,.,.
+.,.,.,5,7,.,.,5,5,.,.,7,5,.,.,.
+.,.,5,7,.,.,.,7,7,.,.,.,7,5,.,.
+.,5,7,.,.,.,.,5,5,.,.,.,.,7,5,.
+5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5
+`,
+  a_ttank: `
+.,w,w,w,w,w,w,.
+.,w,w,w,w,w,w,.
+.,w,7,7,7,7,w,.
+.,w,w,w,w,w,w,.
+.,.,y,.,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_tub: `
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,.
+.,7,w,w,w,w,w,w,w,w,w,w,w,w,w,w,w,w,w,w,w,w,7,.
+.,7,w,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,w,7,.
+.,7,w,w,w,w,w,w,w,w,w,w,w,w,w,w,w,w,w,w,w,w,7,.
+.,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,.
+.,.,7,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,7,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+`,
+  a_turnt: `
+.,7,7,7,7,7,7,.
+.,7,k,k,k,k,7,.
+.,7,k,r,r,k,7,.
+.,7,k,k,k,k,7,.
+.,7,7,7,y,7,7,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_tv: `
+.,5,5,5,5,5,5,.
+.,5,k,k,k,k,5,.
+.,5,k,9,9,k,5,.
+.,5,k,k,k,k,5,.
+.,5,5,5,5,5,5,.
+.,.,5,.,.,5,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_washer: `
+.,7,7,7,7,7,7,.
+.,7,y,7,7,w,7,.
+.,7,7,7,7,7,7,.
+.,7,8,8,8,8,7,.
+.,7,8,9,9,8,7,.
+.,7,8,8,8,8,7,.
+.,7,7,7,7,7,7,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_weeds: `
+.,g,.,.,g,.,g,.,.,g,.,.,g,.,g,.
+g,.,g,g,.,g,.,g,g,.,g,g,.,g,.,g
+g,g,g,.,g,g,g,.,g,g,.,g,g,g,g,g
+.,g,g,g,g,g,g,.,g,g,g,g,g,g,.,.
+g,g,g,g,g,g,g,g,g,g,g,g,g,g,g,.
+.,g,g,g,g,g,.,g,g,g,g,g,.,g,g,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.,.,.,.,.,.,.,.,.
+`,
+  a_window: `
+5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5
+5,9,9,9,9,9,9,5,9,9,9,9,9,9,9,5
+5,9,8,9,8,9,8,5,9,8,9,8,9,8,9,5
+5,9,9,9,9,9,9,5,9,9,9,9,9,9,9,5
+5,9,8,9,8,9,8,5,9,8,9,8,9,8,9,5
+5,9,9,9,9,9,9,5,9,9,9,9,9,9,9,5
+5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5
+1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
+`,
+  a_wiretag: `
+5,5,5,5,5,5,5,5
+.,.,.,.,.,.,.,.
+.,.,.,y,y,.,.,.
+.,.,.,y,y,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
+  a_woodbox: `
+.,b,b,b,b,b,b,.
+.,b,7,7,7,7,b,.
+.,b,b,b,b,b,b,.
+.,b,7,7,7,7,b,.
+.,b,b,b,b,b,b,.
+.,.,b,.,.,b,.,.
+.,.,.,.,.,.,.,.
+.,.,.,.,.,.,.,.
+`,
   glassbits: `
 6,6,w,6,6,6,6,6
 6,6,6,6,6,w,6,6
@@ -4153,6 +4923,16 @@ b,b,w,b,b,w,b,b
 .,g,w,w,w,w,g,.
 .,g,g,g,g,g,g,.
 .,.,g,g,g,g,.,.
+`,
+  i_bomee: `
+.,.,7,7,7,7,.,.
+.,.,g,g,g,g,.,.
+.,.,g,y,r,g,.,.
+.,.,g,w,w,g,.,.
+.,.,g,w,w,g,.,.
+.,.,g,g,g,g,.,.
+.,.,7,7,7,7,.,.
+.,.,.,.,.,.,.,.
 `,
   i_celery: `
 .,.,.,.,y,.,.,.
@@ -4777,9 +5557,32 @@ function artCanvas(name){
   if(!(name in artCache)) artCache[name] = buildArt(name);
   return artCache[name];
 }
+
+/* 物件圖自動描邊：沿著不透明像素的輪廓補一圈深色線，
+   物件才不會和地板糊在一起。只有物件層用這個版本。 */
+const artOutlineCache = {};
+function artCanvasOutlined(name){
+  if(name in artOutlineCache) return artOutlineCache[name];
+  const base = artCanvas(name);
+  if(!base){ artOutlineCache[name] = null; return null; }
+  const w = base.width, h = base.height;
+  const cv = document.createElement('canvas');
+  cv.width = w + 2; cv.height = h + 2;
+  const c = cv.getContext('2d');
+  const d = base.getContext('2d').getImageData(0, 0, w, h).data;
+  const solid = (x, y) => x >= 0 && y >= 0 && x < w && y < h && d[(y*w + x)*4 + 3] > 40;
+  c.fillStyle = '#10141a';
+  for(let y = -1; y <= h; y++)
+    for(let x = -1; x <= w; x++)
+      if(!solid(x, y) && (solid(x-1,y) || solid(x+1,y) || solid(x,y-1) || solid(x,y+1)))
+        c.fillRect(x + 1, y + 1, 1, 1);
+  c.drawImage(base, 1, 1);
+  artOutlineCache[name] = cv;
+  return cv;
+}
 Object.entries(ARTFILES).forEach(([name, url]) => {
   fetch(url).then(r => r.ok ? r.text() : Promise.reject(r.status))
-    .then(t => { ART[name] = t; delete artCache[name]; })
+    .then(t => { ART[name] = t; delete artCache[name]; delete artOutlineCache[name]; })
     .catch(err => console.warn('讀不到 ' + url, err));
 });
 
@@ -6828,6 +7631,7 @@ function docVisible(key){
   const d = DOCS[key];
   if(!d) return false;
   if(d.flag && !state.flags[d.flag]) return false;   // 要先「播放過」才會出現的文件
+  if(d.notFaction && me.factionId === d.notFaction) return false;   // 陣營限定聽對話版，看不到短版
   if(!d.only) return true;
   if(d.only.faction && d.only.faction.includes(me.factionId)) return true;
   if(d.only.race && d.only.race.includes(me.raceId)) return true;
@@ -7087,6 +7891,7 @@ function interact(){
   }
   if(o.photo){ openPhoto(); return; }                    // 打卡背板
   if(o.jiao){ jiaoThrow(); return; }                     // 蒲團：擲茭問事
+  if(o.gossip && allOpened(o)){ gossipPlay(o.gossip); return; }   // 播放裝置：重播八卦
   if(o.terminal){                                        // 終端機檔案介面
     if(o.need && !o.need()) return say(o.name, o.needLines || ['沒有反應。']);
     openTerminal(o); return;
@@ -7399,13 +8204,18 @@ function buildDesktop(o){
   });
 
   if(state.items.includes('usbred')){
-    icon('file', 'USB隨身碟', state.read.gossip_a3 ? '已讀' : '未讀', () => {
+    const heard = !!state.flags.played_a3;
+    icon('file', 'USB隨身碟', heard ? '已讀' : '未讀', () => {
       if(!state.flags.played_a3){ state.flags.played_a3 = true; refreshDocs(); }
-      state.read.gossip_a3 = true; updateProgress(); saveGame();
-      setTimeout(checkAchievements, 0);
-      termWindow('file', '隨身碟 - ' + DOCS.gossip_a3.title, DOCS.gossip_a3.body);
+      saveGame(); setTimeout(checkAchievements, 0);
+      if(me.factionId === 'association'){
+        termWindow('file', '隨身碟 - 錄音檔', GOSSIP.a3.lines);       // 協會：完整錄音
+      } else {
+        state.read.gossip_a3 = true; updateProgress();
+        termWindow('file', '隨身碟 - ' + DOCS.gossip_a3.title, DOCS.gossip_a3.body);
+      }
       buildDesktop(o);
-    }, !state.read.gossip_a3);
+    }, !heard);
   }
   icon('bin', '資源回收筒', '', () =>
     termWindow('bin', '資源回收筒',
@@ -7478,10 +8288,18 @@ const INV_SLOTS = 4;                                   // 固定顯示幾格，�
 let invTab = 'key';
 const itemCat = id => ITEMS[id].heal ? 'supply' : ITEMS[id].battle ? 'combat' : 'key';
 
+/* 道具橫條收掉了：這裡只更新背包鈕上的數量，背包開著就重畫 */
 function renderInv(){
+  const b = $('bagBtn');
+  if(b) b.textContent = '背包' + (state.items.length ? ' ' + state.items.length : '');
+  const ov = $('bagOverlay');
+  if(ov && ov.classList.contains('on')) openBag();
+  return;
+}
+function renderInvOld(){
   const box = $('inv'); box.innerHTML = '';
   const tabs = document.createElement('span'); tabs.className = 'invtabs';
-  [['key','重要'], ['supply','補給'], ['combat','戰鬥']].forEach(([k, label]) => {
+  [['key','重要'], ['補給'], ['combat','戰鬥']].forEach(([k, label]) => {
     const n = state.items.filter(id => itemCat(id) === k).length;
     const b = document.createElement('button');
     b.className = 'invtab' + (invTab === k ? ' on' : '');
@@ -7512,7 +8330,7 @@ function renderInv(){
 /* ── 背包：分組顯示的完整道具視圖（手機上比底部橫條好讀） ── */
 function openBag(){
   const box = $('bagBody'); box.innerHTML = '';
-  [['key','重要道具'], ['supply','補給品'], ['combat','戰鬥道具']].forEach(([k, label]) => {
+  [['key','重要道具'], ['補給品'], ['combat','戰鬥道具']].forEach(([k, label]) => {
     const ids = state.items.filter(id => itemCat(id) === k);
     const h = document.createElement('div'); h.className = 'baghead';
     h.textContent = label + '（' + ids.length + '）';
@@ -7643,7 +8461,7 @@ function boardSolved(o){
   if(L.type === 'choice') return (L._step || 0) >= L.steps.length;
   if(L.type === 'morse')  return !!L._m && L._m.out === L.answer;
   if(L.type === 'seq')    return L._in.join('|') === L.seq.join('|');
-  if(L.type === 'wire')   return L.wires.every((w, i) => L._at[i] === w.goal);
+  if(L.type === 'wire')   return L.wires.every((w, i) => w.free || L._at[i] === w.goal);
   if(L.type === 'tune')   return L.dials.every((d, i) => Math.abs(L._at[i] - d.goal) <= (L.tol || 0));
   if(L.type === 'switch') return L._at.every(Boolean);
   return false;
@@ -7669,7 +8487,7 @@ async function loadSky(){
       if(d && d.list && d.list.length){ skyMsgs = d.list.slice(-SKY.max); return skyMsgs; }
     }
   }catch(err){ console.warn('天空留言板讀取失敗，改用內建資料', err); }
-  skyMsgs = SKY.baked.slice();
+  skyMsgs = SKY.baked.slice().sort(() => Math.random() - .5).slice(0, 8);   // 離線：隨機幾則播報內容
   return skyMsgs;
 }
 
@@ -8987,10 +9805,14 @@ function submitCode(){
 }
 
 /* 道具鎖 */
+function puzItems(){                       // 解謎能用的只有重要道具
+  return state.items.filter(id => itemCat(id) === 'key');
+}
 function renderChips(){
   const box = $('puzChips'); box.innerHTML = '';
-  if(!state.items.length){ box.innerHTML = '<span class="empty">還沒有可以用的東西</span>'; return; }
-  state.items.forEach((id, i) => {
+  const ids = puzItems();
+  if(!ids.length){ box.innerHTML = '<span class="empty">還沒有可以用的東西</span>'; return; }
+  ids.forEach((id, i) => {
     const c = document.createElement('div');
     c.className = 'slot' + (i === state.pick ? ' sel' : '');
     c.dataset.item = id;
@@ -9804,7 +10626,7 @@ function useBattleItem(id){
   }
   const use = it.battle;
   if(use && use.only && B.id !== use.only){
-    B.log.push('刀柄在掌心微微發燙，卻沒有出鞘的意思。');
+    B.log.push('整捆傢伙在掌心微微發燙，卻沒有動手的意思。');
     B.log.push('……還不到時機。');
     renderBattle();
     return;                                     // 不算一回合
@@ -10726,9 +11548,12 @@ function drawLabel(c, text, w, h){
 function drawObj(o){
   const x = o.col*T, y = o.row*T, w = o.w*T, h = o.h*T;
   const rec = getImage(o.sprite);                      // 填了 sprite 就用圖片
-  const a = o.art && artCanvas(o.art);
+  const a = o.art && artCanvasOutlined(o.art);
   if(rec && rec.ok) ctx.drawImage(rec.img, x, y, w, h);
-  else if(a) ctx.drawImage(a, x, y, w, h);
+  else if(a){
+    const sx = w / (a.width - 2), sy = h / (a.height - 2);   // 描線那一圈往格子外長
+    ctx.drawImage(a, x - sx, y - sy, w + sx*2, h + sy*2);
+  }
   else ctx.drawImage(objCanvas(o), x, y);
   if(o.docs){
     const left = visibleDocs(o).filter(k => !state.read[k]).length;
@@ -11044,6 +11869,125 @@ function jiaoThrow(){
   saveGame(); checkAchievements();
 }
 
+/* ── 陣營八卦：自己陣營聽到完整對話，外人只撿到短版傳聞 ── */
+const GOSSIP = {
+  a1: { fac:'association', flag:'played_a1', title:'錄音帶（A面）',
+    lines:['磁帶咬進磁頭，先是幾秒空白，然後——',
+           '無情的聲音「話說你到底幾天沒睡了？營養劑有按時吃嗎？」',
+           '溫和的聲音「三天而已應該還行吧……現在感覺沒有那麼累。」',
+           '無情的聲音「等到昏倒就來不及啦，看你的血液報告一堆數值沒有達標，這幾天該補回來了。」',
+           '溫和的聲音「咦……？」',
+           '無情的聲音「還咦？身體不顧好也不想想最後麻煩到的會是誰，三天後我要看到數據是正常的。不然就別想再用工作逃避囉。」',
+           '溫和的聲音「嗚、有時候覺得你這樣好像我媽……」',
+           '……',
+           '輕浮的聲音「我是你爸，去賣火柴！」',
+           '（翻到B面，全是雜訊。）'] },
+  a2: { fac:'association', flag:'played_a2', title:'綠標MP3',
+    lines:['播放鍵按下去，耳機裡竄出一段爭執——',
+           '急躁的聲音「連咖啡也要弄出香菜味的，你是鬼嗎？大家都在抗議香菜泡芙當補給品啦！」',
+           '無情的聲音「那可是我好不容易復刻的配方耶？而且營養價值高，不喜歡可以不要吃。」',
+           '急躁的聲音「吃東西滿口肥皂味光聞了就想吐，不吃也沒其他可以啃啦，這是強迫消費吧？」',
+           '無情的聲音「不然我來研發改變大家香菜基因的藥如何？」',
+           '急躁的聲音「啥小？這是人能想出來的解決方法？」',
+           '……',
+           '輕浮的聲音「挖這一梯之後菜味肯定很重！」'] },
+  a3: { fac:'association', flag:'played_a3', title:'隨身碟錄音檔',
+    lines:['錄音檔開啟，背景有紙張翻動的聲音——',
+           '溫和的聲音「嗯……妳們想要請假出去一趟啊，大概幾天呢？她有同意嗎？」',
+           '急躁的聲音「至少一個禮拜吧！當初協會成立我可是連蜜月都沒來得去，就被你抓去當隊長耶！」',
+           '急躁的聲音「現在閒一點了總是可以了吧？連那個書蟲都跑回學校教書去了。」',
+           '溫和的聲音「是沒什麼問題……不過妳想去的國家好像有場研討會，能順便幫我去參加嗎？」',
+           '急躁的聲音「蛤？那有加班費嗎？」',
+           '溫和的聲音「啊、最近協會財政吃緊所以……」',
+           '急躁的聲音「那麼我拒絕。」',
+           '溫和的聲音「欸……！」',
+           '……',
+           '輕浮的聲音「錢不到位～心就不到位啦～」'] },
+  y1: { fac:'yelu', flag:'played_y1', title:'空白CD',
+    lines:['雷射頭跳過刮痕，聲音出來了——',
+           '冷淡的聲音「有的時候我真搞不懂，妳到底在想什麼。抽那麼重也不怕腦子哪天就抽壞掉。這不是妳最大的籌碼？」',
+           '菸嗓的聲音「嗯哼、小鬼才不會懂呢，有時候超凡的智慧要從DMN中獲取靈感嘛──不如妳也來試看看？說不定聊天就不會那麼無聊啦～？」',
+           '冷淡的聲音「……允許妳弄這些東西還真是個錯誤。」',
+           '菸嗓的聲音「這可是當初答應的條件之一唷？還有定期的咖啡豆補給～要是反悔的話，老娘也是可以違反契約的喔？」',
+           '冷淡的聲音「我記得是說有限度的提供。多的我一定放把火燒掉。」',
+           '菸嗓的聲音「嘿欸──那看來得找個妳看不到的地方來弄啦？」',
+           '……',
+           '輕浮的聲音「我們的大麻供應商是這樣來的啊？謝囉！南部最大藥頭！」'] },
+  y2: { fac:'yelu', flag:'played_y2', title:'錄影帶',
+    lines:['雪花閃了幾下，畫面穩住，是一間簡陋的診間——',
+           '粗獷的聲音「欸……只是個檢查有必要做這麼細？抽抽血不就好了嗎？」',
+           '菸嗓的聲音「嘛、畢竟阿北你的數值很有趣嘛，尤其是跟災武結合的部分──為什麼覆蓋率會這麼大呢？」',
+           '粗獷的聲音「哦！畢竟災武也算是金屬嘛，感覺就像以前把金屬分子化後，融到身體裡面那樣？」',
+           '菸嗓的聲音「嗯？所以是從皮膚表面吸收？橋接方式怎麼做？是讓原子排列鬆散液化？但這樣大分子不太可能突破角質層──」',
+           '粗獷的聲音「喔、確實是很卡，所以有時候會利用比較薄的地方，像是……嘴巴？」',
+           '菸嗓的聲音「口腔黏膜？大叔你果然很有趣哪。」',
+           '……',
+           '輕浮的聲音「這個笨蛋是不是之後要被解剖了啊？」'] },
+  y3: { fac:'yelu', flag:'played_y3', title:'微型錄音筆',
+    lines:['錄音筆卡了一下，開始轉——',
+           '冷淡的聲音「這已經是這個月第三批了，到底還想收多少？」',
+           '粗獷的聲音「可是這次的團體裡面有小孩……真的不收留他們恐怕凶多吉少。」',
+           '冷淡的聲音「小孩只能算半個勞動力，又要多花資源……好像還有幾個身上有傳染病。」',
+           '粗獷的聲音「噢！那就糟了，看來要去找點抗生素來用？」',
+           '冷淡的聲音「我說你呀……」',
+           '粗獷的聲音「哈哈……小白就多幫忙安排一下嘛。」',
+           '……',
+           '輕浮的聲音「天天上演強制收編的戲碼不煩嗎？」'] },
+  w1: { fac:'wanderer', flag:'played_w1', title:'磁片（系統B）', dos:true,
+    lines:['「目前只招收純人類與超能者，如果是侵蝕者則拒絕。必要時可以動手。」',
+           '「純人類必須做出貢獻，才有機會獲得修練的門票。」',
+           '「超能者也得獻出自身的力量，幫助眾人得到提升。」',
+           '「我們必須超脫凡人之境，才能在末世取得一席之地。」',
+           '嘿、篩人就像篩畜生一樣，不像我對我的聽眾可是來者不拒呢～'] },
+  w2: { fac:'wanderer', flag:'played_w2', title:'3310簡訊匣',
+    lines:['解鎖音效響起，簡訊匣由舊到新排開——',
+           '訊息1「有內鬼！停止交易！」',
+           '訊息2「來了！我聽到吧晡聲！還有小蜜蜂！那個瘋女人來了！」',
+           '訊息3「那是……紅隼火箭彈！怎麼會有那個東西！」',
+           '訊息4「快把物資撤離──」',
+           '……',
+           '訊息？「呦呼！偶爾會在天海幫據點上演的搶劫場景？還真是寶刀未老啊～」'] },
+  w3: { fac:'wanderer', flag:'played_w3', title:'黑膠唱片',
+    lines:['唱針落在裂痕之間，霹啪聲裡浮出一段像是儀式錄音的聲音——',
+           '雜訊的聲音「我們……偉大的教主……早在五十年前就預言災禍……」',
+           '雜訊的聲音「那災異的嬰孩誕生之際……人們將陷入無盡的折磨……」',
+           '雜訊的聲音「即便教主傳遞銀光訊息……依舊無法制止逆向覺醒的潮流……」',
+           '雜訊的聲音「不遵守銀光教誨之徒……將被裂隙給吞沒……」',
+           '雜訊的聲音「永生永世……無以超生……」',
+           '……',
+           '破碎的笑聲「哈哈哈！就算預言到世界末日又如何？人還不是得活下去？」'] },
+};
+
+function gossipPlay(key){
+  const g = GOSSIP[key];
+  if(!g) return;
+  if(!state.flags[g.flag]){
+    state.flags[g.flag] = true;
+    refreshDocs(); saveGame();
+    setTimeout(checkAchievements, 0);
+  }
+  if(me.factionId === g.fac){
+    if(g.dos){ dosShow(g); return; }          // 流浪者的磁片：DOS 介面
+    say(g.title, g.lines);                    // 陣營限定：完整聲音對話
+  } else {
+    openDoc('gossip_' + key);                 // 外人：短版八卦（可播報）
+  }
+}
+
+/* 磁片內容用 DOS 畫面呈現 */
+function dosShow(g){
+  const pre = $('dosBody');
+  const files = g.lines.slice(0, -1);
+  const secret = g.lines[g.lines.length - 1];
+  const out = ['SYSTEM-B  (C) 2031','磁碟機 A: 已就緒','', 'A:\\> DIR', ''];
+  files.forEach((_, i) => out.push('  READ' + (i + 1) + '.TXT      ' + (700 + i * 113) + ' bytes'));
+  out.push('  ???.TXT        ??? bytes', '', 'A:\\> TYPE *.TXT', '');
+  files.forEach((t, i) => { out.push('[READ' + (i + 1) + '.TXT]', t, ''); });
+  out.push('[???.TXT]', secret, '', 'A:\\> _');
+  pre.textContent = out.join('\n');
+  show('dosOverlay');
+}
+
 /* ── 持有後點一下就能用的媒體道具 ──
    MP3、錄音筆：點了直接播（立旗標讓對應文件出現，再打開內容）
    3310：點了先解鎖（預設密碼 0000），解鎖後再點直接看簡訊匣 */
@@ -11056,17 +12000,13 @@ const NOKIA_DEV = {
          wrong:['嘟——密碼錯誤。'],
          opened:['熟悉的解鎖音效響起。','簡訊匣裡存著一串舊訊息。'] },
 };
-NOKIA_DEV.onOpen = () => { state.flags.played_w2 = true; refreshDocs(); };
+NOKIA_DEV.lock.after = () => gossipPlay('w2');   // 解鎖對話結束後接著播簡訊
 
-function playMedia(flag, doc){
-  if(flag && !state.flags[flag]){ state.flags[flag] = true; refreshDocs(); saveGame(); }
-  openDoc(doc);
-}
 const MEDIA_CLICK = {
-  mp3green(){ playMedia('played_a2', 'gossip_a2'); },
-  recpen(){   playMedia('played_y3', 'gossip_y3'); },
+  mp3green(){ gossipPlay('a2'); },
+  recpen(){   gossipPlay('y3'); },
   nokia(){
-    if(state.opened.nokia_dev) playMedia('played_w2', 'gossip_w2');
+    if(state.opened.nokia_dev) gossipPlay('w2');
     else openPuzzle(NOKIA_DEV);
   },
 };
@@ -11088,19 +12028,18 @@ function healItem(id){
 function drawTag(x, y, text, col){
   if(!text) return;
   const h = CONFIG.player.spriteHeight || T;
-  const cx = Math.round(x + T/2), ty = Math.round(y + T - h - 7);
-  ctx.font = '10px sans-serif';
+  const cx = Math.round(x + T/2), ty = Math.round(y + T - h - 5);
+  ctx.font = '10px "Noto Sans TC", sans-serif';
   ctx.textAlign = 'center';
-  /* 透明背景。用柔和的深色陰影撐可讀性，描邊在這個字級會把中文糊成一塊 */
-  ctx.shadowColor = 'rgba(6,8,11,.95)';
-  ctx.shadowBlur = 4;
-  ctx.shadowOffsetY = 1;
+  ctx.textBaseline = 'alphabetic';
+  /* 不用模糊陰影：四方向 1px 實心描邊，字最銳利 */
+  ctx.fillStyle = 'rgba(8,10,14,.92)';
+  ctx.fillText(text, cx - 1, ty);
+  ctx.fillText(text, cx + 1, ty);
+  ctx.fillText(text, cx, ty - 1);
+  ctx.fillText(text, cx, ty + 1);
   ctx.fillStyle = col;
   ctx.fillText(text, cx, ty);
-  ctx.fillText(text, cx, ty);                  // 疊一次讓陰影夠深
-  ctx.shadowColor = 'transparent';
-  ctx.shadowBlur = 0;
-  ctx.shadowOffsetY = 0;
   ctx.textAlign = 'left';
 }
 
@@ -11217,17 +12156,38 @@ addEventListener('keydown', e => {
       if(k === 'Enter' || k === ' '){ e.preventDefault(); submitCode(); return; }
       return;
     }
-    if(!state.items.length) return;
+    /* 選擇題：方向鍵在選項間移動、Enter/E 確認（不用滑鼠） */
+    const LC = state.puzzle ? curLock(state.puzzle) : null;
+    if(LC && LC.type === 'choice'){
+      const btns = Array.from($('puzzleOverlay').querySelectorAll('.pbtn'));
+      if(btns.length){
+        let sel = btns.findIndex(b => b.classList.contains('sel'));
+        const move = dir => {
+          e.preventDefault();
+          if(sel >= 0) btns[sel].classList.remove('sel');
+          sel = sel < 0 ? (dir > 0 ? 0 : btns.length - 1)
+                        : (sel + dir + btns.length) % btns.length;
+          btns[sel].classList.add('sel');
+        };
+        if(k === 'ArrowLeft'  || k === 'ArrowUp'   || k === 'a' || k === 'w'){ move(-1); return; }
+        if(k === 'ArrowRight' || k === 'ArrowDown' || k === 'd' || k === 's'){ move(1);  return; }
+        if((k === 'Enter' || k === ' ' || k === 'e') && sel >= 0){
+          e.preventDefault(); btns[sel].click(); return;
+        }
+      }
+    }
+    const pids = puzItems();
+    if(!pids.length) return;
     if(k === 'ArrowLeft'  || k === 'ArrowUp'   || k === 'a' || k === 'w'){
-      e.preventDefault(); state.pick = (state.pick - 1 + state.items.length) % state.items.length;
+      e.preventDefault(); state.pick = (state.pick - 1 + pids.length) % pids.length;
       renderChips(); return;
     }
     if(k === 'ArrowRight' || k === 'ArrowDown' || k === 'd' || k === 's'){
-      e.preventDefault(); state.pick = (state.pick + 1) % state.items.length;
+      e.preventDefault(); state.pick = (state.pick + 1) % pids.length;
       renderChips(); return;
     }
     if(k === 'Enter' || k === ' ' || k === 'e'){
-      e.preventDefault(); useItem(state.puzzle, state.items[state.pick]); return;
+      e.preventDefault(); useItem(state.puzzle, pids[Math.min(state.pick, pids.length - 1)]); return;
     }
     return;
   }
@@ -11265,7 +12225,6 @@ addEventListener('keydown', e => {
     if(open){ hide(open.id); }
     else interact();
   }
-  if(k === 'g') state.showGrid = !state.showGrid;
   if(k === 'b' && !state.dialog && !panelOpen() && !state.battle) openBag();
   if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
 });
@@ -11302,7 +12261,6 @@ function syncSettings(){
   $('moveSpeed').value   = opts.moveSpeed;
   $('textSpeedVal').textContent = opts.textSpeed;
   $('moveSpeedVal').textContent = opts.moveSpeed;
-  $('gridToggle').checked = state.showGrid;
   $('tagToggle').checked = opts.showTag;
   $('readState').textContent = '目前 ' + readCount() + '/' + ALL_DOCS.length;
   const rsrc = $('rosterSrc'); if(rsrc) rsrc.textContent = rosterSource;
@@ -11438,7 +12396,6 @@ $('roleInput').addEventListener('keydown', e => { if(e.key === 'Enter') $('start
 /* 拉桿即時生效 */
 $('textSpeed').oninput = e => { opts.textSpeed = +e.target.value; $('textSpeedVal').textContent = opts.textSpeed; };
 $('moveSpeed').oninput = e => { opts.moveSpeed = +e.target.value; $('moveSpeedVal').textContent = opts.moveSpeed; };
-$('gridToggle').onchange = e => { state.showGrid = e.target.checked; };
 $('tagToggle').onchange = e => { opts.showTag = e.target.checked; saveGame(); };
 
 /* 清除閱讀進度 */
