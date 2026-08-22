@@ -1491,6 +1491,21 @@
         <div class="note" id="roleNote">對到名冊就會自動帶入頭貼與所屬；沒對到也能直接用這個名字。</div>
       </div>
 
+      <div class="field" id="customWho" style="display:none">
+        <label>這個名字不在名冊上——請先選擇種族與陣營</label>
+        <div class="seg" id="racePick">
+          <button class="segbtn" data-race="human">純人類</button>
+          <button class="segbtn" data-race="esper">超能者</button>
+          <button class="segbtn" data-race="corruptor">侵蝕者</button>
+        </div>
+        <div class="seg" id="facPick" style="margin-top:6px">
+          <button class="segbtn" data-fac="association">協會</button>
+          <button class="segbtn" data-fac="yelu">夜鷺</button>
+          <button class="segbtn" data-fac="wanderer">流浪者</button>
+        </div>
+        <div class="note">種族與陣營會影響數值、技能，還有一些只有自己人才聽得懂的內容。</div>
+      </div>
+
       <div class="field">
         <label>角色圖</label>
         <div class="seg" id="slotTabs"></div>
@@ -1790,7 +1805,7 @@ const ACHIEVEMENTS = [
     check:() => allLocks().every(id => state.opened[id]) },
   { id:'all_docs',   name:'一份不漏',     desc:'讀完所有找得到的資料。',
     check:() => ALL_DOCS.length > 0 && readCount() >= ALL_DOCS.length },
-  { id:'aired',      name:'荒漠人的主張',   desc:'完成 FM94.5 的最後一場放送。',
+  { id:'aired',      name:'荒漠人的主張',   desc:'完成 FM94.5 的最後一場放送。', hidden:true,
     check:() => !!state.flags.aired, clear:true },
 
   { id:'exploded',   name:'那捲不能倒帶',  desc:'被舊型卡帶機炸過。', hidden:true,
@@ -1803,7 +1818,7 @@ const ACHIEVEMENTS = [
     check:() => !!state.flags.brokehp },
   { id:'sanjiao',    name:'拈花微笑',     desc:'在神明廳擲出三個聖茭，得到了回應。', hidden:true,
     check:() => !!state.flags.sanjiao },
-  { id:'fingertip',  name:'指尖的回憶',   desc:'用那根大拇指打開了上三樓的門。',
+  { id:'fingertip',  name:'指尖的回憶',   desc:'用那根大拇指打開了上三樓的門。', hidden:true,
     check:() => !!state.opened.stairs_up },
   { id:'prankster',  name:'整人專家',     desc:'用要你命8000終結了銀無功。', hidden:true,
     check:() => state.battles.silvercent === 'win' },
@@ -1830,9 +1845,9 @@ const ACHIEVEMENTS = [
     check:() => ['pocket','linetag','taperec','bed_note','heater_card',
                  'letter1','note_carpet','sofa_note','reeltape','letter2']
                 .every(k => state.read[k]) },
-  { id:'memeking',   name:'梗王之王',     desc:'把三份迷因測驗全部看完。（有夠LKK）',
+  { id:'memeking',   name:'梗王之王',     desc:'把三份迷因測驗全部看完。（有夠LKK）', hidden:true,
     check:() => !!(state.flags.meme2025 && state.flags.meme2035 && state.flags.meme2045) },
-  { id:'adfan',      name:'無課玩家不跳廣告', desc:'把信箱裡的傳單全部看完。',
+  { id:'adfan',      name:'無課玩家不跳廣告', desc:'把信箱裡的傳單全部看完。', hidden:true,
     check:() => ['ad_cult','ad_gang','ad_doctor','ad_pineapple'].every(k => state.read[k]) },
   { id:'wannaplay',  name:'我想玩個遊戲', desc:'把小丑的訊號解出來。', hidden:true,
     check:() => !!state.opened['tv#2'] },
@@ -2133,6 +2148,54 @@ const DOCS = {
   /* ── 陣營限定：三邊各一份 ───────────────────────────────── */
 
   /* ── L3 溢流層：被動收到的資訊之海碎片 ─────────────────── */
+
+  /* 最後再套一次上下限，擋掉名冊上的極端值 */
+  clamp: { max:[90, 260], atk:[10, 40], def:[0, 22] },
+};
+
+/* ── 玩家數值來源 ────────────────────────────────────────────────────
+   mode:
+     'baked'     只用下面 BATTLE_STATS 算（預設，離線也能跑）
+     'firestore' 從 Firestore REST 讀
+     'rtdb'      從 Realtime Database REST 讀
+
+   讀不到、逾時、欄位缺漏 → 一律退回 baked，遊戲不會卡住。
+   settings 面板底部會顯示這次是用哪一種來源。 */
+const PLAYER_SOURCE = {
+  /* 'roster' = 直接用名冊上的 hp / atk / def 三欄，不用另外連線，離線也能跑 */
+  mode: 'roster',
+
+  /* 下面這些只有 mode 改成 sheet / firestore / rtdb 才會用到 */
+  sheetUrl: '', sheetKey: 'characterId',
+  projectId: '', apiKey: '',
+  docPath: 'characters/{id}', rtdbUrl: '', nodePath: 'characters/{id}',
+  idField: 'characterId',
+  fields: { hp:'hp', atk:'atk', def:'def' },
+  timeout: 4000,
+
+  /* ⚠ 平台上的數值範圍跟這個小房間差很多，直接套會變成一刀秒殺或永遠打不完。
+     下面把「平台區間」線性壓到「房間區間」，所以強的還是強、弱的還是弱，
+     但雙方都落在這個房間打得起來的範圍裡。
+
+     PLATFORM 請照名冊的實際最小／最大值填 —— 同步腳本跑完會直接印給你。
+     ROOM 是房間這邊的目標區間，敵人血量 210～380、攻擊 20～40，照這個抓的。 */
+  PLATFORM: { hp:[100, 220], atk:[10, 26], def:[10, 24] },
+  ROOM:     { hp:[140, 250], atk:[16, 32], def:[ 5, 20] },
+
+  scale(raw){
+    const map = (v, from, to) => {
+      const t = (Number(v) - from[0]) / ((from[1] - from[0]) || 1);
+      return to[0] + Math.max(0, Math.min(1, t)) * (to[1] - to[0]);
+    };
+    const hp  = map(raw.hp,  this.PLATFORM.hp,  this.ROOM.hp);
+    const atk = map(raw.atk, this.PLATFORM.atk, this.ROOM.atk);
+    const def = map(raw.def, this.PLATFORM.def, this.ROOM.def);
+    return {
+      max: Math.round(hp),
+      atk: [Math.round(atk * 0.85), Math.round(atk * 1.15)],
+      def: Math.round(def),
+    };
+  },
 
   /* 最後再套一次上下限，擋掉名冊上的極端值 */
   clamp: { max:[90, 260], atk:[10, 40], def:[0, 22] },
@@ -3396,10 +3459,10 @@ const AREAS = {
         openedLines:['花果燭燒得很穩，香煙仍往陽台的方向流。'] },
       { id:'tablets', name:'收起來的牌位', col:1, row:4, w:2, h:1, solid:true, color:'#6b5c45',
          },
-      { id:'cushion', name:'蒲團', col:3, row:4, w:1, h:1, solid:false, color:'#8a3f2c',
+      { id:'cushion', name:'拜墊', col:3, row:4, w:1, h:1, solid:false, color:'#8a3f2c',
         jiao:true,
         need: () => state.items.includes('jiaobei'),
-        needLines:['神桌前放著一個磨得發亮的蒲團，跪的位置凹了下去。',
+        needLines:['神桌前放著一個磨得發亮的拜墊，跪的位置凹了下去。',
                    { who:'player', text:'……要問事，得先有茭。' }] },
 
       /* — 廣播器材 — */
@@ -3738,8 +3801,11 @@ const AREAS = {
                '袋側縫著一個放說明書的透明套，裡面是空的。',
                { who:'player', text:'……接線的指南被他收去別的地方了。' }] },
       { id:'sender', name:'發信盤', col:8, row:4, w:1, h:1, solid:true, color:'#4a7f92',
-        need: () => (state.music || []).length && (state.topics || []).length
-                 && state.flags.power && state.flags.signal,
+        need: () => (state.music || []).length
+                 && (state.topics || []).length >= 3
+                 && state.flags.power
+                 && state.flags.signal
+                 && state.opened.panel,
         needLines:['天線塔底下的發信盤，推桿還壓在最底。',
                    '旁邊貼著那張清單，四項只勾了一部分。',
                    { who:'player', text:'……開場曲、三件事、放送設備、天線。還沒齊。' }],
@@ -6831,14 +6897,42 @@ function refreshNameHints(n){
           o.value = r[F.name]; dl.appendChild(o);
         });
 }
+const RACE_LABEL = { human:'純人類', esper:'超能者', corruptor:'侵蝕者' };
+const FAC_LABEL   = { association:'協會', yelu:'夜鷺', wanderer:'流浪者' };
+
+/* 名冊外角色：套用玩家自選的種族與陣營 */
+function applyCustomWho(){
+  if(me.raceId || !state.customRace) return;             // 名冊角色不動
+  me.raceId = state.customRace;
+  me.race = RACE_LABEL[state.customRace] || '';
+  me.factionId = state.customFaction || '';
+  me.faction = FAC_LABEL[state.customFaction] || '';
+}
+function refreshCustomWho(show){
+  const box = $('customWho'); if(!box) return;
+  box.style.display = show ? '' : 'none';
+  box.querySelectorAll('#racePick .segbtn').forEach(b =>
+    b.classList.toggle('on', b.dataset.race === state.customRace));
+  box.querySelectorAll('#facPick .segbtn').forEach(b =>
+    b.classList.toggle('on', b.dataset.fac === state.customFaction));
+}
+document.querySelectorAll('#racePick .segbtn').forEach(b => b.onclick = () => {
+  state.customRace = b.dataset.race;
+  applyCustomWho(); refreshCustomWho(true); saveGame();
+});
+document.querySelectorAll('#facPick .segbtn').forEach(b => b.onclick = () => {
+  state.customFaction = b.dataset.fac;
+  applyCustomWho(); refreshCustomWho(true); saveGame();
+});
+
 $('roleInput').addEventListener('input', () => {
   if(state.nameLocked) return;
   const n = $('roleInput').value.trim();
   refreshNameHints(n);
   const found = n ? lookup(n) : null;
-  const newRace = (found && found.raceId) || '';
-  if(newRace === me.raceId) return;
   me = found || { ...NOBODY };
+  refreshCustomWho(!!n && !me.raceId);                   // 名冊外：亮出種族／陣營選擇
+  applyCustomWho();
   if(spriteMode === 'doll'){ buildDollUI(); buildDoll(); }
 });
 
@@ -7460,6 +7554,7 @@ function saveGame(){
         music: state.music || [], topics: state.topics || [],
         photo,
         hp: state.hp, achv: state.achv, vistaSeen: state.vistaSeen,
+        crace: state.customRace || '', cfac: state.customFaction || '',
         area: AREA ? AREA.id : 'room',
         /* 用腳底所在的格子，不能用四捨五入——
            站在物件正下方時會被進位到物件那一格，讀檔就卡在裡面出不來 */
@@ -7480,6 +7575,8 @@ function readSave(){
 
 function applySave(s){
   if(!s) return false;
+  state.customRace = s.crace || '';
+  state.customFaction = s.cfac || '';
   (s.slots || []).forEach((sv, i) => {
     const slot = slots[i]; if(!slot) return;
     Object.assign(slot.doll, sv.doll || {});
@@ -7890,7 +7987,10 @@ function interact(){
     return;
   }
   if(o.photo){ openPhoto(); return; }                    // 打卡背板
-  if(o.jiao){ jiaoThrow(); return; }                     // 蒲團：擲茭問事
+  if(o.jiao){                                            // 拜墊：擲茭問事
+    if(o.need && !o.need()) return say(o.name, o.needLines || ['現在還不行。']);
+    jiaoThrow(); return;
+  }
   if(o.gossip && allOpened(o)){ gossipPlay(o.gossip); return; }   // 播放裝置：重播八卦
   if(o.terminal){                                        // 終端機檔案介面
     if(o.need && !o.need()) return say(o.name, o.needLines || ['沒有反應。']);
@@ -11391,6 +11491,170 @@ function vistaImage(id){
   return (img.complete && img.naturalWidth) ? img : null;
 }
 
+/* ═══ 三個眺望點的手繪夜景 ═══ */
+const vistaSceneCache = {};
+function vistaSceneCanvas(id, variant){
+  const key = id + '|' + (variant || '');
+  if(vistaSceneCache[key]) return vistaSceneCache[key];
+  const painter = VISTA_PAINTERS[id]; if(!painter) return null;
+  const cv = document.createElement('canvas');
+  cv.width = 480; cv.height = 240;
+  const c = cv.getContext('2d');
+  c.imageSmoothingEnabled = false;
+  painter(c, 480, 240, variant || '');
+  vistaSceneCache[key] = cv;
+  return cv;
+}
+function paintVistaScene(id, variant){
+  const sc = vistaSceneCanvas(id, variant);
+  if(!sc) return false;
+  const cv = $('vistaCanvas'), c = cv.getContext('2d');
+  c.imageSmoothingEnabled = false;
+  c.drawImage(sc, 0, 0, cv.width, cv.height);
+  return true;
+}
+const vseed = s0 => { let x = s0; return () => (x = (x * 16807) % 2147483647) / 2147483647; };
+
+const VISTA_PAINTERS = {
+
+  /* 北——霧夜。遠景整片濛濛的，霧的深處隱約立著一棟高樓 */
+  antenna_view(c, W, H){
+    const R = vseed(7);
+    const g = c.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, '#070b14'); g.addColorStop(.55, '#121b29'); g.addColorStop(1, '#222b37');
+    c.fillStyle = g; c.fillRect(0, 0, W, H);
+    c.fillStyle = 'rgba(255,255,255,.3)';                 // 霧夜只剩幾顆星
+    for(let i = 0; i < 22; i++) c.fillRect((R()*W)|0, (R()*H*.26)|0, 1, 1);
+    c.fillStyle = 'rgba(120,110,80,.05)';                 // 遠處地面的微光
+    c.fillRect(0, H*.72, W, H*.28);
+    /* 高樓剪影（畫在霧之前，讓霧把它半吞掉） */
+    const bx = W*.56, bw = 34, bt = H*.18;
+    c.fillStyle = 'rgba(9,13,21,.92)';
+    c.fillRect(bx, bt, bw, H - bt);
+    c.fillRect(bx + bw/2 - 2, bt - 26, 4, 26);            // 塔尖
+    c.fillRect(bx - 7, H*.5, 7, H*.5);                    // 側翼樓體
+    c.fillRect(bx + bw, H*.56, 6, H*.44);
+    c.fillStyle = 'rgba(201,180,120,.22)';                // 還亮著的幾扇窗
+    [[7,58],[21,94],[11,142],[25,182]].forEach(([dx,dy]) => c.fillRect(bx+dx, bt+dy, 2, 2));
+    c.fillStyle = 'rgba(255,90,90,.5)';                   // 航空警示燈
+    c.fillRect(bx + bw/2 - 1, bt - 26, 2, 2);
+    /* 一層一層的霧，越低越濃 */
+    for(let i = 0; i < 7; i++){
+      const y = H*.3 + i*H*.088;
+      c.fillStyle = 'rgba(140,150,165,' + (0.05 + i*0.017).toFixed(3) + ')';
+      for(let x = -24; x < W; x += 9)
+        c.fillRect(x, y + ((x*7 + i*31) % 6), 28, 6 + ((x*13 + i*57) % 9));
+    }
+    c.fillStyle = 'rgba(150,158,172,.15)';                // 地平線上最厚的一層
+    c.fillRect(0, H*.66, W, H*.15);
+  },
+
+  /* 南——晴朗的夜。高原平頂剪影，上面漫天星星 */
+  balcony_view(c, W, H){
+    const R = vseed(21);
+    const g = c.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, '#06080f'); g.addColorStop(.6, '#0c1220'); g.addColorStop(1, '#161e2c');
+    c.fillStyle = g; c.fillRect(0, 0, W, H);
+    for(let i = 0; i < 175; i++){                         // 滿天星
+      const a = .22 + R()*.62;
+      c.fillStyle = 'rgba(255,255,255,' + a.toFixed(2) + ')';
+      c.fillRect((R()*W)|0, (R()*H*.6)|0, R() < .06 ? 2 : 1, 1);
+    }
+    for(let i = 0; i < 430; i++){                         // 一道斜斜的銀河
+      const t = R();
+      c.fillStyle = 'rgba(205,218,255,' + (0.03 + R()*.055).toFixed(3) + ')';
+      c.fillRect(((t*W*1.2 - 40))|0, (H*.1 + t*H*.34 + (R()-.5)*28)|0, 1, 1);
+    }
+    [[70,40],[300,28],[410,78],[176,92]].forEach(([x,y]) => {   // 幾顆特別亮的
+      c.fillStyle = 'rgba(225,238,255,.85)'; c.fillRect(x, y, 2, 2);
+      c.fillStyle = 'rgba(225,238,255,.28)';
+      c.fillRect(x - 3, y, 8, 1); c.fillRect(x + 1, y - 3, 1, 8);
+    });
+    c.fillStyle = '#0d131d';                              // 後排稜線
+    for(let x = 0; x < W; x += 6){
+      const hh = H*.6 + ((x*29) % 19);
+      c.fillRect(x, hh, 6, H - hh);
+    }
+    const top = H*.55, L = W*.16, Rr = W*.84;             // 高原：平平的頂
+    c.fillStyle = '#0a0f17';
+    c.fillRect(L, top, Rr - L, H - top);
+    c.beginPath(); c.moveTo(L, top); c.lineTo(L - 44, H); c.lineTo(L, H); c.closePath(); c.fill();
+    c.beginPath(); c.moveTo(Rr, top); c.lineTo(Rr + 50, H); c.lineTo(Rr, H); c.closePath(); c.fill();
+    c.fillStyle = 'rgba(140,170,210,.26)';                // 月光描出的頂緣
+    c.fillRect(L - 2, top - 1, Rr - L + 4, 1);
+    c.fillStyle = 'rgba(30,40,55,.55)';                   // 崖面的直紋
+    for(let x = L + 9; x < Rr; x += 14)
+      c.fillRect(x, top + 4, 2, (H - top)*.5 + ((x*7) % 18));
+    c.fillStyle = 'rgba(160,170,190,.08)';                // 山腳薄霧
+    c.fillRect(0, H*.87, W, H*.1);
+  },
+
+  /* 三樓窗外——前庭草地與 SNG 車。variant 'bolt' 時一道雷正劈下來 */
+  window_view(c, W, H, variant){
+    const R = vseed(5);
+    const bolt = variant === 'bolt';
+    const g = c.createLinearGradient(0, 0, 0, H*.55);
+    g.addColorStop(0, bolt ? '#1c2634' : '#0c1220');
+    g.addColorStop(1, bolt ? '#26303c' : '#141c26');
+    c.fillStyle = g; c.fillRect(0, 0, W, H*.55);
+    c.fillStyle = bolt ? '#2c3542' : '#181f2a';           // 積雨雲
+    for(let i = 0; i < 14; i++){
+      const x = R()*W, y = R()*H*.3, w2 = 50 + R()*90;
+      c.beginPath(); c.ellipse(x, y, w2/2, 12 + R()*10, 0, 0, 7); c.fill();
+    }
+    c.fillStyle = '#17231a';                              // 草地
+    c.fillRect(0, H*.52, W, H*.48);
+    for(let i = 0; i < 320; i++){                         // 草的質地
+      const x = R()*W, y = H*.54 + R()*H*.44;
+      c.fillStyle = R() < .5 ? 'rgba(10,18,12,.5)' : 'rgba(40,58,40,.5)';
+      c.fillRect(x|0, y|0, 2, 1);
+    }
+    c.fillStyle = '#242019';                              // 走出來的小徑
+    c.beginPath(); c.moveTo(W*.5, H); c.quadraticCurveTo(W*.46, H*.75, W*.4, H*.58);
+    c.lineTo(W*.46, H*.57); c.quadraticCurveTo(W*.53, H*.76, W*.6, H); c.closePath(); c.fill();
+    /* SNG 車剪影 */
+    const cx = W*.13, cy = H*.5, sc2 = 1;
+    c.fillStyle = '#242e38';
+    c.fillRect(cx, cy - 14, 118, 40);                     // 車廂
+    c.fillRect(cx + 118, cy + 2, 30, 24);                 // 車頭
+    c.fillStyle = '#0f151d';
+    c.fillRect(cx + 124, cy + 6, 18, 10);                 // 擋風玻璃
+    c.fillRect(cx + 8, cy - 6, 22, 12);                   // 側窗
+    c.fillStyle = '#0a0e14';
+    [[cx+18, cy+26],[cx+86, cy+26],[cx+130, cy+26]].forEach(([x,y]) => {
+      c.beginPath(); c.arc(x, y, 7, 0, 7); c.fill();
+    });
+    c.fillStyle = '#3a4550';
+    c.fillRect(cx + 30, cy - 26, 3, 12);                  // 車頂天線
+    c.fillRect(cx + 22, cy - 20, 40, 6);                  // 碟盤座
+    if(bolt){
+      /* 雷電：右側劈下來的一道折線 */
+      const pts = [[W*.78, 0]]; let x = W*.78, y = 0;
+      while(y < H*.5){ x += (R() - .5) * 34; y += 14 + R()*16; pts.push([x, y]); }
+      c.save();
+      c.fillStyle = 'rgba(220,235,255,.1)';               // 整片天空跟著亮
+      c.fillRect(0, 0, W, H*.55);
+      const flash = c.createRadialGradient(W*.78, H*.2, 10, W*.78, H*.2, 200);
+      flash.addColorStop(0, 'rgba(200,225,255,.3)'); flash.addColorStop(1, 'rgba(200,225,255,0)');
+      c.fillStyle = flash; c.fillRect(0, 0, W, H);
+      c.strokeStyle = 'rgba(170,205,255,.85)'; c.lineWidth = 4; c.lineJoin = 'round';
+      c.beginPath(); pts.forEach(([px, py], i) => i ? c.lineTo(px, py) : c.moveTo(px, py)); c.stroke();
+      c.strokeStyle = '#ffffff'; c.lineWidth = 1.5; c.stroke();
+      c.restore();
+      c.fillStyle = 'rgba(200,225,255,.2)';               // 車頂與草尖被照亮的一線
+      c.fillRect(cx, cy - 15, 118, 1);
+      for(let i = 0; i < 60; i++)
+        c.fillRect((W*.55 + R()*W*.45)|0, (H*.54 + R()*H*.4)|0, 2, 1);
+    }
+    /* 玻璃感：斜斜一道反光＋角落的霧 */
+    c.fillStyle = 'rgba(255,255,255,.035)';
+    c.beginPath(); c.moveTo(W*.1, 0); c.lineTo(W*.28, 0); c.lineTo(W*.02, H); c.lineTo(-W*.14, H);
+    c.closePath(); c.fill();
+    c.fillStyle = 'rgba(180,190,200,.05)';
+    c.fillRect(0, 0, W, 14); c.fillRect(0, H - 14, W, 14);
+  },
+};
+
 function drawVistaFallback(){                    // 沒有自訂圖時，程式畫一張遠景
   const cv = $('vistaCanvas'), c = cv.getContext('2d');
   const W = cv.width, H = cv.height;
@@ -11430,7 +11694,8 @@ function openVista(id){
     wrap.classList.add('custom');
   } else {
     wrap.classList.remove('custom');
-    drawVistaFallback();
+    state.vistaId = id;
+    if(!paintVistaScene(id)) drawVistaFallback();
   }
   $('vistaTitle').textContent = v.title || '眺望';
   state.vistaSeen[id] = true;
@@ -11452,12 +11717,26 @@ function advanceVista(){
   if(s.i >= s.lines.length){ hide('vistaOverlay'); return; }
   paintVista();
 }
+let vBoltNext = 2.2, vBoltOn = 0;
 function tickVista(dt){
   const s = state.vista; if(!s) return;
   const full = asText(s.lines[s.i]);
   if(s.chars < full.length){
     s.chars = Math.min(full.length, s.chars + dt * opts.textSpeed);
     paintVista();
+  }
+  if(state.vistaId === 'window_view'){                    // 窗外不時有雷電閃過
+    if(vBoltOn > 0){
+      vBoltOn -= dt;
+      if(vBoltOn <= 0){ delete vistaSceneCache['window_view|bolt']; paintVistaScene('window_view'); }
+    } else {
+      vBoltNext -= dt;
+      if(vBoltNext <= 0){
+        vBoltNext = 2.5 + Math.random() * 4.5;
+        vBoltOn = .28;
+        paintVistaScene('window_view', 'bolt');
+      }
+    }
   }
 }
 document.querySelector('.vwrap').addEventListener('pointerdown', e => {
@@ -11649,6 +11928,13 @@ function drawBackdrop(){
   /* 眺望上移中，若這個眺望點有指定背景圖就改用它 */
   const p = state.pan;
   if(p){
+    const sc = vistaSceneCanvas(p.id);
+    if(sc){
+      const k = Math.max(w / sc.width, h / sc.height);
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(sc, (w - sc.width*k)/2, (h - sc.height*k)/2, sc.width*k, sc.height*k);
+      return;
+    }
     const img = vistaImage(p.id);
     if(img){
       const s = Math.max(w / img.naturalWidth, h / img.naturalHeight);
@@ -11837,10 +12123,10 @@ function drawHurtPops(){
   }
 }
 
-/* ── 擲茭：跪在蒲團上問事。連續擲出三個聖茭 → 拈花微笑 ── */
+/* ── 擲茭：跪在拜墊上問事。連續擲出三個聖茭 → 拈花微笑 ── */
 function jiaoThrow(){
   if(state.flags.sanjiao){
-    say('蒲團', ['你跪下來，把木茭合在掌心。',
+    say('拜墊', ['你跪下來，把木茭合在掌心。',
                  '不用再問了。答案已經給過你了。']);
     return;
   }
@@ -12357,6 +12643,15 @@ $('startBtn').onclick = async () => {
      一律用鎖定的那個名字重查，輸入框動過也不算數 */
   const name = state.nameLocked ? state.roleName : $('roleInput').value.trim();
   me = name ? lookup(name) : { ...NOBODY };
+  if(!me.raceId){                                        // 名冊外角色
+    if(!state.nameLocked && (!state.customRace || !state.customFaction)){
+      refreshCustomWho(true);
+      const note = $('roleNote');
+      if(note){ note.textContent = '⚠ 這個名字不在名冊上——要先選好「種族」和「陣營」才能進廣播室。'; }
+      return;
+    }
+    applyCustomWho();                                    // 讀檔回來也照選過的套
+  }
   if(!state.nameLocked){
     state.roleName = me.name === '你' ? '' : me.name;
     state.nameLocked = true;           // 從這一刻起，這一輪就是這隻角色
