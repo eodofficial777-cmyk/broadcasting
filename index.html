@@ -1630,6 +1630,7 @@
         <label>存檔</label>
         <div class="row">
           <button class="mini" id="slotsBtn">存檔格</button>
+          <button class="mini" id="toTitleBtn">回到標題畫面</button>
           <button class="mini danger" id="wipeSave">清除存檔重新開始</button>
           <span class="note" id="saveState" style="margin:0"></span>
         </div>
@@ -3817,7 +3818,7 @@ const AREAS = {
         needLines:['天線塔底下的發信盤，推桿還壓在最底。',
                    '旁邊貼著那張清單，四項只勾了一部分。',
                    { who:'player', text:'開場曲、三件事、放送設備、天線。還沒齊。' }],
-        lock:{ type:'broadcast',
+        lock:{ type:'broadcast', deferOpen:true,
                locked:['推桿可以推了。',
                        '訊號會從這支塔送出去，這一帶只要還有收音機的人都聽得到。',
                        '你把耳機戴上。'],
@@ -7560,6 +7561,7 @@ function saveGame(){
         read: state.read, opened: state.opened, flags: state.flags,
         battles: state.battles, items: state.items,
         music: state.music || [], topics: state.topics || [],
+        decl: state.decl || '',
         photo,
         hp: state.hp, achv: state.achv, vistaSeen: state.vistaSeen,
         crace: state.customRace || '', cfac: state.customFaction || '',
@@ -7626,6 +7628,7 @@ function applySave(s){
   if(state.opened.tv) state.items = state.items.filter(id => id !== 'daitong');
   state.music = s.music || [];
   state.topics = s.topics || [];
+  state.decl = s.decl || '';
   state.hp = s.hp || 0;
   state.achv = s.achv || {};
   state.vistaSeen = s.vistaSeen || {};
@@ -7809,7 +7812,7 @@ const state = { read:{}, showGrid:false, dialog:null, started:false, list:null,
                 items:[], opened:{}, flags:{}, puzzle:null, code:'', pick:0,
                 battle:null, battles:{}, after:null, continued:false, posed:false,
                 vista:null, photo:false, pan:null, hp:0,
-                achv:{}, vistaSeen:{},
+                achv:{}, vistaSeen:{}, decl:'',
                 nameLocked:false, roleName:'' };   // 開場決定名字後鎖定這一輪
 // 註：面板開關一律用 panelOpen() 判斷，不另外存旗標
 const opts = { textSpeed:44, moveSpeed:CONFIG.player.speed, showTag:true,
@@ -8733,7 +8736,7 @@ function buildDecl(o, box){
   ta.id = 'declInput';
   ta.maxLength = DECL_MAX;
   ta.placeholder = '最後，你想對所有還聽得到的人說什麼？';
-  ta.value = L._t || '';
+  ta.value = L._t || state.decl || '';
   wrap.appendChild(ta);
 
   const row = document.createElement('div'); row.className = 'declrow';
@@ -8742,6 +8745,7 @@ function buildDecl(o, box){
   const cnt = document.createElement('span'); cnt.className = 'cnt';
   const sync = () => {
     L._t = ta.value;
+    state.decl = ta.value;
     cnt.textContent = ta.value.length + ' / ' + DECL_MAX + ' 字';
     go.style.opacity = ta.value.trim() ? '1' : '.45';
   };
@@ -8749,6 +8753,8 @@ function buildDecl(o, box){
   go.onclick = () => {
     if(!ta.value.trim()){ puzWrong(['總得說點什麼。'], '還沒寫'); return; }
     L._t = ta.value.trim();
+    state.decl = L._t;
+    saveGame();                                  // 播到一半被中斷也留得住這句話
     solve(o);
   };
   row.appendChild(go); row.appendChild(cnt);
@@ -8900,9 +8906,14 @@ function runBroadcast(text){
   const finish = () => {
     airStop(); skyStop();
     hide('airOverlay');
+    state.opened.sender = true;        // 整段播完才算解開（deferOpen）
     state.flags.aired = true;
     try{ localStorage.setItem(SKY_KEY, JSON.stringify({ text, name:sign })); }catch(err){}
     playBGM('special');
+    /* 結束台詞收掉之後，讓玩家自己決定要收工還是留下來逛 */
+    state.after = () => askConfirm('放送結束',
+      '這一場放送結束了。要回到標題畫面嗎？房間會保持播出後的樣子，之後隨時可以再進來。',
+      goTitle, false, { yes:'跳回標題', no:'繼續留在這' });
     say('播出', ['訊號送出去了。', { who:'player', text:'……接下來就是我的節目了。' }]);
     checkAchievements();
     saveGame();
@@ -10011,7 +10022,9 @@ function useItem(o, id){
 /* 解開 */
 function solve(o, viaBypass){
   const L = curLock(o);                       // 一定要先取，下一行就會換階段
-  state.opened[stageKey(o)] = true;
+  /* deferOpen：機關要等後續演出跑完才算解開（發信盤：播完整段才算播出去）。
+     中途關掉或重整的話，這裡沒被標記，回來還能重推推桿再播一次 */
+  if(!(L && L.deferOpen)) state.opened[stageKey(o)] = true;
   if(L){ delete L._in; delete L._at; delete L._step; delete L._m; }
   saveGame();
   setTimeout(checkAchievements, 0);
@@ -12702,12 +12715,14 @@ function shrinkToDataURL(file, maxW, cb){
 
 /* ── 確認視窗 ── */
 let confirmAction = null;
-function askConfirm(title, text, onYes, danger){
+function askConfirm(title, text, onYes, danger, labels){
   $('confirmTitle').textContent = title;
   $('confirmText').textContent = text;
   const y = $('confirmYes');
-  y.textContent = danger ? '確定，我知道會不見' : '確定';
+  y.textContent = (labels && labels.yes) || (danger ? '確定，我知道會不見' : '確定');
   y.classList.toggle('danger', !!danger);
+  const n = document.querySelector('#confirmOverlay [data-close]');
+  if(n) n.textContent = (labels && labels.no) || '取消';
   confirmAction = onYes;
   show('confirmOverlay');
 }
@@ -12728,6 +12743,9 @@ $('rescueBtn').onclick = () => {
       say(AREA.name, ['你回到了原本的位置。']);
     });
 };
+
+const toTitleBtn = $('toTitleBtn');
+if(toTitleBtn) toTitleBtn.onclick = () => { saveGame(); goTitle(); };
 
 $('wipeSave').onclick = () => askConfirm('清除目前進度',
   '讀過的資料、拿到的道具、解開的機關、成就會全部歸零，回到剛進門的狀態。'
@@ -12798,7 +12816,7 @@ $('startBtn').onclick = async () => {
       yelu:'看起來是有災獸的樣子。',
       wanderer:'農曆七月的別嚇人啊！',
       else:'你也說不清楚自己為什麼會走到這裡。' },
-    { who:'player', text:'不是普通人家。' },
+    { who:'player', text:'這是要拍大膽旅行團？' },
   ]), 300);
 };
 $('roleInput').addEventListener('keydown', e => { if(e.key === 'Enter') $('startBtn').click(); });
@@ -12809,11 +12827,14 @@ $('moveSpeed').oninput = e => { opts.moveSpeed = +e.target.value; $('moveSpeedVa
 $('tagToggle').onchange = e => { opts.showTag = e.target.checked; saveGame(); };
 
 /* 清除閱讀進度 */
-$('resetRead').onclick = () => {
-  state.read = {}; updateProgress(); syncSettings();
-  const b = $('resetRead'); b.textContent = '已清除';
-  setTimeout(() => b.textContent = '清除閱讀進度', 1200);
-};
+$('resetRead').onclick = () => askConfirm('清除閱讀進度',
+  '所有文件會變回「未讀」狀態（目前 ' + readCount() + '/' + ALL_DOCS.length + '）。'
+  + '文件本身還在原位，可以重新去讀，但已讀紀錄清掉就回不來了。要繼續嗎？',
+  () => {
+    state.read = {}; updateProgress(); syncSettings(); saveGame();
+    const b = $('resetRead'); b.textContent = '已清除';
+    setTimeout(() => b.textContent = '清除閱讀進度', 1200);
+  }, true);
 
 /* ── 版面自動縮放 ── */
 function reservedH(){
@@ -13102,6 +13123,17 @@ function tmove(d){
 }
 
 /* 橫式時把整個 1024×768 的舞台等比縮到畫面裡；直式交給 CSS */
+/* ── 從遊戲中回到標題（進度不動，隨時可以再「進入」接回來） ── */
+function goTitle(){
+  ['setup','bagOverlay','listOverlay','slotsOverlay','airOverlay',
+   'termOverlay','dosOverlay','puzzleOverlay','confirmOverlay',
+   'achvOverlay','battleOverlay'].forEach(id => { const el = $(id); if(el) el.classList.remove('on'); });
+  state.dialog = null; state.pan = null;
+  paintTitle(); tsel = 0; tmove(0); fitTitle();
+  show('title');
+  playBGM('title');
+}
+
 function fitTitle(){
   const st = $('titleStage'); if(!st) return;
   if(innerWidth <= innerHeight){ st.style.transform = ''; return; }
@@ -13431,9 +13463,10 @@ syncSettings();
 flushReports();
 
 paintTitle(); tmove(0); fitTitle(); playBGM('title');
-try{                                             // 從存檔格讀進來就跳過標題
-  if(sessionStorage.getItem(SKIP_KEY)){
-    sessionStorage.removeItem(SKIP_KEY);
+try{                                             // 從存檔格讀進來，或有進行中的自動存檔：跳過標題直接續玩
+  const skip = sessionStorage.getItem(SKIP_KEY);
+  if(skip) sessionStorage.removeItem(SKIP_KEY);
+  if(skip || (SAVED && state.nameLocked)){
     hide('title');
     if(state.nameLocked) $('startBtn').click();      // 讀檔：不用再過設定頁
     else { show('setup'); syncSettings(); }
