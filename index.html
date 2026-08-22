@@ -2437,8 +2437,7 @@ const ENEMIES = {
 /* ── 道具 ──────────────────────────────────────────────────────────────
    撿到的道具會出現在畫面下方的道具欄，可以拖到房間裡的東西上使用 */
 const ITEMS = {
-  screwdriver: { name:'螺絲起子',     art:'i_screwdriver', desc:'柄上纏了幾圈電火布。',
-                 battle:{ atk:[45,70], text:'你用螺絲起子往前刺。' } },
+  screwdriver: { name:'螺絲起子',     art:'i_screwdriver', desc:'柄上纏了幾圈電火布。天線塔和機櫃的螺絲用得上。' },
   gas:         { name:'汽油',         art:'i_gas',         desc:'從 SNG 車油箱抽出來的，裝在一個舊塑膠桶裡。' },
   daitong:     { name:'大同寶寶',     art:'i_daitong',     desc:'棒球帽、紅衣服、憨憨的笑。底座刻著一組編號。' },
   smallkey:    { name:'小鑰匙',       art:'i_smallkey',    desc:'從遊戲機裡彈出來的小鑰匙，齒紋很細。像是抽屜用的。' },
@@ -3592,6 +3591,7 @@ const AREAS = {
                failTitle:'爆炸了！',
                fail:['機殼裡「砰」的一聲，蓋子彈開，熱氣噴了你一臉。'],
                locked:['一台舊型卡帶機，比旁邊那些器材都老。',
+                       '進帶口是窄的專業規格，家用的卡帶插不進去——裡面本來就卡著一卷帶子。',
                        '進帶口旁邊有兩排按鍵，還能動。'],
                opened:['帶子倒到最前面，喀一聲停住。','喇叭開始出聲。'] },
         docs:['reeltape'],
@@ -7699,18 +7699,55 @@ function useRoster(rows, label){
   useRoster(ROSTER.baked, '使用內建名冊（沒有填 csvUrl）');
 })();
 
+/* ── 名冊代號正規化 ──────────────────────────────────────────────────
+   SKILLS / BATTLE_STATS 的 key 是 association / yelu / wanderer 與
+   esper / corruptor / human。名冊上如果填的是中文或別的寫法，
+   對不到就會掉進 FALLBACK_RACE + DEFAULT_SKILL（只有一招「撐住」）。
+   這張表把常見寫法都收斂到正規代號；要再加寫法就往下面補。 */
+const ID_ALIAS = {
+  faction: {
+    association:'association', assoc:'association', a:'association',
+    協會:'association', 災害對策協會:'association', 對策協會:'association',
+    yelu:'yelu', yellu:'yelu', nightheron:'yelu', y:'yelu',
+    夜鷺:'yelu', 夜鷺集團:'yelu', 夜鷥:'yelu',
+    wanderer:'wanderer', anonymous:'wanderer', wandering:'wanderer', w:'wanderer',
+    流浪者:'wanderer', 流浪:'wanderer', 無所屬:'wanderer', 其他:'wanderer',
+  },
+  race: {
+    esper:'esper', psychic:'esper', e:'esper',
+    異能者:'esper', 超能者:'esper', 能力者:'esper', 超能力者:'esper',
+    corruptor:'corruptor', corrupted:'corruptor', c:'corruptor',
+    侵蝕者:'corruptor', 侵蝕:'corruptor', 汙染者:'corruptor', 污染者:'corruptor',
+    human:'human', h:'human',
+    人類:'human', 純人類:'human', 一般人:'human', 普通人:'human',
+  },
+};
+/* 對不到的值記下來，設定面板會提示，不用開開發者工具 */
+let idMissed = [];
+function normId(kind, raw){
+  const v = String(raw == null ? '' : raw).trim();
+  if(!v) return '';
+  const hit = ID_ALIAS[kind][v] || ID_ALIAS[kind][v.toLowerCase()];
+  if(hit) return hit;
+  const tag = kind + '「' + v + '」';
+  if(!idMissed.includes(tag)) idMissed.push(tag);
+  return v;                                            // 保留原值，至少分歧台詞還有機會對到
+}
+
 function lookup(name){
   const F = ROSTER.fields;
   const hit = roster.find(r => r[F.name] === name)
            || roster.find(r => (r[F.name]||'').includes(name));
   if(!hit) return { ...NOBODY, name };
+  const facId  = normId('faction', hit[F.faction]);
+  const raceId = normId('race',    hit[F.race]);
   return {
     name: hit[F.name],
     avatar: hit[F.avatar] || '',
-    factionId: hit[F.faction] || '',                     // 分歧用的原始代號
-    raceId: hit[F.race] || '',
-    faction: LABELS.faction[hit[F.faction]] || hit[F.faction] || '',   // 畫面上顯示的名稱
-    race: LABELS.race[hit[F.race]] || hit[F.race] || '',
+    factionId: facId,                                    // 分歧用的正規代號
+    raceId: raceId,
+    faction: LABELS.faction[facId] || hit[F.faction] || '',   // 畫面上顯示的名稱
+    race: LABELS.race[raceId] || hit[F.race] || '',
     titles: (hit[F.titles] === '無稱號' ? '' : hit[F.titles]) || '',
     charId: hit[F.id] || '',
     raw: hit,                                            // 原始那一列，取數值時用
@@ -9932,8 +9969,10 @@ function submitCode(){
 }
 
 /* 道具鎖 */
-function puzItems(){                       // 解謎能用的只有重要道具
-  return state.items.filter(id => itemCat(id) === 'key');
+function puzItems(){                       // 補給品點了會直接吃掉，其他（重要＋戰鬥）都能拿來試鎖
+  /* 螺絲起子、鐵撬這類工具因為掛了 battle 欄位被歸在「戰鬥道具」，
+     天線塔（mast）與機櫃（rack）的 item 鎖需要它們，不能被濾掉 */
+  return state.items.filter(id => itemCat(id) !== 'supply');
 }
 function renderChips(){
   const box = $('puzChips'); box.innerHTML = '';
@@ -12362,6 +12401,37 @@ function drawTag(x, y, text, col){
   ctx.textAlign = 'left';
 }
 
+/* ── 香煙指引 ────────────────────────────────────────────────────────
+   點燃花果燭（censer#2）之後、盆栽（planter）解開之前，
+   香煙會沿著路徑一路飄：三樓從香爐飄向落地窗，陽台從門口飄向盆栽。
+   路徑用地磚座標寫，改房間佈局時記得跟著調。 */
+const SMOKE_PATH = {
+  room:    [[3.5, 3.1], [4.3, 5.2], [5.0, 7.6], [5.7, 9.7]],   // 香爐 → 落地窗
+  balcony: [[6.0, 3.0], [4.4, 3.4], [2.7, 3.8], [1.4, 4.2]],   // 窗口 → 盆栽
+};
+let smokes = [], smokeLast = 0;
+function drawIncense(){
+  const on = state.opened && state.opened['censer#2'] && !state.opened.planter;
+  const path = on && AREA && SMOKE_PATH[AREA.id];
+  if(!path){ smokes.length = 0; return; }
+  const now = performance.now();
+  if(now - smokeLast > 300){ smokeLast = now; smokes.push({ u:0, ph:Math.random()*6.28 }); }
+  const segs = path.length - 1;
+  for(let i = smokes.length - 1; i >= 0; i--){
+    const s = smokes[i];
+    s.u += 0.0045;                                     // 每幀前進量（60fps 走完約 4 秒）
+    if(s.u >= 1){ smokes.splice(i, 1); continue; }
+    const p = s.u * segs, k = Math.min(segs - 1, Math.floor(p)), f = p - k;
+    const x = (path[k][0] + (path[k+1][0] - path[k][0]) * f) * T
+            + Math.sin(now/450 + s.ph) * 3;            // 左右輕輕搖
+    const y = (path[k][1] + (path[k+1][1] - path[k][1]) * f) * T;
+    const a = 0.30 * Math.sin(Math.PI * s.u);          // 頭尾淡入淡出
+    const r = 3 + s.u * 4;                             // 越飄越散
+    ctx.fillStyle = 'rgba(222,228,234,' + a.toFixed(3) + ')';
+    ctx.beginPath(); ctx.arc(x, y, r, 0, 6.29); ctx.fill();
+  }
+}
+
 function draw(){
   if(state.battle) drawBattleScene();     // 戰鬥中要持續重畫才有動畫
   if(!AREA) return;                       // 區域還沒載入就先不畫
@@ -12381,6 +12451,7 @@ function draw(){
     .sort((a,b) => a.b - b.b).forEach(d => d.f());
   drawHurtPops();
   drawBolt();
+  drawIncense();
   if(opts.showTag){
     party().forEach((s, i) => drawTag(mates[i].x, mates[i].y, s.name, 'rgba(219,226,234,.85)'));
     drawTag(P.x, P.y, playerTag(), '#6fb3c9');
@@ -13276,8 +13347,19 @@ function previewStats(){
     const prev = me;
     me = Object.assign({}, m, { stats: raw });
     const s = myBattleStats();
+    const nSkill = s.skills.length;
     me = prev;
-    el.textContent = '名冊數值　HP ' + s.max + '　攻 ' + s.atk[0] + '-' + s.atk[1] + '　防 ' + s.def;
+    let txt = '名冊數值　HP ' + s.max + '　攻 ' + s.atk[0] + '-' + s.atk[1] + '　防 ' + s.def;
+    /* 技能是靠陣營×種族查表的，對不到就只剩一招「撐住」——直接講清楚 */
+    if(!SKILLS[m.factionId] || !SKILLS[m.factionId][m.raceId]){
+      txt += '　⚠ 技能對不到（陣營 ' + (m.factionId || '空') + ' × 種族 '
+           + (m.raceId || '空') + '），只會有「撐住」。'
+           + (idMissed.length ? '名冊裡不認得的寫法：' + idMissed.join('、') : '');
+    } else {
+      txt += '　技能 ' + nSkill + ' 招（' + (m.faction || m.factionId)
+           + '×' + (m.race || m.raceId) + '）';
+    }
+    el.textContent = txt;
   }catch(err){
     el.textContent = '內建數值（' + err.message + '）';
   }
