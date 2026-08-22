@@ -1961,7 +1961,7 @@ const DOCS = {
           { who:'player', text:'這根本是他自己簽給自己看的吧？' }] },
   olddiary: { title:'流理台裡的日記', code:'HOME-10', from:'流理台',
     body:['一本被塞在鍋子底下的日記，只有幾頁有字。',
-          '「8/25　大地震後外面出現了怪獸。」',
+          '「8/23　大地震後外面出現了怪獸。」',
           '「9/13　保存的食物已經都吃光了，只能拔外面的菜，政府也不救，接下來該怎麼辦？」',
           '「9/17　阿嬤走了……該死的爛政府，應該要組織搜救隊啊！」',
           '「10/21　阿麟說要自己出去找生路……外面都是怪物又有什麼用？」',
@@ -2334,7 +2334,7 @@ const EP = { start:4, gain:4, max:16 };
    逃跑之後還會再遇到，打贏或打輸就結束。 */
 const ENEMIES = {
   driller: {
-    name:'錐齒獸', hp:230, art:'e_driller',
+    name:'錐齒獸', hp:120, art:'e_driller',
     intro:['油箱底下傳來一陣金屬被磨開的聲音。',
            '有東西從車底鑽出來，牙齒排成一圈，正在轉。'],
     moves:[{ text:'它撞上你的側腹，牙齒還在轉。', atk:[22,32] },
@@ -2720,6 +2720,7 @@ const AREAS = {
         docs:['ad_cult','ad_gang','ad_doctor','ad_pineapple'],
         lines:['鐵皮信箱塞得滿滿的，全是傳單，日曬到褪色。'] },
       { id:'weeds', name:'雜草叢', col:10, row:6, w:2, h:1, solid:false, color:'#5c7a5f',
+        rest:true, restHalf:true,
         lines:['草長到膝蓋，只有從門口到車子那條路被踩出一道痕。',
                '那道痕已經開始長回來了。'] },
       { id:'bloom', name:'開花的草叢', col:13, row:6, w:1, h:1, solid:false, color:'#7a9a6f',
@@ -3255,6 +3256,11 @@ const AREAS = {
                '地上的積水就是從這裡來的。'],
         docs:['heater_card'] },
       { id:'mirror', name:'碎掉的鏡子', col:12, row:1, w:2, h:1, solid:true, color:'#8fb8c9',
+        /* GHOST 支線前置：要先在書桌抽屜讀過「提醒籤」才會注意到鏡面的痕跡 */
+        need: () => !!state.read.ghost_reminder,
+        needLines:['鏡面裂成好幾塊，右半邊整片掉進洗手台裡。',
+                   '左半邊還算完整，只是蒙著一層灰。',
+                   { who:'player', text:'……鏡子裡什麼都沒有。' }],
         lock:{ type:'choice',
                steps:[
                  { q:'左半邊的鏡面上有很淺的痕跡，旁邊用筆寫著「播報第幾天啦？」。要怎麼讓痕跡浮出來？',
@@ -3505,7 +3511,7 @@ const AREAS = {
       { id:'drawer', name:'控台抽屜', col:11, row:4, w:1, h:1, solid:false, color:'#5c4d38',
         lock:{ type:'code', code:'20500823', digits:8, hint:'八位數字',
                locked:['控台下的抽屜，鎖上有八個轉輪。',
-                       '轉輪旁邊刻著很小的字：「開始播報的日子？」'],
+                       '轉輪旁邊刻著很小的字：「開播年月日＝一切天翻地覆的時候」'],
                wrong:['轉輪沒有動靜。'],
                opened:['八個轉輪對上的瞬間，抽屜彈了開來。'] },
         give:'screwdriver',
@@ -3619,6 +3625,7 @@ const AREAS = {
         docs:['day1773'] },
       { id:'onair', name:'ON AIR 燈', col:13, row:1, w:2, h:1, solid:true, color:'#7a2f2c',
         lines:['燈是暗的。','開關還在，但沒有電。'],
+        linesPowered:['紅色的燈亮著。','放送設備是通的，隨時可以開播。'],
         linesAired:['燈亮著。', { who:'player', text:'現在真的在播了。' }] },
 
       /* — 出入口 — */
@@ -7984,6 +7991,17 @@ function interact(){
     if(state.hp >= hpMax()){
       return say(o.name, (o.lines || []).concat([{ who:'player', text:'現在還不想睡。' }]));
     }
+    if(o.restHalf){                                      // 草叢：只回一半，躺不舒服
+      askConfirm('躺一下',
+        '要在' + o.name + '裡躺一下嗎？可以回復一些體力。',
+        () => {
+          healPlayer(Math.floor(hpMax() / 2));
+          say(o.name, ['你撥開草，仰躺下去。草腥味包過來，蟲聲很近。',
+                       '躺了一陣子，痠痛散掉一些。',
+                       { who:'player', text:'……地上還是不能跟床比。' }]);
+        });
+      return;
+    }
     askConfirm('休息一下',
       '要在' + o.name + '上躺一下嗎？體力會回滿。',
       () => {
@@ -8038,6 +8056,7 @@ function interact(){
   if(ds.length === 1){ openDoc(ds[0]); return; }
   if(ds.length > 1){ openList(o.name, ds); return; }
   const lines = (state.flags.aired && o.linesAired)
+             || (state.flags.power && o.linesPowered)
              || (allOpened(o) && o.openedLines)
              || o.lines;
   say(o.name, lines || ['……沒什麼特別的。']);
@@ -8407,7 +8426,7 @@ function renderInv(){
 function renderInvOld(){
   const box = $('inv'); box.innerHTML = '';
   const tabs = document.createElement('span'); tabs.className = 'invtabs';
-  [['key','重要'], ['補給'], ['combat','戰鬥']].forEach(([k, label]) => {
+  [['key','重要'], ['supply','補給'], ['combat','戰鬥']].forEach(([k, label]) => {
     const n = state.items.filter(id => itemCat(id) === k).length;
     const b = document.createElement('button');
     b.className = 'invtab' + (invTab === k ? ' on' : '');
@@ -8438,7 +8457,7 @@ function renderInvOld(){
 /* ── 背包：分組顯示的完整道具視圖（手機上比底部橫條好讀） ── */
 function openBag(){
   const box = $('bagBody'); box.innerHTML = '';
-  [['key','重要道具'], ['補給品'], ['combat','戰鬥道具']].forEach(([k, label]) => {
+  [['key','重要道具'], ['supply','補給品'], ['combat','戰鬥道具']].forEach(([k, label]) => {
     const ids = state.items.filter(id => itemCat(id) === k);
     const h = document.createElement('div'); h.className = 'baghead';
     h.textContent = label + '（' + ids.length + '）';
@@ -11762,7 +11781,7 @@ function drawTile(def,c,r){
 /* 沒有圖的物件會畫色塊加名字，其中 fillText 相對貴。
    內容不會變，所以整個物件先畫進一張小圖快取起來 */
 function objCanvas(o){
-  const key = (o.id === 'onair' ? (state.flags.aired ? 'on' : 'off') : '') + o.name;
+  const key = (o.id === 'onair' ? (state.flags.power ? 'on' : 'off') : '') + o.name;
   if(o._cache && o._cacheKey === key) return o._cache;
   const w = o.w*T, h = o.h*T;
   const cv = document.createElement('canvas');
@@ -11772,7 +11791,7 @@ function objCanvas(o){
   c.fillStyle = o.color; c.fillRect(0, 0, w, h);
   c.fillStyle = 'rgba(0,0,0,.3)'; c.fillRect(0, h-3, w, 3);
   if(o.id === 'onair'){
-    c.fillStyle = state.flags.aired ? '#d1443c' : 'rgba(209,68,60,.4)';
+    c.fillStyle = state.flags.power ? '#d1443c' : 'rgba(209,68,60,.4)';
     c.fillRect(3, h/2-4, w-6, 8);
   }
   drawLabel(c, o.name, w, h);
@@ -12708,7 +12727,7 @@ $('startBtn').onclick = async () => {
       yelu:'看起來是有災獸的樣子。',
       wanderer:'農曆七月的別嚇人啊！',
       else:'你也說不清楚自己為什麼會走到這裡。' },
-    { who:'player', text:'這是要大膽旅行團了嗎？' },
+    { who:'player', text:'不是普通人家。' },
   ]), 300);
 };
 $('roleInput').addEventListener('keydown', e => { if(e.key === 'Enter') $('startBtn').click(); });
