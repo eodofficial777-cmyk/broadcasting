@@ -3490,7 +3490,7 @@ const AREAS = {
         onOpen: () => {
           state.flags.power = true;
           const t = findObj('terminal');
-          if(t && !t.docs.includes('powerlog')) t.docs.push('powerlog');
+          if(t){ t.docs = t.docs || []; if(!t.docs.includes('powerlog')) t.docs.push('powerlog'); }
           refreshDocs();
         },
         openedLines:['所有指示燈都亮著。','終端機那邊多了一筆新紀錄。'] },
@@ -3531,6 +3531,7 @@ const AREAS = {
         openedLines:['機器上少了一包乘乘，那一格的灰塵印還在。'] },
       { id:'terminal', name:'終端機', col:14, row:8, w:1, h:1, solid:true, color:'#33505a',
         terminal:true,
+        docs:[],                                   /* 通電後 powerlog 會加進來 */
          },
       { id:'shelf', name:'資料架', col:1, row:7, w:1, h:2, solid:true, color:'#5c4d38',
         lock:{ type:'choice',
@@ -7562,6 +7563,7 @@ function saveGame(){
         battles: state.battles, items: state.items,
         music: state.music || [], topics: state.topics || [],
         decl: state.decl || '',
+        runId: state.runId || '',
         photo,
         hp: state.hp, achv: state.achv, vistaSeen: state.vistaSeen,
         crace: state.customRace || '', cfac: state.customFaction || '',
@@ -7635,11 +7637,12 @@ function applySave(s){
   Object.assign(opts, s.opts || {});
   if(s.role) $('roleInput').value = s.role;
   state.roleName = s.role || '';
+  state.runId = s.runId || Math.random().toString(36).slice(2, 8);
   state.nameLocked = true;             // 這一輪的名字在當初開場就決定了
   /* 供電後追加的文件要補回來 */
   if(state.flags.power){
     const t = findObj('terminal');
-    if(t && !t.docs.includes('powerlog')) t.docs.push('powerlog');
+    if(t){ t.docs = t.docs || []; if(!t.docs.includes('powerlog')) t.docs.push('powerlog'); }
   }
   return true;
 }
@@ -10414,6 +10417,7 @@ function sendReport(event, extra){
     charId: me.charId || '',
     faction: me.faction || '',
     race: me.race || '',
+    run: state.runId || '',
     event,
     time: new Date().toISOString(),
   }, extra || {});
@@ -12791,6 +12795,7 @@ $('startBtn').onclick = async () => {
   if(!state.nameLocked){
     state.roleName = me.name === '你' ? '' : me.name;
     state.nameLocked = true;           // 從這一刻起，這一輪就是這隻角色
+    state.runId = state.runId || Math.random().toString(36).slice(2, 8);  // 這一輪的識別碼，回報去重用
   }
 
   if(PLAYER_SOURCE.mode !== 'baked' && PLAYER_SOURCE.mode !== 'roster'){
@@ -12819,7 +12824,7 @@ $('startBtn').onclick = async () => {
       yelu:'看起來是有災獸的樣子。',
       wanderer:'農曆七月的別嚇人啊！',
       else:'你也說不清楚自己為什麼會走到這裡。' },
-    { who:'player', text:'不是普通人家。' },
+    { who:'player', text:'這是要拍大膽旅行團？' },
   ]), 300);
 };
 $('roleInput').addEventListener('keydown', e => { if(e.key === 'Enter') $('startBtn').click(); });
@@ -13444,7 +13449,16 @@ if(reportClearBtn) reportClearBtn.onclick = () => {
    然後重新整理一次改走乾淨開機。存檔格 1–4 完全不受影響。
    以前這種狀況會卡死在載入，玩家只能清快取、連存檔一起賠掉。 */
 const BOOT_RETRY = 'eod-boot-retry';
-const SAVED = readSave();
+const DAMAGED_KEY = slotKey('auto') + ':damaged';
+let SAVED = readSave();
+let fromDamaged = false;
+if(!SAVED){                      /* 沒有自動存檔但有隔離檔：試著救回來
+                                    （壞檔多半是程式炸而不是資料壞，程式修好後檔就能用了） */
+  try{
+    const raw = localStorage.getItem(DAMAGED_KEY);
+    if(raw){ SAVED = JSON.parse(raw); fromDamaged = true; }
+  }catch(err){}
+}
 let bootErr = null;
 if(SAVED){
   try{ applySave(SAVED); state.continued = true; }
@@ -13465,10 +13479,18 @@ try{
 if(bootErr){
   console.warn('自動存檔套用失敗，隔離後重新開機：', bootErr);
   try{
-    const raw = localStorage.getItem(slotKey('auto'));
-    if(raw != null){
-      localStorage.setItem(slotKey('auto') + ':damaged', raw);
-      localStorage.removeItem(slotKey('auto'));
+    if(fromDamaged){                      /* 隔離檔還是炸：改標 :dead，下次不再嘗試 */
+      const raw = localStorage.getItem(DAMAGED_KEY);
+      if(raw != null){
+        localStorage.setItem(DAMAGED_KEY + ':dead', raw);
+        localStorage.removeItem(DAMAGED_KEY);
+      }
+    } else {
+      const raw = localStorage.getItem(slotKey('auto'));
+      if(raw != null){
+        localStorage.setItem(DAMAGED_KEY, raw);
+        localStorage.removeItem(slotKey('auto'));
+      }
     }
   }catch(err){}
   let retried = false;
@@ -13481,6 +13503,13 @@ if(bootErr){
   throw bootErr;
 } else {
   try{ sessionStorage.removeItem(BOOT_RETRY); }catch(err){}
+  if(fromDamaged){                          /* 隔離檔套用成功：轉正回自動存檔 */
+    try{
+      localStorage.setItem(slotKey('auto'), localStorage.getItem(DAMAGED_KEY) || '');
+      localStorage.removeItem(DAMAGED_KEY);
+      console.info('已從隔離備份救回自動存檔。');
+    }catch(err){}
+  }
 }
 if(SAVED){
   $('startBtn').textContent = '繼續遊戲';
@@ -13536,6 +13565,35 @@ flushReports();
     report('Promise 未處理：' + (r && r.message ? r.message : String(r))
          + (r && r.stack ? '\n' + r.stack.split('\n').slice(0, 4).join('\n') : ''));
   });
+})();
+
+/* ── 多分頁偵測 ──────────────────────────────────────────────────────
+   兩個分頁同時開會共用同一格自動存檔、互相覆寫，最後存檔會壞掉。
+   後開的分頁會看到全版警告；玩家確認關掉另一邊之後才放行。 */
+(function(){
+  let ch = null;
+  try{ ch = new BroadcastChannel('eod-tab'); }catch(err){ return; }  // 不支援就跳過
+  let blocked = null;
+  function warn(){
+    if(blocked) return;
+    blocked = document.createElement('div');
+    blocked.style.cssText = 'position:fixed;inset:0;z-index:99998;background:rgba(6,10,14,.94);'
+      + 'display:flex;flex-direction:column;align-items:center;justify-content:center;'
+      + 'gap:14px;color:#e8f0f6;font:15px/1.8 system-ui;text-align:center;padding:24px';
+    blocked.innerHTML = '<b style="font-size:18px">遊戲已在另一個視窗開啟</b>'
+      + '<div>兩邊同時玩會互相覆寫自動存檔，存檔可能因此損壞。<br>請關閉另一個視窗或分頁後再繼續。</div>';
+    const go = document.createElement('button');
+    go.textContent = '我已關閉另一個視窗，繼續遊玩';
+    go.style.cssText = 'padding:8px 18px;cursor:pointer;font-size:14px';
+    go.onclick = () => { blocked.remove(); blocked = null; };
+    blocked.appendChild(go);
+    document.body.appendChild(blocked);
+  }
+  ch.onmessage = e => {
+    if(e.data === 'ping') ch.postMessage('pong');   // 舊分頁：回應「我還在」
+    if(e.data === 'pong') warn();                   // 新分頁：收到回應代表撞頁了
+  };
+  ch.postMessage('ping');                           // 開頁時問一聲有沒有人在
 })();
 
 paintTitle(); tmove(0); fitTitle(); playBGM('title');
