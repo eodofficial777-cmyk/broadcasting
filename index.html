@@ -10042,9 +10042,12 @@ function solve(o, viaBypass){
   }
   if(L && L.after){                           // 解開之後接一段自訂演出
     const fn = L.after;
-    if(opened.length) say(o.name, opened.concat(extra));
-    state.after = () => fn(o);
-    if(!opened.length) fn(o);
+    if(opened.length){                        // 有台詞:講完才接演出
+      state.after = () => fn(o);
+      say(o.name, opened.concat(extra));
+    } else {
+      fn(o);                                  // 沒台詞:直接演,不掛 after
+    }                                         // （以前這裡兩邊都掛 after,造成結局播完又重播）
     return;
   }
   say(o.name, opened.concat(extra));
@@ -13436,16 +13439,48 @@ if(reportClearBtn) reportClearBtn.onclick = () => {
   reportLast = ''; reportStatus();
 };
 
-/* ── 開機 ── */
+/* ── 開機 ──
+   自動存檔套用失敗時：把壞檔搬去 :damaged 隔離（不刪除，之後還救得回來），
+   然後重新整理一次改走乾淨開機。存檔格 1–4 完全不受影響。
+   以前這種狀況會卡死在載入，玩家只能清快取、連存檔一起賠掉。 */
+const BOOT_RETRY = 'eod-boot-retry';
 const SAVED = readSave();
-if(SAVED){ applySave(SAVED); state.continued = true; }
-{
-  const aid = SAVED && AREAS[SAVED.area] ? SAVED.area : CONFIG.player.startArea;
+let bootErr = null;
+if(SAVED){
+  try{ applySave(SAVED); state.continued = true; }
+  catch(err){ bootErr = err; }
+}
+try{
+  const aid = !bootErr && SAVED && AREAS[SAVED.area] ? SAVED.area : CONFIG.player.startArea;
   const sp = AREAS[aid].spawn || CONFIG.player.start;
   /* 舊存檔可能存到被物件佔住的格子，數字不合理就退回重生點 */
-  const c = SAVED && Number.isFinite(SAVED.col) ? SAVED.col : sp.col;
-  const r = SAVED && Number.isFinite(SAVED.row) ? SAVED.row : sp.row;
+  const c = !bootErr && SAVED && Number.isFinite(SAVED.col) ? SAVED.col : sp.col;
+  const r = !bootErr && SAVED && Number.isFinite(SAVED.row) ? SAVED.row : sp.row;
   loadArea(aid, c, r);
+}catch(err){
+  bootErr = bootErr || err;
+  loadArea(CONFIG.player.startArea,
+           CONFIG.player.start.col, CONFIG.player.start.row);
+}
+if(bootErr){
+  console.warn('自動存檔套用失敗，隔離後重新開機：', bootErr);
+  try{
+    const raw = localStorage.getItem(slotKey('auto'));
+    if(raw != null){
+      localStorage.setItem(slotKey('auto') + ':damaged', raw);
+      localStorage.removeItem(slotKey('auto'));
+    }
+  }catch(err){}
+  let retried = false;
+  try{ retried = sessionStorage.getItem(BOOT_RETRY) === '1'; }catch(err){}
+  if(!retried){
+    try{ sessionStorage.setItem(BOOT_RETRY, '1'); }catch(err){}
+    location.reload();                       // 壞檔已隔離，這次會是乾淨開機
+  }
+  /* 重開一次還是失敗：不再無限重整，交給全域錯誤攔截把訊息顯示出來 */
+  throw bootErr;
+} else {
+  try{ sessionStorage.removeItem(BOOT_RETRY); }catch(err){}
 }
 if(SAVED){
   $('startBtn').textContent = '繼續遊戲';
@@ -13461,6 +13496,47 @@ if(SAVED){
 fit(); updateProgress(); renderInv();
 syncSettings();
 flushReports();
+
+/* ── 全域錯誤攔截 ──────────────────────────────────────────────────
+   玩家那端出事時，畫面上通常只看得到「按了沒反應」。
+   這裡把錯誤直接顯示出來並提供複製，回報時才有東西可看。 */
+(function(){
+  let shown = false;
+  function report(msg){
+    if(shown) return; shown = true;
+    const box = document.createElement('div');
+    box.style.cssText = 'position:fixed;left:8px;right:8px;bottom:8px;z-index:99999;'
+      + 'background:#2a1113;border:1px solid #d1443c;border-radius:8px;padding:10px 12px;'
+      + 'font:12px/1.6 ui-monospace,monospace;color:#f2d6d4;max-height:44vh;overflow:auto';
+    const info = msg + '\n---\n' + navigator.userAgent
+               + '\n畫面 ' + innerWidth + '×' + innerHeight;
+    box.innerHTML = '<b style="color:#ff8a80">遊戲發生錯誤</b>'
+      + '<div style="white-space:pre-wrap;margin:6px 0">' + info.replace(/[<>&]/g, c =>
+          ({ '<':'&lt;', '>':'&gt;', '&':'&amp;' }[c])) + '</div>';
+    const cp = document.createElement('button');
+    cp.textContent = '複製錯誤訊息';
+    cp.style.cssText = 'margin-right:8px;padding:4px 10px;cursor:pointer';
+    cp.onclick = () => {
+      navigator.clipboard.writeText(info).then(() => cp.textContent = '已複製',
+                                               () => cp.textContent = '複製失敗，請手動選取');
+    };
+    const cl = document.createElement('button');
+    cl.textContent = '關閉';
+    cl.style.cssText = 'padding:4px 10px;cursor:pointer';
+    cl.onclick = () => box.remove();
+    box.append(cp, cl);
+    document.body.appendChild(box);
+  }
+  addEventListener('error', e => {
+    report((e.message || '未知錯誤') + '\n' + (e.filename || '') + ':' + (e.lineno || '?')
+         + (e.error && e.error.stack ? '\n' + e.error.stack.split('\n').slice(0, 4).join('\n') : ''));
+  });
+  addEventListener('unhandledrejection', e => {
+    const r = e.reason;
+    report('Promise 未處理：' + (r && r.message ? r.message : String(r))
+         + (r && r.stack ? '\n' + r.stack.split('\n').slice(0, 4).join('\n') : ''));
+  });
+})();
 
 paintTitle(); tmove(0); fitTitle(); playBGM('title');
 try{                                             // 從存檔格讀進來，或有進行中的自動存檔：跳過標題直接續玩
