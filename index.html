@@ -3489,11 +3489,9 @@ const AREAS = {
                    { who:'player', text:'這一層的電是從樓下上來的。' }],
         onOpen: () => {
           state.flags.power = true;
-          const t = findObj('terminal');
-          if(t){ t.docs = t.docs || []; if(!t.docs.includes('powerlog')) t.docs.push('powerlog'); }
           refreshDocs();
         },
-        openedLines:['所有指示燈都亮著。','終端機那邊多了一筆新紀錄。'] },
+        openedLines:['所有指示燈都亮著。'] },
 
       { id:'mic', name:'主播的位子', col:11, row:5, w:1, h:1, solid:true, color:'#6d7783',
         gather:'up',
@@ -7228,6 +7226,7 @@ function switchSlot(i){
   const s = slots[i];
   doll = s.doll; sprite = s.sprite; parts = s.parts; px = s.px;
   spriteMode = s.mode; sheetImg = s.sheetImg;
+  if(spriteMode === 'sheet' && sheetImg) applySprite(sheetImg);   // 還原的圖要重建 frames
   buildDollUI(); buildSlotUI(); setSpriteMode(spriteMode);
   updatePartsUI(); buildDrawUI(); renderDraw();
 }
@@ -7295,11 +7294,16 @@ function loadPart(dir, files){
   if(!arr.length) return;
   const imgs = []; let waiting = arr.length;
   arr.forEach((f, i) => {
-    const img = new Image();
-    const done = ok => { if(ok) imgs[i] = img; if(--waiting === 0){ parts[dir] = imgs.filter(Boolean); spriteMode = 'parts'; buildParts(); } };
-    img.onload = () => done(true);
-    img.onerror = () => done(false);
-    img.src = URL.createObjectURL(f);
+    const r = new FileReader();
+    const done = ok => { if(--waiting === 0){ parts[dir] = imgs.filter(Boolean); spriteMode = 'parts'; buildParts(); persistSlotImages(); } };
+    r.onload = () => {
+      const img = new Image();
+      img.onload = () => { imgs[i] = img; done(true); };
+      img.onerror = () => done(false);
+      img.src = r.result;                          /* dataURL：重整後救得回來 */
+    };
+    r.onerror = () => done(false);
+    r.readAsDataURL(f);
   });
 }
 
@@ -7374,11 +7378,67 @@ function setSpriteMode(m){
 }
 document.querySelectorAll('.segbtn').forEach(b => b.onclick = () => setSpriteMode(b.dataset.mode));
 
+/* ── 上傳圖持久化 ─────────────────────────────────────────────────
+   上傳的精靈圖／四張圖以 dataURL 存在獨立的 localStorage key（每格一個），
+   只在上傳當下寫入，不跟著高頻的自動存檔走。太大就跳過並在 Console 提示。 */
+const IMG_KEY = i => SAVE_KEY + ':img:' + i;
+function persistSlotImages(){
+  try{
+    const s = { sheet: (sheetImg && sheetImg.src && sheetImg.src.slice(0,5) === 'data:') ? sheetImg.src : '',
+                parts: {} };
+    ['down','left','right','up'].forEach(d =>
+      s.parts[d] = (parts[d] || []).map(im => im.src).filter(u => u.slice(0,5) === 'data:'));
+    const json = JSON.stringify(s);
+    if(json.length > 2500000){
+      console.warn('角色圖總量超過保存上限，重新整理後需要重新上傳。建議改用小一點的圖。');
+      localStorage.removeItem(IMG_KEY(cur));
+      return;
+    }
+    if(s.sheet || Object.values(s.parts).some(a => a.length))
+      localStorage.setItem(IMG_KEY(cur), json);
+    else localStorage.removeItem(IMG_KEY(cur));
+  }catch(err){ console.warn('角色圖保存失敗（可能是空間不足）：', err); }
+}
+function restoreSlotImages(){
+  slots.forEach((slot, i) => {
+    try{
+      const raw = localStorage.getItem(IMG_KEY(i)); if(!raw) return;
+      const s = JSON.parse(raw);
+      if(s.sheet){
+        const img = new Image();
+        img.onload = () => {
+          slot.sheetImg = img;
+          if(i === cur){ sheetImg = img; if(spriteMode === 'sheet') applySprite(img); }
+        };
+        img.src = s.sheet;
+      }
+      Object.keys(s.parts || {}).forEach(d => {
+        const arr = s.parts[d] || []; if(!arr.length) return;
+        const imgs = []; let w = arr.length;
+        arr.forEach((u, k) => {
+          const im = new Image();
+          const done = () => { if(--w === 0){
+            slot.parts[d] = imgs.filter(Boolean);
+            if(i === cur && spriteMode === 'parts') buildParts();
+          } };
+          im.onload = () => { imgs[k] = im; done(); };
+          im.onerror = done;
+          im.src = u;
+        });
+      });
+    }catch(err){}
+  });
+}
+
 $('spriteFile').addEventListener('change', e => {
   const f = e.target.files[0]; if(!f) return;
-  const img = new Image();
-  img.onload = () => { sheetImg = img; sprite.layout = layoutSel.value; applySprite(img); };
-  img.src = URL.createObjectURL(f);
+  const r = new FileReader();
+  r.onload = () => {
+    const img = new Image();
+    img.onload = () => { sheetImg = img; sprite.layout = layoutSel.value; applySprite(img); persistSlotImages(); };
+    img.src = r.result;                            /* dataURL：重整後救得回來 */
+  };
+  r.readAsDataURL(f);
 });
 layoutSel.addEventListener('change', () => {
   if(spriteMode !== 'sheet' || !sheetImg) return;
@@ -7606,6 +7666,9 @@ function applySave(s){
     slot.mode = sv.mode || 'doll';
     if(sv.drawn) decodePx(sv.drawn, slot.px);
   });
+  /* 全域模式要跟著目前格子走，不然開機重建時 switchSlot 會用初始值把還原好的模式蓋掉 */
+  spriteMode = (slots[cur] && slots[cur].mode) || 'doll';
+  sheetImg = (slots[cur] && slots[cur].sheetImg) || null;
   if(s.doll) Object.assign(doll, s.doll);                // 相容舊版存檔
   if(s.photo){
     Object.assign(photo, s.photo);
@@ -7639,11 +7702,6 @@ function applySave(s){
   state.roleName = s.role || '';
   state.runId = s.runId || Math.random().toString(36).slice(2, 8);
   state.nameLocked = true;             // 這一輪的名字在當初開場就決定了
-  /* 供電後追加的文件要補回來 */
-  if(state.flags.power){
-    const t = findObj('terminal');
-    if(t){ t.docs = t.docs || []; if(!t.docs.includes('powerlog')) t.docs.push('powerlog'); }
-  }
   /* 中斷救援：舊版在播出中途關頁會留下「發信盤已解、aired 沒立」的孤兒狀態，
      結局從此觸發不了。正常流程兩者一定同時成立，所以這個組合只可能是事故——
      把發信盤重置回可推的狀態，讓玩家重播結局 */
@@ -7691,7 +7749,7 @@ function useRoster(rows, label){
   const rs = $('rosterSrc'); if(rs) rs.textContent = rosterSource;
   try{ previewStats(); }catch(err){}
 }
-(async () => {
+const rosterReady = (async () => {
   if(ROSTER.csvUrl){
     try{
       const res = await fetch(ROSTER.csvUrl);
@@ -8025,6 +8083,10 @@ function interact(){
     return say(o.name, dl);
   }
   if(o.rest){                                            // 躺一下回復體力
+    /* 床上有沒讀過的東西就先讀（rest 一 return，文件永遠輪不到） */
+    const unRest = visibleDocs(o).filter(k => !state.read[k]);
+    if(unRest.length === 1){ openDoc(unRest[0]); return; }
+    if(unRest.length > 1){ openList(o.name, unRest); return; }
     /* GHOST 支線：讀完鏡子隔間的東西之後，躺上床會做那個夢 */
     if(o.dream && state.opened['mirror#2'] && !state.flags.ghost){
       askConfirm('躺一下',
@@ -8062,7 +8124,13 @@ function interact(){
       });
     return;
   }
-  if(o.photo){ openPhoto(); return; }                    // 打卡背板
+  if(o.photo){                                           // 打卡背板
+    /* 布告欄跟打卡背板是同一個物件：先讀上面貼的東西，讀完才進拍照 */
+    const unPh = visibleDocs(o).filter(k => !state.read[k]);
+    if(unPh.length === 1){ openDoc(unPh[0]); return; }
+    if(unPh.length > 1){ openList(o.name, unPh); return; }
+    openPhoto(); return;
+  }
   if(o.jiao){                                            // 拜墊：擲茭問事
     if(o.need && !o.need()) return say(o.name, o.needLines || ['現在還不行。']);
     jiaoThrow(); return;
@@ -8097,6 +8165,11 @@ function interact(){
     openPuzzle(o); return;
   }
   if(o.exit){                                            // ④ 最後才是走過去
+    /* 門上貼著沒讀過的東西就先讀（不然 exit 一 return，文件永遠輪不到）；
+       讀完之後再按一次就正常通過 */
+    const un = visibleDocs(o).filter(k => !state.read[k]);
+    if(un.length === 1){ openDoc(un[0]); return; }
+    if(un.length > 1){ openList(o.name, un); return; }
     const x = o.exit;
     state.after = () => loadArea(x.to, x.col, x.row);
     say(o.name, o.lines || ['過去。']);
@@ -8670,6 +8743,37 @@ async function loadSky(){
 
 function skyStop(){ if(skyAnim) cancelAnimationFrame(skyAnim); skyAnim = null; }
 
+/* ── 載入指示 ─────────────────────────────────────────────────────
+   等待網路的那幾秒要讓玩家看得出「還在讀」而不是「壞掉了」。 */
+let skyLoadTimer = null;
+function skyLoadingStart(){
+  clearInterval(skyLoadTimer);
+  let dots = 0;
+  const tick = () => { $('airLine').textContent = '正在接收天上的訊號' + '…'.repeat(1 + (dots++ % 3)); };
+  tick();
+  skyLoadTimer = setInterval(tick, 420);
+}
+function skyLoadingStop(){ clearInterval(skyLoadTimer); skyLoadTimer = null; }
+
+let bootLoaderEl = null, bootLoaderTimer = null;
+function bootLoader(on, text){
+  if(!on){
+    clearInterval(bootLoaderTimer); bootLoaderTimer = null;
+    if(bootLoaderEl){ bootLoaderEl.remove(); bootLoaderEl = null; }
+    return;
+  }
+  if(bootLoaderEl) return;
+  bootLoaderEl = document.createElement('div');
+  bootLoaderEl.style.cssText = 'position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);'
+    + 'z-index:99997;background:rgba(10,16,22,.92);border:1px solid #2c3a46;border-radius:10px;'
+    + 'padding:16px 26px;color:#cfe0ea;font:14px/1.6 system-ui;letter-spacing:.05em';
+  document.body.appendChild(bootLoaderEl);
+  let dots = 0;
+  const tick = () => { if(bootLoaderEl) bootLoaderEl.textContent = text + '…'.repeat(1 + (dots++ % 3)); };
+  tick();
+  bootLoaderTimer = setInterval(tick, 420);
+}
+
 function skyScene(mine, sign, onDone){
   const cv = $('airCanvas');
   const c = airCanvasSetup();
@@ -8939,12 +9043,12 @@ function runBroadcast(text){
       });
       busy = true;
       $('airWho').textContent = '';
-      $('airLine').textContent = '……';
       $('airTip').textContent = '……';
+      skyLoadingStart();
       /* 留言板抓太久或失敗都不能卡住結局：六秒沒回來就用內建留言照常進場 */
       withTimeout(loadSky(), 6000)
         .catch(err => console.warn('天空留言載入失敗，改用內建：', err))
-        .then(() => { busy = false; skyScene(text, sign, finish); });
+        .then(() => { skyLoadingStop(); busy = false; skyScene(text, sign, finish); });
       return;
     }
     $('airWho').textContent = s.who || '';
@@ -12791,6 +12895,13 @@ function wipeSave(){
 };
 
 $('startBtn').onclick = async () => {
+  /* 名冊還在路上就先等它（最多八秒）——開機自動續玩會在名冊抓回來之前
+     就按下這顆按鈕，不等的話 lookup 會查空名冊，身分整個退化 */
+  if(rosterSource === '尚未載入'){
+    bootLoader(true, '正在讀取角色名冊');
+    try{ await withTimeout(rosterReady, 8000); }catch(err){}
+    bootLoader(false);
+  }
   /* 名字只在「還沒鎖定」時從輸入框決定；鎖定後（遊戲中開設定、或讀檔回來）
      一律用鎖定的那個名字重查，輸入框動過也不算數 */
   const name = state.nameLocked ? state.roleName : $('roleInput').value.trim();
@@ -13218,11 +13329,14 @@ $('titleMenu').addEventListener('click', e => {
     if(!mine || !mine.text) return;
     show('airOverlay');
     $('airWho').textContent = '';
-    $('airLine').textContent = '……';
     $('airTip').textContent = '……';
+    skyLoadingStart();
     playBGM('special');
     skyMsgs = null;                                  // 每次都重抓，別人可能又喊了新的
-    loadSky().then(() => {
+    withTimeout(loadSky(), 6000)                     // 抓太久就用內建留言，不能讓按鈕看起來像壞掉
+      .catch(err => console.warn('天空留言載入失敗，改用內建：', err))
+      .then(() => {
+      skyLoadingStop();
       skyScene(mine.text, mine.name || '你', () => {
         hide('airOverlay');
         playBGM('title');
@@ -13473,7 +13587,7 @@ if(!SAVED){                      /* 沒有自動存檔但有隔離檔：試著�
 }
 let bootErr = null;
 if(SAVED){
-  try{ applySave(SAVED); state.continued = true; }
+  try{ applySave(SAVED); state.continued = true; restoreSlotImages(); }
   catch(err){ bootErr = err; }
 }
 try{
