@@ -1695,7 +1695,7 @@ const ROSTER = {
 /* 顯示名稱對照 —— 改成你的正式譯名 */
 const LABELS = {
   faction: { association:'協會', yelu:'夜鷺', wanderer:'流浪者' },
-  race:    { esper:'異能者', corruptor:'侵蝕者', human:'人類' },
+  race:    { esper:'超能者', corruptor:'侵蝕者', human:'純人類' },
 };
 
 /* ── 通關回報 ────────────────────────────────────────────────────────
@@ -1833,13 +1833,13 @@ const ACHIEVEMENTS = [
     check:() => !!state.opened.douhua },
   { id:'wushi',      name:'5566得第一',   desc:'知道要打就去哪裡打。', hidden:true,
     check:() => !!state.opened.dancers },
-  { id:'assoc_drama', name:'八點檔收聽中', desc:'聽完協會的三段私房對話。', hidden:true,
+  { id:'assoc_drama', name:'八點檔收聽中', desc:'聽完協會的三段私房對話。', hidden:true, faction:'association',
     check:() => me.factionId === 'association'
              && ['played_a1','played_a2','played_a3'].every(f => state.flags[f]) },
-  { id:'yelu_pot',    name:'南方大悶鍋', desc:'聽完夜鷺的三段私房對話。', hidden:true,
+  { id:'yelu_pot',    name:'南方大悶鍋', desc:'聽完夜鷺的三段私房對話。', hidden:true, faction:'yelu',
     check:() => me.factionId === 'yelu'
              && ['played_y1','played_y2','played_y3'].every(f => state.flags[f]) },
-  { id:'wander_tmi',  name:'其實我沒有想要知道那麼多', desc:'看完流浪者的三段私房紀錄。', hidden:true,
+  { id:'wander_tmi',  name:'其實我沒有想要知道那麼多', desc:'看完流浪者的三段私房紀錄。', hidden:true, faction:'wanderer',
     check:() => me.factionId === 'wanderer'
              && ['played_w1','played_w2','played_w3'].every(f => state.flags[f]) },
   { id:'allmats',    name:'全知聽眾視角', desc:'十份播報材料，一份不漏全部讀完。', hidden:true,
@@ -10500,11 +10500,13 @@ function clearCode(){
 
 /* ── 成就清單 ── */
 function openAchv(){
-  const done = ACHIEVEMENTS.filter(a => state.achv[a.id]).length;
+  /* 他陣營的成就這一輪根本拿不到，列出來只會讓玩家以為解不完——整個藏掉，總數也跟著算 */
+  const list = ACHIEVEMENTS.filter(a => !a.faction || a.faction === me.factionId);
+  const done = list.filter(a => state.achv[a.id]).length;
   $('listTitle').textContent = '成就';
-  $('listMeta').textContent = done + '/' + ACHIEVEMENTS.length;
+  $('listMeta').textContent = done + '/' + list.length;
   const box = $('listBody'); box.innerHTML = '';
-  ACHIEVEMENTS.forEach(a => {
+  list.forEach(a => {
     const got = !!state.achv[a.id];
     const row = document.createElement('div');
     row.className = 'achv' + (got ? '' : ' locked');
