@@ -1816,7 +1816,7 @@ const ACHIEVEMENTS = [
     check:() => !!state.flags.ghost },
   { id:'brokehp',    name:'血本無歸',     desc:'體力歸零倒了下去，又在別的地方醒了過來。', hidden:true,
     check:() => !!state.flags.brokehp },
-  { id:'sanjiao',    name:'拈花微笑',     desc:'在神明廳擲出三個聖茭，得到了回應。', hidden:true,
+  { id:'sanjiao',    name:'拈花微笑',     desc:'在神明廳擲出三個聖筊，得到了回應。', hidden:true,
     check:() => !!state.flags.sanjiao },
   { id:'fingertip',  name:'指尖的回憶',   desc:'用那根大拇指打開了上三樓的門。', hidden:true,
     check:() => !!state.opened.stairs_up },
@@ -1853,6 +1853,13 @@ const ACHIEVEMENTS = [
     check:() => !!state.opened['tv#2'] },
   { id:'with_party', name:'你不孤單',   desc:'帶著同行者完成播出。', hidden:true,
     check:() => !!state.flags.aired && party().length > 0 },
+  { id:'title_quit', name:'來玩嘛～',   desc:'在開頭畫面按下了「結束」。', hidden:true,
+    check:() => {
+      if(state.flags.titleQuit) return true;
+      /* 按過結束的紀錄本來就會留在 QUIT_KEY（封面也是靠它換的），
+         重新整理再進來也還算數；「重新開始」會連 QUIT_KEY 一起清掉 */
+      try{ return !!localStorage.getItem(QUIT_KEY); }catch(err){ return false; }
+    } },
 ];
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -2072,7 +2079,7 @@ const DOCS = {
   mirror_note: { title:'鏡子上的字', code:'HOME-8', from:'鏡子',
     body:['鏡面有一層薄薄的水垢。',
           '斜著看的時候會浮出用手指寫過的字——寫的人大概以為擦掉就沒了。',
-          '「I'll be back」'] },
+          '「I\'ll be back」'] },
   heater_card: { title:'播報材料-508號', code:'MAT-508', from:'熱水器',
     body:['塞在熱水器機殼縫裡的紙條，右上角編號508。',
           '「不少密醫加入了奇怪結社的行列，聽說那邊聚集越來越多研究材料，',
@@ -2133,7 +2140,7 @@ const DOCS = {
   toolnote: { title:'信號塔操作指南', code:'MAN-1', from:'保險箱',
     body:['一張護貝過的指南，對摺兩次，跟帶子一起收在保險箱裡。',
           '「紅接黃、藍接綠，老鼠的兒子會打洞！」',
-          '最後一句被人用簽字筆圈了起來。''] },
+          '最後一句被人用簽字筆圈了起來。'] },
 
   /* ── 陣營限定：三邊各一份 ───────────────────────────────── */
 
@@ -12126,7 +12133,7 @@ function drawHurtPops(){
 /* ── 擲茭：跪在拜墊上問事。連續擲出三個聖茭 → 拈花微笑 ── */
 function jiaoThrow(){
   if(state.flags.sanjiao){
-    say('拜墊', ['你跪下來，把木茭合在掌心。',
+    say('拜墊', ['你跪下來，把木筊合在掌心。',
                  '不用再問了。答案已經給過你了。']);
     return;
   }
@@ -12304,11 +12311,17 @@ function healItem(id){
     say(it.name, [it.desc, { who:'player', text:'現在還用不到。' }]);
     return;
   }
-  const before = state.hp;
-  healPlayer(it.heal);
-  dropItem(id);
-  say(it.name, [it.use || '你處理了一下。',
-                { who:'player', text:'體力恢復了 ' + Math.round(state.hp - before) + ' 點。' }]);
+  /* 先給說明再確認，不要點一下就直接吃掉 */
+  askConfirm(it.name,
+    it.desc + '　使用後體力會回復 ' + it.heal + ' 點'
+    + '（目前 ' + Math.round(state.hp) + '/' + hpMax() + '）。要用掉嗎？',
+    () => {
+      const before = state.hp;
+      healPlayer(it.heal);
+      dropItem(id);
+      say(it.name, [it.use || '你處理了一下。',
+                    { who:'player', text:'體力恢復了 ' + Math.round(state.hp - before) + ' 點。' }]);
+    });
 }
 
 function drawTag(x, y, text, col){
@@ -12851,6 +12864,22 @@ function buildSlots(){
     box.appendChild(row);
   }
 
+  /* ── 備份：進度只存在這個瀏覽器裡，匯出成檔案才能跨裝置／防清除 ── */
+  const bk = document.createElement('div');
+  bk.style.cssText = 'margin-top:12px;display:flex;gap:6px;align-items:center;flex-wrap:wrap';
+  const bnote = document.createElement('span');
+  bnote.className = 'note';
+  bnote.style.cssText = 'margin-right:auto';
+  bnote.textContent = '進度只存在這個瀏覽器裡。換裝置或清瀏覽資料前，先匯出備份檔帶走。';
+  const exp = document.createElement('button');
+  exp.className = 'mini'; exp.textContent = '匯出備份';
+  exp.onclick = exportBackup;
+  const imp = document.createElement('button');
+  imp.className = 'mini'; imp.textContent = '匯入備份';
+  imp.onclick = () => backupFileInput.click();
+  bk.appendChild(bnote); bk.appendChild(exp); bk.appendChild(imp);
+  box.appendChild(bk);
+
   const any = [...Array(SLOTS_N)].some((_, i) => slotInfo(i + 1));
   if(any){
     const foot = document.createElement('div');
@@ -12866,6 +12895,76 @@ function buildSlots(){
 }
 
 function openSlots(){ buildSlots(); show('slotsOverlay'); }
+
+/* ── 備份匯出／匯入 ──────────────────────────────────────────
+   把自動存檔（目前進度）＋四個存檔格打包成一個 JSON 檔下載。
+   匯入時檢查格式、整包寫回 localStorage，然後重新載入頁面，
+   讓 applySave 用寫回的自動存檔把遊戲狀態全部接回來 */
+const BACKUP_SLOTS = () => ['auto', ...Array.from({ length: SLOTS_N }, (_, i) => String(i + 1))];
+
+function exportBackup(){
+  const data = {};
+  BACKUP_SLOTS().forEach(s => {
+    try{
+      const raw = localStorage.getItem(slotKey(s));
+      if(raw) data[s] = raw;
+    }catch(err){}
+  });
+  if(!Object.keys(data).length){
+    askConfirm('沒有東西可以匯出', '目前沒有任何進度，也沒有存檔格資料。', null);
+    return;
+  }
+  const pack = { format:'eod-broadcast-backup', v:1,
+                 at:new Date().toISOString(), data };
+  const blob = new Blob([JSON.stringify(pack)], { type:'application/json' });
+  const a = document.createElement('a');
+  a.download = 'broadcast-room-save-' + Date.now() + '.json';
+  a.href = URL.createObjectURL(blob);
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+}
+
+const backupFileInput = document.createElement('input');
+backupFileInput.type = 'file';
+backupFileInput.accept = '.json,application/json';
+backupFileInput.addEventListener('change', e => {
+  const f = e.target.files[0]; e.target.value = '';
+  if(!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    let pack = null;
+    try{ pack = JSON.parse(r.result); }catch(err){}
+    if(!pack || pack.format !== 'eod-broadcast-backup' || !pack.data){
+      askConfirm('讀不懂這個檔案', '這看起來不是廣播室的備份檔。', null);
+      return;
+    }
+    /* 每一份都要是能解析的 JSON 才寫回，擋掉壞掉或被改過的檔 */
+    const entries = Object.entries(pack.data).filter(([s, raw]) => {
+      if(!BACKUP_SLOTS().includes(s) || typeof raw !== 'string') return false;
+      try{ JSON.parse(raw); return true; }catch(err){ return false; }
+    });
+    if(!entries.length){
+      askConfirm('讀不懂這個檔案', '備份檔裡沒有可用的存檔資料。', null);
+      return;
+    }
+    const hasAuto = entries.some(([s]) => s === 'auto');
+    askConfirm('匯入備份',
+      '會寫回 ' + entries.length + ' 份資料'
+      + (hasAuto ? '（包含目前進度）' : '')
+      + '，這個瀏覽器裡同一格原有的內容會被蓋掉，接著重新載入頁面。要繼續嗎？',
+      () => {
+        try{
+          entries.forEach(([s, raw]) => localStorage.setItem(slotKey(s), raw));
+        }catch(err){
+          console.warn('匯入失敗', err);
+          askConfirm('匯入失敗', '寫入存檔時出了問題（可能是無痕模式或空間不足）。', null);
+          return;
+        }
+        location.reload();
+      });
+  };
+  r.readAsText(f);
+});
 
 /* 存檔格是唯一跨角色保留的地方，只有這裡動得到 */
 function wipeAllSlots(){
@@ -12956,7 +13055,10 @@ $('titleMenu').addEventListener('click', e => {
     else { show('setup'); syncSettings(); }          // 第一次：先捏角色
   }
   if(act === 'load'){ openSlots(); }
-  if(act === 'quit'){ show('quitOverlay'); playBGM('special'); }
+  if(act === 'quit'){
+    state.flags.titleQuit = true;                  // 成就「來玩嘛～」
+    show('quitOverlay'); playBGM('special');
+  }
   if(act === 'fresh'){
     askConfirm('重新開始',
       '目前這一輪的進度會全部歸零，從頭開始。'
